@@ -2,5 +2,5 @@
   <Project Path="StaffManagement.Core/StaffManagement.Core.csproj" />
   <Project Path="StaffManagement.Data/StaffManagement.Data.csproj" />
   <Project Path="StaffManagement.Model/StaffManagement.Model.csproj" />
-  <Project Path="StaffManagement/StaffManagement.csproj" />
+  <Project Path="StaffManagement/StaffManagement.Web.csproj" />
 </Solution>
