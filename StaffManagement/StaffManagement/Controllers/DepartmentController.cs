@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.Iservices;
+using StaffManagement.Core.Security;
 using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Web.Controllers;
 
+[Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
 public class DepartmentController(IDepartmentService departmentService) : Controller
 {
     public async Task<IActionResult> Index()

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,55 +10,57 @@
     <link rel="stylesheet" href="~/StaffManagement.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">StaffManagement</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item"><a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Dashboard</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Employee" asp-action="Index">Employees</a></li>
-                            @if (User.IsInRole("Admin") || User.IsInRole("HR"))
-                            {
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Account" asp-action="Create">Create account</a></li>
-                            }
-                        }
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item d-flex align-items-center"><span class="badge bg-primary me-2">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("HR") ? "HR" : User.IsInRole("Manager") ? "Manager" : "User")</span><span class="nav-link">@User.Identity.Name</span></li>
-                            <li class="nav-item"><form asp-controller="Account" asp-action="Logout" method="post"><button type="submit" class="nav-link btn btn-link">Logout</button></form></li>
-                        }
-                        else
-                        {
-                            <li class="nav-item"><a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a></li>
-                        }
-                    </ul>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="app-shell">
+            <aside class="app-sidebar">
+                <a class="sidebar-brand" asp-controller="Home" asp-action="Index">StaffManagement</a>
+                <div class="sidebar-user">
+                    <span class="badge bg-primary">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("HR") ? "HR" : User.IsInRole("Manager") ? "Manager" : "User")</span>
+                    <span class="sidebar-user-name">@User.Identity.Name</span>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+                <nav class="sidebar-nav" aria-label="Main navigation">
+                    <a class="sidebar-link" asp-controller="Home" asp-action="Index">Dashboard</a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("HR"))
+                    {
+                        <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Employees</a>
+                        <a class="sidebar-link" asp-controller="Department" asp-action="Index">Departments</a>
+                        <a class="sidebar-link" asp-controller="Account" asp-action="Create">Create account</a>
+                    }
+                    else if (User.IsInRole("Manager"))
+                    {
+                        <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Team records</a>
+                    }
+                    else
+                    {
+                        <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Staff directory</a>
+                    }
+                    <a class="sidebar-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </nav>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout">
+                    <button type="submit" class="btn btn-outline-light w-100">Logout</button>
+                </form>
+            </aside>
+            <main class="app-content">
+                <div class="container-fluid p-4">
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    }
+    else
+    {
+        <header class="border-bottom bg-white">
+            <nav class="navbar container">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">StaffManagement</a>
+                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+            </nav>
+        </header>
+        <main class="container py-4">
             @RenderBody()
         </main>
-    </div>
+    }
 
-    @* <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - StaffManagement - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer> *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
