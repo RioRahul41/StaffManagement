@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DbContext\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\StaffManagement.Core\StaffManagement.Core.csproj" />
     <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />
   </ItemGroup>
 

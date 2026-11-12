@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+   
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StaffManagement.Core\StaffManagement.Core.csproj" />
     <ProjectReference Include="..\StaffManagement.Data\StaffManagement.Data.csproj" />
     <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />

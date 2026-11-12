@@ -7,14 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Iservices\" />
-    <Folder Include="DTOs\" />
-    <Folder Include="IRepositories\" />
-    <Folder Include="Services\" />
+    <Folder Include="DTOs\EmployeeModel\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StaffManagement.Data\StaffManagement.Data.csproj" />
     <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />
   </ItemGroup>
 
