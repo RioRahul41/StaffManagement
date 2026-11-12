@@ -281,6 +281,37 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Departments");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.Designation", b =>
+                {
+                    b.Property<int>("DesignationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DesignationId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DesignationName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("DesignationId");
+
+                    b.ToTable("Designations");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
                 {
                     b.Property<int>("Id")

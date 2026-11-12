@@ -13,6 +13,8 @@ namespace StaffManagement.Data.DbContext
         }
         public DbSet<Department> Departments { get; set; }
 
+        public DbSet<Designation> Designations { get; set; }
+
         public DbSet<Employee> Employees { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

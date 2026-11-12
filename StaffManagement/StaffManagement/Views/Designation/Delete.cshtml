@@ -1,0 +1,13 @@
+@model StaffManagement.Model.Entities.Designation
+
+@{ ViewData["Title"] = "Delete Designation"; }
+
+<h1>Delete Designation</h1>
+<div class="alert alert-warning">
+    Are you sure you want to deactivate <strong>@Model.DesignationName</strong>?
+</div>
+<form asp-action="Delete" asp-route-id="@Model.DesignationId" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

@@ -6,7 +6,6 @@ using StaffManagement.Core.Services;
 using StaffManagement.Data.Repositories;
 using StaffManagement.Data.DbContext;
 using StaffManagement.IdentitySeeder;
-using StaffManagement.Data.Repositories;
 using StaffManagement.Model.Entities;
 using StaffManagement.Services;
 using StaffManagement.Core.IServices;
@@ -29,11 +28,15 @@ builder.Services
     })
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+
+builder.Services.AddScoped<IDesignationRepository, DesignationRepository>();
+builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IAccountService, IdentityAccountService>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-builder.Services.AddScoped<IAccountService, IdentityAccountService>();
+
 
 
 var app = builder.Build();

@@ -1,0 +1,16 @@
+@model StaffManagement.Model.Entities.Designation
+
+@{ ViewData["Title"] = "Edit Designation"; }
+
+<h1>Edit Designation</h1>
+<form asp-action="Edit" asp-route-id="@Model.DesignationId" method="post">
+    <input asp-for="DesignationId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <partial name="_DesignationForm" model="Model" />
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
