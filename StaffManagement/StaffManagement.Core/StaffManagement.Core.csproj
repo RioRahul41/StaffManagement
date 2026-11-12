@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\EmployeeModel\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />
   </ItemGroup>
 

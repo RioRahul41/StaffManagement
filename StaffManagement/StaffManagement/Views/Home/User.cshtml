@@ -1,0 +1,5 @@
+@model StaffManagement.Core.DTOs.DashboardViewModel
+@{ ViewData["Title"] = "User Dashboard"; }
+<div class="mb-4"><span class="text-primary fw-semibold">STAFF PORTAL</span><h1 class="display-6 fw-bold">Welcome, @Model.DisplayName</h1><p class="text-muted">View your staff directory and account information.</p></div>
+<div class="row g-3 mb-4"><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Active staff</p><h2>@Model.ActiveEmployees</h2></div></div></div><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Directory entries</p><h2>@Model.TotalEmployees</h2></div></div></div></div>
+<div class="card border-0 shadow-sm"><div class="card-body"><h5>Staff directory</h5><p class="text-muted">You have read-only access to employee records.</p><a asp-controller="Employee" asp-action="Index" class="btn btn-primary">View directory</a></div></div>

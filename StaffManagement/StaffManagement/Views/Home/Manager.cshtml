@@ -1,0 +1,5 @@
+@model StaffManagement.Core.DTOs.DashboardViewModel
+@{ ViewData["Title"] = "Manager Dashboard"; }
+<div class="mb-4"><span class="text-primary fw-semibold">TEAM MANAGEMENT</span><h1 class="display-6 fw-bold">Manager Dashboard</h1><p class="text-muted">Welcome, @Model.DisplayName. Review and maintain your team records.</p></div>
+<div class="row g-3 mb-4"><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Employees</p><h2>@Model.TotalEmployees</h2></div></div></div><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Active</p><h2 class="text-success">@Model.ActiveEmployees</h2></div></div></div></div>
+<div class="card border-0 shadow-sm"><div class="card-body"><h5>Team actions</h5><p class="text-muted">Managers can review, edit, and deactivate employee records. Account creation is restricted to Admin and HR.</p><a asp-controller="Employee" asp-action="Index" class="btn btn-primary">Open team records</a></div></div>

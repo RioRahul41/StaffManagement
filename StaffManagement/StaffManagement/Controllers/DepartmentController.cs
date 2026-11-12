@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace StaffManagement.Web.Controllers
+namespace StaffManagement.Controllers
 {
     public class DepartmentController : Controller
     {

@@ -1,10 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Core.IRepositories
 {
-    internal class IEmployeeRepository
+    public interface IEmployeeRepository
     {
+        Task<IReadOnlyList<Employee>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<Employee?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default);
+        Task AddAsync(Employee employee, CancellationToken cancellationToken = default);
+        void Update(Employee employee);
+        void Remove(Employee employee);
+        Task<bool> EmailExistsAsync(string email, int? excludedId = null, CancellationToken cancellationToken = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
