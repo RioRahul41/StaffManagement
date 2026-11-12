@@ -14,8 +14,13 @@ public sealed class AccountController(
     IAccountService accountService) : Controller
 {
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null) =>
-        View(new LoginDto { ReturnUrl = returnUrl });
+    public IActionResult Login(string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        return View(new LoginDto { ReturnUrl = returnUrl });
+    }
 
     [HttpPost]
     [AllowAnonymous]

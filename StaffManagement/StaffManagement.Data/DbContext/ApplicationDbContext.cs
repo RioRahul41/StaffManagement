@@ -11,7 +11,6 @@ namespace StaffManagement.Data.DbContext
         {
 
         }
-        public DbSet<Employee> Employees { get; set; }
         public DbSet<Department> Departments { get; set; }
 
         public DbSet<Employee> Employees { get; set; } = null!;
