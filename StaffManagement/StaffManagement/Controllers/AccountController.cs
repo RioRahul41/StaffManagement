@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
@@ -13,7 +14,7 @@ public sealed class AccountController(
     SignInManager<ApplicationIdentity> signInManager,
     UserManager<ApplicationIdentity> userManager,
     IAccountService accountService,
-    IDepartmentService departmentService) : Controller
+    IDesignationService designationService, IDepartmentService departmentService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -63,6 +64,7 @@ public sealed class AccountController(
     {
         var roles = GetCreatorRoles();
         ViewBag.Roles = accountService.GetCreatableRoles(roles);
+        ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
         await LoadDepartmentsAsync();
         return View(new CreateAccountDto());
     }
@@ -80,6 +82,7 @@ public sealed class AccountController(
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = allowedRoles;
+            ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
             return View(model);
         }
@@ -89,6 +92,7 @@ public sealed class AccountController(
         {
             ModelState.AddModelError(string.Empty, result.Error!);
             ViewBag.Roles = allowedRoles;
+            ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
             return View(model);
         }

@@ -13,6 +13,7 @@ namespace StaffManagement.Controllers;
 public sealed class EmployeeController(
     IEmployeeService employeeService,
     IAccountService accountService,
+    IDesignationService designationService,
     IDepartmentService departmentService,
     UserManager<ApplicationIdentity> userManager) : Controller
 {
@@ -29,6 +30,7 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Create()
     {
         ViewBag.Roles = accountService.GetCreatableRoles(GetCreatorRoles());
+        ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
         await LoadDepartmentsAsync();
         return View("~/Views/Account/Create.cshtml", new CreateAccountDto());
     }
@@ -46,6 +48,7 @@ public sealed class EmployeeController(
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = allowedRoles;
+            ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
             return View("~/Views/Account/Create.cshtml", model);
         }
@@ -55,6 +58,7 @@ public sealed class EmployeeController(
         {
             ModelState.AddModelError(string.Empty, result.Error!);
             ViewBag.Roles = allowedRoles;
+            ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
             return View("~/Views/Account/Create.cshtml", model);
         }
