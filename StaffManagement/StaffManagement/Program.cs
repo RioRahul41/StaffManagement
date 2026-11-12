@@ -47,6 +47,17 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.EnsureCreated();
+
+    if (!await dbContext.Departments.AnyAsync(department => department.IsActive))
+    {
+        dbContext.Departments.AddRange(
+            new Department { DepartmentName = "Human Resources" },
+            new Department { DepartmentName = "Finance" },
+            new Department { DepartmentName = "Information Technology" },
+            new Department { DepartmentName = "Operations" });
+
+        await dbContext.SaveChangesAsync();
+    }
 }
 
 // Configure the HTTP request pipeline.

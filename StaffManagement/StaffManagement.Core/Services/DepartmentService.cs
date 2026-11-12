@@ -11,6 +11,11 @@ public class DepartmentService(IDepartmentRepository departmentRepository) : IDe
         return departmentRepository.GetAllAsync();
     }
 
+    public Task<IReadOnlyList<Department>> GetAllForSelectionAsync()
+    {
+        return departmentRepository.GetAllForSelectionAsync();
+    }
+
     public Task<Department?> GetByIdAsync(int departmentId)
     {
         return departmentRepository.GetByIdAsync(departmentId);

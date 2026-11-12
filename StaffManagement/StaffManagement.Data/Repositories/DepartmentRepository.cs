@@ -15,6 +15,15 @@ public class DepartmentRepository(ApplicationDbContext context) : IDepartmentRep
             .OrderBy(d => d.DepartmentName)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyList<Department>> GetAllForSelectionAsync()
+    {
+        return await context.Departments
+            .AsNoTracking()
+            .OrderBy(d => d.DepartmentName)
+            .ToListAsync();
+    }
+
     public Task<Department?> GetByIdAsync(int departmentId)
     {
         return context.Departments

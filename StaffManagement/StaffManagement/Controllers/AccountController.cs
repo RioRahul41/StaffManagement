@@ -99,7 +99,8 @@ public sealed class AccountController(
 
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
     {
-        ViewBag.Departments = await departmentService.GetAllAsync();
+        ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
+            ?? Array.Empty<Department>();
         ViewBag.SelectedDepartmentId = selectedDepartmentId;
     }
 

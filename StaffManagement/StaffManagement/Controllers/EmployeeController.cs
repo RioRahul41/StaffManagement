@@ -13,6 +13,7 @@ namespace StaffManagement.Controllers;
 public sealed class EmployeeController(
     IEmployeeService employeeService,
     IAccountService accountService,
+    IDepartmentService departmentService,
     UserManager<ApplicationIdentity> userManager) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
@@ -25,9 +26,10 @@ public sealed class EmployeeController(
     }
 
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
         ViewBag.Roles = accountService.GetCreatableRoles(GetCreatorRoles());
+        await LoadDepartmentsAsync();
         return View("~/Views/Account/Create.cshtml", new CreateAccountDto());
     }
 
@@ -44,6 +46,7 @@ public sealed class EmployeeController(
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = allowedRoles;
+            await LoadDepartmentsAsync(model.DepartmentId);
             return View("~/Views/Account/Create.cshtml", model);
         }
 
@@ -52,6 +55,7 @@ public sealed class EmployeeController(
         {
             ModelState.AddModelError(string.Empty, result.Error!);
             ViewBag.Roles = allowedRoles;
+            await LoadDepartmentsAsync(model.DepartmentId);
             return View("~/Views/Account/Create.cshtml", model);
         }
 
@@ -120,4 +124,11 @@ public sealed class EmployeeController(
 
     private IReadOnlyCollection<string> GetCreatorRoles() =>
         RoleNames.All.Where(role => User.IsInRole(role)).ToArray();
+
+    private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
+    {
+        ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
+            ?? Array.Empty<Department>();
+        ViewBag.SelectedDepartmentId = selectedDepartmentId;
+    }
 }
