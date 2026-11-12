@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Iservices\" />
+    <Folder Include="DTOs\" />
+    <Folder Include="IRepositories\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StaffManagement.Data\StaffManagement.Data.csproj" />
+    <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />
+  </ItemGroup>
+
 </Project>
