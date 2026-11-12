@@ -15,4 +15,8 @@
     <ProjectReference Include="..\StaffManagement.Model\StaffManagement.Model.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.15" />
+  </ItemGroup>
+
 </Project>
