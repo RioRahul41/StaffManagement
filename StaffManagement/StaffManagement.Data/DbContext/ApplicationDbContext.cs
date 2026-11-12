@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using StaffManagement.Model.Entities;
-using System;
-using System.Collections.Generic;
 
 namespace StaffManagement.Data.DbContext
 {
@@ -13,6 +11,8 @@ namespace StaffManagement.Data.DbContext
         {
 
         }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Department> Departments { get; set; }
 
         public DbSet<Employee> Employees { get; set; } = null!;
 

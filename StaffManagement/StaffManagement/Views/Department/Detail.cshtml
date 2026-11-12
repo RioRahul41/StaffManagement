@@ -1,5 +1,19 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+@model StaffManagement.Model.Entities.Department
+
+@{ ViewData["Title"] = "Department Details"; }
+
+<h1>Department Details</h1>
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.DepartmentName</dd>
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@Model.Description</dd>
+    <dt class="col-sm-3">Created date</dt>
+    <dd class="col-sm-9">@Model.CreatedDate</dd>
+    <dt class="col-sm-3">Updated date</dt>
+    <dd class="col-sm-9">@(Model.UpdatedDate?.ToString() ?? "Not updated")</dd>
+    <dt class="col-sm-3">Active</dt>
+    <dd class="col-sm-9">@Model.IsActive</dd>
+</dl>
+<a asp-action="Edit" asp-route-id="@Model.DepartmentId" class="btn btn-primary">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back</a>

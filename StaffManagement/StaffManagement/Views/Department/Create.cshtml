@@ -1,5 +1,61 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+@model StaffManagement.Model.Entities.Department
+
+@{ ViewData["Title"] = "Create Department"; }
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary me-3">&larr; Back</a>
+            <div>
+                <h1 class="mb-1">Create Department</h1>
+                <p class="text-muted mb-0">Add a new department to your organization.</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <partial name="_DepartmentForm" model="Model" />
+                    <hr class="my-4" />
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Department</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const createForm = document.querySelector('form[action*="/Department/Create"]');
+        if (createForm) {
+            createForm.addEventListener('submit', function (event) {
+                if (!createForm.checkValidity()) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                Swal.fire({
+                    title: 'Create department?',
+                    text: 'The department will be added to the system.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, create it',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        createForm.submit();
+                    }
+                });
+            });
+        }
+    </script>
 }

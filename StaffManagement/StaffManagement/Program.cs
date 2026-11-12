@@ -6,6 +6,7 @@ using StaffManagement.Core.Services;
 using StaffManagement.Data.Repositories;
 using StaffManagement.Data.DbContext;
 using StaffManagement.IdentitySeeder;
+using StaffManagement.Data.Repositories;
 using StaffManagement.Model.Entities;
 using StaffManagement.Services;
 using StaffManagement.Core.IServices;
@@ -28,12 +29,22 @@ builder.Services
     })
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IAccountService, IdentityAccountService>();
 
 
 var app = builder.Build();
+
+// Create the local development database and schema when it does not exist.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

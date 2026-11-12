@@ -1,29 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
-namespace StaffManagement.Model.Entities
+namespace StaffManagement.Model.Entities;
+
+public class Department
 {
-    public class Department
+    [Key]
+    public int DepartmentId { get; set; }
 
+    [Required(ErrorMessage = "Department name is required.")]
+    [StringLength(100, ErrorMessage = "Department name cannot exceed 100 characters.")]
+    public string DepartmentName { get; set; } = string.Empty;
 
-    {
-        [Key]
-        public int Id { get; set; }
+    [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+    public string? Description { get; set; }
 
-        [Required(ErrorMessage = "Department name is required")]
-        [StringLength(50, MinimumLength = 2,
-            ErrorMessage = "Department name must be 2 to 50 characters")]
-        public string DepartmentName { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        [Required(ErrorMessage = "Description is required")]
-        public string Description { get; set; } = string.Empty;
+    public DateTime? UpdatedDate { get; set; }
 
-        public bool IsActive { get; set; } = true;
-
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-
-        public DateTime? UpdatedDate { get; set; }
-    }
+    public bool IsActive { get; set; } = true;
 }

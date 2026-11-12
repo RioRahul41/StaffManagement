@@ -1,5 +1,12 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+@model StaffManagement.Model.Entities.Department
+
+@{ ViewData["Title"] = "Delete Department"; }
+
+<h1>Delete Department</h1>
+<div class="alert alert-warning">
+    Are you sure you want to deactivate <strong>@Model.DepartmentName</strong>?
+</div>
+<form asp-action="Delete" asp-route-id="@Model.DepartmentId" method="post">
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
