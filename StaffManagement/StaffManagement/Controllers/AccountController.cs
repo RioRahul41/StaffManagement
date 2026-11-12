@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IServices;
+using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
 using StaffManagement.Model.Entities;
 
@@ -11,7 +12,8 @@ namespace StaffManagement.Controllers;
 public sealed class AccountController(
     SignInManager<ApplicationIdentity> signInManager,
     UserManager<ApplicationIdentity> userManager,
-    IAccountService accountService) : Controller
+    IAccountService accountService,
+    IDepartmentService departmentService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -57,10 +59,11 @@ public sealed class AccountController(
     }
 
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
         var roles = GetCreatorRoles();
         ViewBag.Roles = accountService.GetCreatableRoles(roles);
+        await LoadDepartmentsAsync();
         return View(new CreateAccountDto());
     }
 
@@ -77,6 +80,7 @@ public sealed class AccountController(
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = allowedRoles;
+            await LoadDepartmentsAsync(model.DepartmentId);
             return View(model);
         }
 
@@ -85,11 +89,18 @@ public sealed class AccountController(
         {
             ModelState.AddModelError(string.Empty, result.Error!);
             ViewBag.Roles = allowedRoles;
+            await LoadDepartmentsAsync(model.DepartmentId);
             return View(model);
         }
 
         TempData["Success"] = $"{model.FirstName} {model.LastName} was created with the {model.Role} role.";
         return RedirectToAction("Index", "Employee");
+    }
+
+    private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
+    {
+        ViewBag.Departments = await departmentService.GetAllAsync();
+        ViewBag.SelectedDepartmentId = selectedDepartmentId;
     }
 
     private IReadOnlyCollection<string> GetCreatorRoles() =>

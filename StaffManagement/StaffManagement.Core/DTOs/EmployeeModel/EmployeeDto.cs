@@ -20,6 +20,9 @@ public class EmployeeDto
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
     public string? Phone { get; set; }
 
+    [Required(ErrorMessage = "Department is required.")]
+    public int? DepartmentId { get; set; }
+
     [StringLength(100)]
     public string? Department { get; set; }
 

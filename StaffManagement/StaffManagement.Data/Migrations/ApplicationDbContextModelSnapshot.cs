@@ -330,6 +330,9 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Designation")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -377,6 +380,8 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("IdentityUserId");
 
@@ -436,6 +441,11 @@ namespace StaffManagement.Data.Migrations
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
                 {
+                    b.HasOne("StaffManagement.Model.Entities.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StaffManagement.Model.Entities.ApplicationIdentity", "IdentityUser")
                         .WithMany()
                         .HasForeignKey("IdentityUserId");

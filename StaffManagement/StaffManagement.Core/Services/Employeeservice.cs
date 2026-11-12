@@ -53,6 +53,7 @@ namespace StaffManagement.Core.Services
             employee.LastName = model.LastName;
             employee.Email = model.Email;
             employee.Phone = model.Phone;
+            employee.DepartmentId = model.DepartmentId;
             employee.Department = model.Department;
             employee.Location = model.Location;
             employee.DOB = model.DOB;
@@ -86,6 +87,7 @@ namespace StaffManagement.Core.Services
             LastName = employee.LastName,
             Email = employee.Email,
             Phone = employee.Phone,
+            DepartmentId = employee.DepartmentId,
             Department = employee.Department,
             Location = employee.Location,
             DOB = employee.DOB,
@@ -102,6 +104,7 @@ namespace StaffManagement.Core.Services
             LastName = model.LastName,
             Email = model.Email,
             Phone = model.Phone,
+            DepartmentId = model.DepartmentId,
             Department = model.Department,
             Location = model.Location,
             DOB = model.DOB,

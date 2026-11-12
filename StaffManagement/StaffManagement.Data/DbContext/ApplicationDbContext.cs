@@ -24,6 +24,12 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne<Department>()
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
