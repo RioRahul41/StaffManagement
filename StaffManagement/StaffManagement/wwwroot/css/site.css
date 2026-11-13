@@ -67,21 +67,102 @@ body {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: .35rem;
+  gap: .55rem;
 }
 
 .sidebar-link {
-  display: block;
-  padding: .7rem .85rem;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-height: 42px;
+  padding: .6rem .75rem;
   border-radius: .5rem;
   color: rgba(255, 255, 255, .8);
   text-decoration: none;
 }
 
+.sidebar-link.active,
 .sidebar-link:hover,
 .sidebar-link:focus {
   color: #fff;
-  background: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .14);
+}
+
+.sidebar-link.active {
+  box-shadow: inset 3px 0 #67a8ff;
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar-group {
+  border-radius: .55rem;
+}
+
+.sidebar-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-height: 42px;
+  padding: .6rem .75rem;
+  border-radius: .5rem;
+  color: rgba(255, 255, 255, .62);
+  cursor: pointer;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .055em;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.sidebar-group-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-group-toggle:hover,
+.sidebar-group-toggle:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+  outline: none;
+}
+
+.sidebar-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .18s ease;
+}
+
+.sidebar-group[open] .sidebar-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: 0 0 0 .45rem;
+}
+
+.sidebar-submenu .sidebar-link {
+  min-height: 39px;
+  padding-top: .45rem;
+  padding-bottom: .45rem;
+  font-size: .93rem;
 }
 
 .sidebar-logout {
@@ -165,8 +246,11 @@ body.dark-mode .form-control::placeholder { color: #9ca3af; }
   }
 
   .sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+    gap: .2rem;
+  }
+
+  .sidebar-group {
+    width: 100%;
   }
 
   .sidebar-link {
