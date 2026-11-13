@@ -1,7 +1,8 @@
 @model IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto>
 @{
     ViewData["Title"] = "Employees";
-    var canManage = User.IsInRole("Admin") || User.IsInRole("HR") || User.IsInRole("Manager");
+    var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
+    var canDelete = User.IsInRole("Admin");
     var canCreate = User.IsInRole("Admin") || User.IsInRole("HR");
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -50,7 +51,7 @@ else
                 <td>@(employee.AssignedProjects.Count == 0 ? "None" : string.Join(", ", employee.AssignedProjects.Select(project => project.ProjectName)))</td>
                 <td>@if (employee.IdentityUserId is null) { <span class="badge text-bg-warning">Not linked</span> } else { <span class="badge text-bg-success">Linked</span> }</td>
                 <td>@if (employee.EmpIsActive) { <span class="badge text-bg-success">Active</span> } else { <span class="badge text-bg-secondary">Inactive</span> }</td>
-                <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">Details</a>@if (canManage) { <a asp-action="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a><a asp-action="Delete" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a> }@if (User.IsInRole("Admin") || User.IsInRole("Manager")) { <a asp-action="AssignProjects" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-success ms-1">Assign projects</a> }</td>
+                <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">Details</a>@if (canEdit) { <a asp-action="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a> }@if (canDelete) { <a asp-action="Delete" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a> }@if (User.IsInRole("Admin") || User.IsInRole("Manager")) { <a asp-action="AssignProjects" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-success ms-1">Assign projects</a> }</td>
             </tr>
         }
         </tbody>

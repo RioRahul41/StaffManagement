@@ -19,6 +19,9 @@ html {
 
 body {
   margin-bottom: 0;
+  background: #f5f7fb;
+  color: #172033;
+  transition: background-color .2s ease, color .2s ease;
 }
 
 .app-shell {
@@ -90,6 +93,57 @@ body {
   flex: 1;
   min-width: 0;
 }
+
+.topbar {
+  min-height: 76px;
+  background: #fff;
+  border-bottom: 1px solid #e5e9f2;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .25rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.profile-trigger::after { margin-left: .2rem; }
+.profile-trigger-text { line-height: 1.15; }
+.profile-trigger-text strong, .profile-trigger-text small { display: block; }
+.profile-trigger-text small { margin-top: .2rem; color: #6c757d; }
+
+.profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  background: #1b6ec2;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.profile-avatar-lg { width: 64px; height: 64px; flex-basis: 64px; font-size: 1.25rem; }
+.profile-menu { min-width: 245px; padding: .45rem 0; }
+.profile-menu .dropdown-item { padding: .6rem 1rem; }
+.menu-icon { display: inline-block; width: 1.5rem; font-size: 1rem; }
+.profile-card { max-width: 850px; border: 0; box-shadow: 0 .25rem 1rem rgba(23, 32, 51, .06); }
+.password-card { max-width: 580px; }
+.profile-heading { display: flex; align-items: center; gap: 1rem; }
+
+body.dark-mode { background: #172033; color: #e5e7eb; }
+body.dark-mode .topbar, body.dark-mode .card, body.dark-mode .dropdown-menu { background: #202b40; color: #e5e7eb; border-color: rgba(255, 255, 255, .15); }
+body.dark-mode .text-muted, body.dark-mode .profile-trigger-text small { color: #9ca3af !important; }
+body.dark-mode .dropdown-item { color: #e5e7eb; }
+body.dark-mode .dropdown-item:hover { background: #374151; }
+body.dark-mode .form-control, body.dark-mode .form-select { background: #172033; color: #e5e7eb; border-color: #4b5563; }
+body.dark-mode .form-control::placeholder { color: #9ca3af; }
 
 @media (max-width: 767.98px) {
   .app-shell {

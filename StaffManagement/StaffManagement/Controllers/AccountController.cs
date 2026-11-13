@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
-using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
 using StaffManagement.Model.Entities;
 
@@ -14,6 +13,7 @@ public sealed class AccountController(
     SignInManager<ApplicationIdentity> signInManager,
     UserManager<ApplicationIdentity> userManager,
     IAccountService accountService,
+    IEmployeeService employeeService,
     IDesignationService designationService, IDepartmentService departmentService) : Controller
 {
     [AllowAnonymous]
@@ -55,6 +55,112 @@ public sealed class AccountController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        await signInManager.SignOutAsync();
+        return RedirectToAction(nameof(Login));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> Profile(CancellationToken cancellationToken)
+    {
+        var employee = await GetCurrentEmployeeAsync(cancellationToken);
+        return employee is null ? NotFound() : View(employee);
+    }
+
+    [Authorize]
+    public async Task<IActionResult> EditProfile(CancellationToken cancellationToken)
+    {
+        var employee = await GetCurrentEmployeeAsync(cancellationToken);
+        return employee is null ? NotFound() : View(employee);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditProfile(EmployeeDto model, CancellationToken cancellationToken)
+    {
+        var currentEmployee = await GetCurrentEmployeeAsync(cancellationToken);
+        if (currentEmployee is null)
+            return NotFound();
+
+        model.Id = currentEmployee.Id;
+        model.IdentityUserId = currentEmployee.IdentityUserId;
+        model.DepartmentId = currentEmployee.DepartmentId;
+        model.Department = currentEmployee.Department;
+        model.Designation = currentEmployee.Designation;
+        model.Salary = currentEmployee.Salary;
+        model.ProjectIds = currentEmployee.ProjectIds;
+        model.EmpIsActive = currentEmployee.EmpIsActive;
+
+        // These employee-management fields are intentionally not editable in the
+        // self-service profile form. Their values are restored above, so remove
+        // binder validation entries for fields that were not posted by the form.
+        ModelState.Remove(nameof(EmployeeDto.DepartmentId));
+        ModelState.Remove(nameof(EmployeeDto.Department));
+        ModelState.Remove(nameof(EmployeeDto.Designation));
+        ModelState.Remove(nameof(EmployeeDto.Salary));
+        ModelState.Remove(nameof(EmployeeDto.ProjectIds));
+        ModelState.Remove(nameof(EmployeeDto.EmpIsActive));
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await employeeService.UpdateAsync(model, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!);
+            return View(model);
+        }
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is not null)
+        {
+            user.Email = model.Email;
+            user.UserName = model.Email;
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.PhoneNumber = model.Phone;
+            user.Location = model.Location;
+
+            var identityResult = await userManager.UpdateAsync(user);
+            if (!identityResult.Succeeded)
+            {
+                foreach (var error in identityResult.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                return View(model);
+            }
+
+            await signInManager.RefreshSignInAsync(user);
+        }
+
+        TempData["Success"] = "Your profile was updated.";
+        return RedirectToAction(nameof(Profile));
+    }
+
+    [Authorize]
+    public IActionResult ChangePassword() => View(new ChangePasswordDto());
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is null)
+            return Challenge();
+
+        var result = await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            return View(model);
+        }
+
         await signInManager.SignOutAsync();
         return RedirectToAction(nameof(Login));
     }
@@ -115,4 +221,7 @@ public sealed class AccountController(
         !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
             ? Redirect(returnUrl)
             : RedirectToAction("Index", "Home")!;
+
+    private Task<EmployeeDto?> GetCurrentEmployeeAsync(CancellationToken cancellationToken) =>
+        employeeService.GetByIdentityUserIdAsync(userManager.GetUserId(User)!, cancellationToken);
 }

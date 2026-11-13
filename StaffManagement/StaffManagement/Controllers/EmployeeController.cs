@@ -68,19 +68,28 @@ public sealed class EmployeeController(
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager)]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
-        await LoadProjectChoicesAsync(employee?.ProjectIds);
+        await LoadEditChoicesAsync(employee?.ProjectIds);
         return employee is null ? NotFound() : View(employee);
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EmployeeDto model, CancellationToken cancellationToken)
     {
+        if (model.DepartmentId.HasValue)
+        {
+            var department = await departmentService.GetByIdAsync(model.DepartmentId.Value);
+            if (department is null)
+                ModelState.AddModelError(nameof(model.DepartmentId), "Select a valid department.");
+            else
+                model.Department = department.DepartmentName;
+        }
+
         if (!CanAssignProjects())
         {
             var existing = await employeeService.GetByIdAsync(model.Id, cancellationToken);
@@ -92,7 +101,7 @@ public sealed class EmployeeController(
 
         if (!ModelState.IsValid)
         {
-            await LoadProjectChoicesAsync(model.ProjectIds);
+            await LoadEditChoicesAsync(model.ProjectIds);
             return View(model);
         }
 
@@ -100,7 +109,7 @@ public sealed class EmployeeController(
         if (!result.Succeeded)
         {
             ModelState.AddModelError(string.Empty, result.Error!);
-            await LoadProjectChoicesAsync(model.ProjectIds);
+            await LoadEditChoicesAsync(model.ProjectIds);
             return View(model);
         }
 
@@ -198,5 +207,15 @@ public sealed class EmployeeController(
 
         ViewBag.Projects = await projectService.GetAllAsync();
         ViewBag.SelectedProjectIds = selectedProjectIds ?? Array.Empty<int>();
+    }
+
+    private async Task LoadEditChoicesAsync(IReadOnlyCollection<int>? selectedProjectIds = null)
+    {
+        await LoadProjectChoicesAsync(selectedProjectIds);
+        ViewBag.Departments = await departmentService.GetAllForSelectionAsync();
+        ViewBag.Designations = (await designationService.GetAllAsync())
+            .Where(designation => designation.IsActive)
+            .OrderBy(designation => designation.DesignationName)
+            .ToList();
     }
 }
