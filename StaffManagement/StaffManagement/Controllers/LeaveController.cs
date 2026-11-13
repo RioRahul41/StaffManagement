@@ -98,13 +98,13 @@ public sealed class LeaveController(
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Manager)]
+    [Authorize(Roles = RoleNames.Manager + "," + RoleNames.Hr)]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Approve(int id, CancellationToken cancellationToken) =>
         ReviewAsync(id, LeaveStatus.Approved, cancellationToken);
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Manager)]
+    [Authorize(Roles = RoleNames.Manager + "," + RoleNames.Hr)]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Reject(int id, CancellationToken cancellationToken) =>
         ReviewAsync(id, LeaveStatus.Rejected, cancellationToken);
@@ -146,7 +146,7 @@ public sealed class LeaveController(
     }
 
     private bool CanReviewLeaves() =>
-        User.IsInRole(RoleNames.Manager);
+        User.IsInRole(RoleNames.Manager) || User.IsInRole(RoleNames.Hr);
 
     private bool CanViewAllLeaves() =>
         User.IsInRole(RoleNames.Hr) || User.IsInRole(RoleNames.Admin);
