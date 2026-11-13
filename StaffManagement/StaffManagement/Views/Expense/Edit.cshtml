@@ -1,0 +1,29 @@
+@using StaffManagement.Model.Enums
+@model StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseDto
+@{
+    ViewData["Title"] = "Edit Expense";
+    var canApprove = User.IsInRole("Admin") || User.IsInRole("HR");
+}
+<h1>Edit employee expense</h1>
+<form asp-action="Edit" method="post" class="row g-3">
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="EmployeeId" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><input asp-for="FirstName" class="form-control" readonly /></div>
+    <div class="col-md-6"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /><span asp-validation-for="Title" class="text-danger"></span></div>
+    <div class="col-md-3"><label asp-for="FromDate" class="form-label"></label><input asp-for="FromDate" class="form-control" /><span asp-validation-for="FromDate" class="text-danger"></span></div>
+    <div class="col-md-3"><label asp-for="ToDate" class="form-label"></label><input asp-for="ToDate" class="form-control" /><span asp-validation-for="ToDate" class="text-danger"></span></div>
+    <div class="col-md-4"><label asp-for="Amount" class="form-label"></label><input asp-for="Amount" class="form-control" type="number" min="0.01" step="0.01" /><span asp-validation-for="Amount" class="text-danger"></span></div>
+    @if (canApprove)
+    {
+        <div class="col-md-4"><label asp-for="Status" class="form-label"></label><select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<ExpenseStatus>())"></select></div>
+        <div class="col-12"><label asp-for="ApprovalNotes" class="form-label"></label><textarea asp-for="ApprovalNotes" class="form-control" rows="3"></textarea><span asp-validation-for="ApprovalNotes" class="text-danger"></span></div>
+    }
+    else
+    {
+        <div class="col-md-4"><label class="form-label">Status</label><input value="@Model.Status" class="form-control" readonly /><input asp-for="Status" type="hidden" /></div>
+        <div class="col-12"><label class="form-label">Approval notes</label><textarea class="form-control" rows="3" readonly>@Model.ApprovalNotes</textarea></div>
+    }
+    <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
