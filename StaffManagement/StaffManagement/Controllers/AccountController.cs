@@ -14,7 +14,9 @@ public sealed class AccountController(
     SignInManager<ApplicationIdentity> signInManager,
     UserManager<ApplicationIdentity> userManager,
     IAccountService accountService,
-    IDesignationService designationService, IDepartmentService departmentService) : Controller
+    IDesignationService designationService,
+    IDepartmentService departmentService,
+    IEmployeeService employeeService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -66,6 +68,7 @@ public sealed class AccountController(
         ViewBag.Roles = accountService.GetCreatableRoles(roles);
         ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
         await LoadDepartmentsAsync();
+        await LoadReportingPersonsAsync();
         return View(new CreateAccountDto());
     }
 
@@ -84,6 +87,7 @@ public sealed class AccountController(
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
         }
 
@@ -94,11 +98,25 @@ public sealed class AccountController(
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
         }
 
         TempData["Success"] = $"{model.FirstName} {model.LastName} was created with the {model.Role} role.";
         return RedirectToAction("Index", "Employee");
+    }
+
+    private async Task LoadReportingPersonsAsync(int? selectedReportingPersonId = null)
+    {
+        var reportingUsers = await userManager.GetUsersInRoleAsync(RoleNames.Manager);
+        var reportingUserIds = reportingUsers.Select(user => user.Id).ToHashSet(StringComparer.Ordinal);
+
+        ViewBag.Managers = (await employeeService.GetAllAsync())
+            .Where(employee => employee.EmpIsActive &&
+                employee.IdentityUserId is not null &&
+                reportingUserIds.Contains(employee.IdentityUserId))
+            .ToList();
+        ViewBag.SelectedReportingPersonId = selectedReportingPersonId;
     }
 
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)

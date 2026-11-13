@@ -1,0 +1,148 @@
+@using StaffManagement.Core.DTOs
+@using StaffManagement.Model.Enums
+@model PagedResultDto<StaffManagement.Core.DTOs.LeaveModel.LeaveRequestDto>
+@{
+    ViewData["Title"] = "Leave management";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">LEAVE MANAGEMENT</p>
+        <h1 class="mb-1">Leave requests</h1>
+        <p class="text-muted mb-0">Review your leave history and requests assigned to you.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Apply for leave</a>
+</div>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <span class="text-muted">Total leave applications</span>
+        <strong class="fs-4">@Model.TotalCount</strong>
+    </div>
+</div>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+}
+<form asp-action="Index" method="get" class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6">
+                <label for="search" class="form-label">Search</label>
+                <input id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Employee name or reason" />
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    @foreach (var value in Enum.GetValues<LeaveStatus>())
+                    {
+                        <option value="@value" selected="@(ViewBag.Status?.ToString() == value.ToString())">@value</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="leaveType" class="form-label">Leave type</label>
+                <select id="leaveType" name="leaveType" class="form-select">
+                    <option value="">All types</option>
+                    @foreach (var value in Enum.GetValues<LeaveType>())
+                    {
+                        <option value="@value" selected="@(ViewBag.LeaveType?.ToString() == value.ToString())">@value</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="fromDate" class="form-label">From date</label>
+                <input id="fromDate" name="fromDate" type="date" value="@ViewBag.FromDate" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="toDate" class="form-label">To date</label>
+                <input id="toDate" name="toDate" type="date" value="@ViewBag.ToDate" class="form-control" />
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Search / Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Applied count</th><th>Reason</th><th>Document</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+        <tbody>
+        @if (Model.Items.Count == 0)
+        {
+            <tr><td colspan="9" class="text-center text-muted py-4">No leave requests found.</td></tr>
+        }
+        else
+        {
+            @foreach (var request in Model.Items)
+            {
+                <tr>
+                    <td>@request.EmployeeName</td>
+                    <td>@request.LeaveType</td>
+                    <td>@request.FromDate.ToString("yyyy-MM-dd")</td>
+                    <td>@request.ToDate.ToString("yyyy-MM-dd")</td>
+                    <td>@request.AppliedDays @(request.AppliedDays == 1 ? "day" : "days")</td>
+                    <td>@request.Reason</td>
+                    <td>@if (!string.IsNullOrWhiteSpace(request.DocumentPath)) { <a asp-action="Document" asp-route-id="@request.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
+                    <td><span class="badge @(request.Status == LeaveStatus.Approved ? "text-bg-success" : request.Status == LeaveStatus.Rejected ? "text-bg-danger" : "text-bg-warning")">@request.Status</span></td>
+                    <td class="text-end text-nowrap">
+                        @if (request.CanReview)
+                        {
+                            <form asp-action="Approve" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Approve this leave?" data-confirm-text="This request will be marked as approved.">
+                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                            </form>
+                            <form asp-action="Reject" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Reject this leave?" data-confirm-text="This request will be marked as rejected.">
+                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">View only</span>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+</table></div></div>
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3" aria-label="Leave request pages"><ul class="pagination">
+        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)" asp-route-search="@ViewBag.Search" asp-route-status="@ViewBag.Status" asp-route-leaveType="@ViewBag.LeaveType" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">Previous</a></li>
+        @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+        {
+            <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@pageNumber" asp-route-search="@ViewBag.Search" asp-route-status="@ViewBag.Status" asp-route-leaveType="@ViewBag.LeaveType" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">@pageNumber</a></li>
+        }
+        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)" asp-route-search="@ViewBag.Search" asp-route-status="@ViewBag.Status" asp-route-leaveType="@ViewBag.LeaveType" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">Next</a></li>
+    </ul></nav>
+}
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @if (TempData["Success"] is string success)
+    {
+        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
+    }
+    <script>
+        document.querySelectorAll('.leave-review-form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const currentForm = this;
+                Swal.fire({
+                    title: currentForm.dataset.confirmTitle,
+                    text: currentForm.dataset.confirmText,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: currentForm.action.includes('/Reject') ? '#dc3545' : '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Confirm',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (result.isConfirmed) currentForm.submit();
+                });
+            });
+        });
+    </script>
+}

@@ -83,6 +83,10 @@ namespace StaffManagement.Core.Services
         {
             Id = employee.Id,
             IdentityUserId = employee.IdentityUserId,
+            ReportingPersonId = employee.ReportingPersonId,
+            ReportingPersonName = employee.ReportingPerson is null
+                ? null
+                : $"{employee.ReportingPerson.FirstName} {employee.ReportingPerson.LastName}",
             FirstName = employee.FirstName,
             LastName = employee.LastName,
             Email = employee.Email,
@@ -100,6 +104,7 @@ namespace StaffManagement.Core.Services
         private static Employee Map(EmployeeDto model) => new()
         {
             Id = model.Id,
+            ReportingPersonId = model.ReportingPersonId,
             FirstName = model.FirstName,
             LastName = model.LastName,
             Email = model.Email,

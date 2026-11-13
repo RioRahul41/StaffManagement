@@ -32,6 +32,7 @@ public sealed class EmployeeController(
         ViewBag.Roles = accountService.GetCreatableRoles(GetCreatorRoles());
         ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
         await LoadDepartmentsAsync();
+        await LoadReportingPersonsAsync();
         return View("~/Views/Account/Create.cshtml", new CreateAccountDto());
     }
 
@@ -44,6 +45,12 @@ public sealed class EmployeeController(
         var allowedRoles = accountService.GetCreatableRoles(creatorRoles);
         if (!allowedRoles.Contains(model.Role, StringComparer.OrdinalIgnoreCase))
             ModelState.AddModelError(nameof(model.Role), "You cannot create an account with this role.");
+
+        var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
+        if (string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase) && !model.ReportingPersonId.HasValue)
+            ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person to this employee.");
+        else if (model.ReportingPersonId.HasValue && !reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value))
+            ModelState.AddModelError(nameof(model.ReportingPersonId), "Select an active employee with the Admin, HR, or Manager role.");
 
         if (!ModelState.IsValid)
         {
@@ -60,6 +67,7 @@ public sealed class EmployeeController(
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View("~/Views/Account/Create.cshtml", model);
         }
 
@@ -71,6 +79,7 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+        await LoadReportingPersonsAsync(employee?.ReportingPersonId);
         return employee is null ? NotFound() : View(employee);
     }
 
@@ -79,13 +88,34 @@ public sealed class EmployeeController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EmployeeDto model, CancellationToken cancellationToken)
     {
+        var existingEmployee = await employeeService.GetByIdAsync(model.Id, cancellationToken);
+        if (existingEmployee is null)
+            return NotFound();
+
+        var canAssignReportingPerson = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+        if (!canAssignReportingPerson)
+            model.ReportingPersonId = existingEmployee.ReportingPersonId;
+        else
+        {
+            var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
+            if (model.ReportingPersonId.HasValue &&
+                (!reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value) || model.ReportingPersonId == model.Id))
+            {
+                ModelState.AddModelError(nameof(model.ReportingPersonId), "Select a different active employee with the Admin, HR, or Manager role.");
+            }
+        }
+
         if (!ModelState.IsValid)
+        {
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
+        }
 
         var result = await employeeService.UpdateAsync(model, cancellationToken);
         if (!result.Succeeded)
         {
             ModelState.AddModelError(string.Empty, result.Error!);
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
         }
 
@@ -134,5 +164,26 @@ public sealed class EmployeeController(
         ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
             ?? Array.Empty<Department>();
         ViewBag.SelectedDepartmentId = selectedDepartmentId;
+    }
+
+    private async Task<IReadOnlyList<EmployeeDto>> LoadReportingPersonsAsync(int? selectedReportingPersonId = null)
+    {
+        var reportingRoles = new[] { RoleNames.Admin, RoleNames.Hr, RoleNames.Manager };
+        var reportingUserIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var role in reportingRoles)
+        {
+            var users = await userManager.GetUsersInRoleAsync(role);
+            reportingUserIds.UnionWith(users.Select(user => user.Id));
+        }
+
+        var reportingPersons = (await employeeService.GetAllAsync())
+            .Where(employee => employee.EmpIsActive &&
+                employee.IdentityUserId is not null &&
+                reportingUserIds.Contains(employee.IdentityUserId))
+            .ToList();
+
+        ViewBag.Managers = reportingPersons;
+        ViewBag.SelectedReportingPersonId = selectedReportingPersonId;
+        return reportingPersons;
     }
 }

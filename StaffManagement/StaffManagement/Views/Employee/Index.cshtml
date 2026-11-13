@@ -30,7 +30,7 @@
 else
 {
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Department</th><th>Account</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+        <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Department</th><th>Reporting person</th><th>Account</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
         <tbody>
         @foreach (var employee in Model)
         {
@@ -38,6 +38,7 @@ else
                 <td><strong>@employee.FirstName @employee.LastName</strong><br /><small class="text-muted">@employee.Designation</small></td>
                 <td>@employee.Email</td>
                 <td>@(employee.Department ?? "-")</td>
+                <td>@(employee.ReportingPersonName ?? "-")</td>
                 <td>@if (employee.IdentityUserId is null) { <span class="badge text-bg-warning">Not linked</span> } else { <span class="badge text-bg-success">Linked</span> }</td>
                 <td>@if (employee.EmpIsActive) { <span class="badge text-bg-success">Active</span> } else { <span class="badge text-bg-secondary">Inactive</span> }</td>
                 <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">Details</a>@if (canManage) { <a asp-action="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a><a asp-action="Delete" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a> }</td>

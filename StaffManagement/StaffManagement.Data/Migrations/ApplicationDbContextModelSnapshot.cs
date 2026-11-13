@@ -409,6 +409,9 @@ namespace StaffManagement.Data.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ReportingPersonId")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("Salary")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -421,6 +424,8 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("IdentityUserId");
+
+                    b.HasIndex("ReportingPersonId");
 
                     b.ToTable("Employees");
                 });
@@ -474,6 +479,54 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("EmployeeExpenses");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.LeaveRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppliedDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FromDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LeaveType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ToDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Timesheet", b =>
@@ -593,10 +646,28 @@ namespace StaffManagement.Data.Migrations
                         .WithMany()
                         .HasForeignKey("IdentityUserId");
 
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "ReportingPerson")
+                        .WithMany()
+                        .HasForeignKey("ReportingPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("IdentityUser");
+
+                    b.Navigation("ReportingPerson");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.LeaveRequest", b =>
                 {
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
                         .WithMany()

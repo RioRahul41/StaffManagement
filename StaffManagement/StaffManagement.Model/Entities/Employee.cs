@@ -59,6 +59,10 @@ namespace StaffManagement.Model.Entities
         // Identity User relationship
         public string? IdentityUserId { get; set; }
 
+        public int? ReportingPersonId { get; set; }
+
+        public Employee? ReportingPerson { get; set; }
+
         [StringLength(100)]
         public string? Designation { get; set; }
         public ApplicationIdentity IdentityUser { get; set; } = null!;

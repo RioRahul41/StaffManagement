@@ -23,6 +23,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<EmployeeExpense> EmployeeExpenses { get; set; } = null!;
 
+        public DbSet<LeaveRequest> LeaveRequests { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -35,6 +37,12 @@ namespace StaffManagement.Data.DbContext
                 .HasOne<Department>()
                 .WithMany()
                 .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(employee => employee.ReportingPerson)
+                .WithMany()
+                .HasForeignKey(employee => employee.ReportingPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Timesheet>()
@@ -52,6 +60,12 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<EmployeeExpense>()
                 .Property(expense => expense.Amount)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<LeaveRequest>()
+                .HasOne(request => request.Employee)
+                .WithMany()
+                .HasForeignKey(request => request.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

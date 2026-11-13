@@ -8,6 +8,10 @@ public class EmployeeDto
     public int Id { get; set; }
     public string? IdentityUserId { get; set; }
 
+    public int? ReportingPersonId { get; set; }
+
+    public string? ReportingPersonName { get; set; }
+
     [Required, StringLength(50)]
     public string FirstName { get; set; } = string.Empty;
 

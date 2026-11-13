@@ -10,6 +10,7 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
     public async Task<IReadOnlyList<Employee>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await dbContext.Employees
             .AsNoTracking()
+            .Include(employee => employee.ReportingPerson)
             .Where(employee => !employee.EmpIsDeleted)
             .OrderBy(employee => employee.LastName)
             .ThenBy(employee => employee.FirstName)
@@ -18,11 +19,13 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
     public Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         dbContext.Employees
             .Include(employee => employee.IdentityUser)
+            .Include(employee => employee.ReportingPerson)
             .FirstOrDefaultAsync(employee => employee.Id == id && !employee.EmpIsDeleted, cancellationToken);
 
     public Task<Employee?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default) =>
         dbContext.Employees
             .Include(employee => employee.IdentityUser)
+            .Include(employee => employee.ReportingPerson)
             .FirstOrDefaultAsync(employee => employee.IdentityUserId == identityUserId && !employee.EmpIsDeleted, cancellationToken);
 
     public async Task AddAsync(Employee employee, CancellationToken cancellationToken = default) =>

@@ -1,0 +1,65 @@
+@using StaffManagement.Model.Enums
+@model StaffManagement.Core.DTOs.LeaveModel.CreateLeaveRequestDto
+@{
+    ViewData["Title"] = "Apply for leave";
+}
+<h1>Apply for leave</h1>
+<p class="text-muted">Leave can be requested for today or a future date. Sick leave lasting 2 or more days requires a supporting document.</p>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3" id="leave-form">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="col-md-6">
+        <label asp-for="LeaveType" class="form-label"></label>
+        <select asp-for="LeaveType" class="form-select" asp-items="@(Html.GetEnumSelectList<LeaveType>())" data-sick-value="@((int)LeaveType.Sick)"></select>
+        <span asp-validation-for="LeaveType" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="FromDate" class="form-label"></label>
+        <input asp-for="FromDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="FromDate" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="ToDate" class="form-label"></label>
+        <input asp-for="ToDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="ToDate" class="text-danger"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Reason" class="form-label"></label>
+        <textarea asp-for="Reason" class="form-control" rows="3" maxlength="250"></textarea>
+        <span asp-validation-for="Reason" class="text-danger"></span>
+    </div>
+    <div class="col-md-8" id="document-section" hidden>
+        <label class="form-label" for="document">Supporting document <span class="text-danger">(required for sick leave of 2+ days)</span></label>
+        <input class="form-control" type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" />
+        <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
+        <span class="text-danger">@Html.ValidationMessage("document")</span>
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary" type="submit">Submit application</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const fromDate = document.getElementById('FromDate');
+            const toDate = document.getElementById('ToDate');
+            const leaveType = document.getElementById('LeaveType');
+            const documentInput = document.getElementById('document');
+            const documentSection = document.getElementById('document-section');
+            const sickLeaveValue = leaveType.dataset.sickValue;
+            const updateDocumentVisibility = function () {
+                const start = fromDate.value ? new Date(fromDate.value + 'T00:00:00') : null;
+                const end = toDate.value ? new Date(toDate.value + 'T00:00:00') : null;
+                const needsDocument = leaveType.value === sickLeaveValue && start && end && end >= start && (end - start) / 86400000 + 1 >= 2;
+                documentSection.hidden = !needsDocument;
+                documentInput.required = Boolean(needsDocument);
+                if (!needsDocument) documentInput.value = '';
+            };
+            leaveType.addEventListener('change', updateDocumentVisibility);
+            fromDate.addEventListener('change', updateDocumentVisibility);
+            toDate.addEventListener('change', updateDocumentVisibility);
+            updateDocumentVisibility();
+        })();
+    </script>
+}

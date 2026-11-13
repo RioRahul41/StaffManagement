@@ -42,6 +42,8 @@ builder.Services.AddScoped<ITimesheetRepository, TimesheetRepository>();
 builder.Services.AddScoped<ITimesheetService, TimesheetService>();
 builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository>();
 builder.Services.AddScoped<IEmployeeExpenseService, EmployeeExpenseService>();
+builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
+builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 
 
 

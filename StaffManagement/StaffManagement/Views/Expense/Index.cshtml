@@ -11,14 +11,6 @@
     </div>
     <a asp-action="Create" class="btn btn-primary">Add expense</a>
 </div>
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success">@success</div>
-}
-@if (TempData["Error"] is string error)
-{
-    <div class="alert alert-danger">@error</div>
-}
 @if (Model.Items.Count == 0)
 {
     <div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h4>No expense records found</h4><p class="text-muted">Add an expense record to begin.</p><a asp-action="Create" class="btn btn-primary">Add expense</a></div></div>
@@ -53,5 +45,17 @@ else
             }
             <li class="page-item @(!Model.HasNextPage ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">Next</a></li>
         </ul></nav>
+    }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @if (TempData["Success"] is string success)
+    {
+        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
     }
 }
