@@ -64,8 +64,6 @@
     {
         <div class="col-md-6"><label class="form-label">Assigned projects</label><input value="@(Model.AssignedProjects.Count == 0 ? "No projects assigned" : string.Join(", ", Model.AssignedProjects.Select(project => project.ProjectName)))" class="form-control" readonly /></div>
     }
-    <div class="col-md-6"><label asp-for="Department" class="form-label"></label><input asp-for="Department" class="form-control" /></div>
-    <div class="col-md-6"><label asp-for="Designation" class="form-label"></label><input asp-for="Designation" class="form-control" /></div>
     @if (canAssignReportingPerson)
     {
         <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><select asp-for="ReportingPersonId" class="form-select"><option value="">-- No reporting person assigned --</option>@foreach (var manager in managers) { if (manager.Id != Model.Id) { <option value="@manager.Id">@manager.FirstName @manager.LastName (@manager.Email)</option> } }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div class="form-text">Eligible roles: Admin, HR, and Manager.</div></div>
