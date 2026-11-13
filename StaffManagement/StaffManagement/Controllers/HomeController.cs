@@ -61,6 +61,9 @@ namespace StaffManagement.Controllers
             var employees = await employeeService.GetAllAsync(cancellationToken);
             var identityUser = await userManager.GetUserAsync(User);
             var displayName = $"{identityUser?.FirstName} {identityUser?.LastName}".Trim();
+            var currentEmployee = role == RoleNames.User && identityUser is not null
+                ? await employeeService.GetByIdentityUserIdAsync(identityUser.Id, cancellationToken)
+                : null;
 
             return new DashboardViewModel
             {
@@ -73,7 +76,8 @@ namespace StaffManagement.Controllers
                 CanCreateAccounts = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr),
                 CanManageEmployees = User.IsInRole(RoleNames.Admin)
                     || User.IsInRole(RoleNames.Hr)
-                    || User.IsInRole(RoleNames.Manager)
+                    || User.IsInRole(RoleNames.Manager),
+                CurrentProjects = currentEmployee?.AssignedProjects ?? []
             };
         }
 

@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<StaffManagement.Model.Entities.ApplicationIdentity> UserManager
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,10 +34,12 @@
                     else if (User.IsInRole("Manager"))
                     {
                         <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Team records</a>
+                        <a class="sidebar-link" asp-controller="Project" asp-action="Index">Projects</a>
                     }
                     else
                     {
                         <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Staff directory</a>
+                        <a class="sidebar-link" asp-controller="Project" asp-action="Index">My projects</a>
                     }
                     <a class="sidebar-link" asp-controller="Timesheet" asp-action="Index">Timesheets</a>
                     <a class="sidebar-link" asp-controller="Expense" asp-action="Index">Expenses</a>
@@ -47,7 +51,43 @@
                 </form>
             </aside>
             <main class="app-content">
-                <div class="container-fluid p-4">
+                <header class="topbar d-flex justify-content-end align-items-center px-4 py-3">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        var displayName = currentUser is null ? User.Identity.Name : $"{currentUser.FirstName} {currentUser.LastName}";
+                        var displayEmail = currentUser?.Email ?? User.Identity.Name;
+                        var initials = currentUser is null
+                            ? (User.Identity.Name is { Length: > 0 } name ? name[..1] : "U")
+                            : $"{currentUser.FirstName.FirstOrDefault()}{currentUser.LastName.FirstOrDefault()}";
+                        <div class="dropdown">
+                            <button class="profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="profile-avatar">@initials.ToUpperInvariant()</span>
+                                <span class="profile-trigger-text d-none d-sm-block text-start">
+                                    <strong>@displayName</strong>
+                                    <small>@displayEmail</small>
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end profile-menu">
+                                <li class="px-3 py-2 border-bottom">
+                                    <div class="fw-semibold">@displayName</div>
+                                    <small class="text-muted">@displayEmail</small>
+                                </li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">View profile</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="EditProfile">Edit details</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change password</a></li>
+                                <li><button type="button" class="dropdown-item" id="darkModeToggle"><span id="darkModeLabel">Dark mode</span></button></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="dropdown-item text-danger">Sign out</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                </header>
+                <div class="container-fluid px-4 pb-4">
                     @RenderBody()
                 </div>
             </main>

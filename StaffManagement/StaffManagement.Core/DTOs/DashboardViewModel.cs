@@ -1,3 +1,5 @@
+using StaffManagement.Core.DTOs.EmployeeModel;
+
 namespace StaffManagement.Core.DTOs;
 
 public sealed class DashboardViewModel
@@ -9,4 +11,5 @@ public sealed class DashboardViewModel
     public int InactiveEmployees => TotalEmployees - ActiveEmployees;
     public bool CanCreateAccounts { get; init; }
     public bool CanManageEmployees { get; init; }
+    public IReadOnlyList<ProjectAssignmentDto> CurrentProjects { get; init; } = [];
 }

@@ -316,6 +316,22 @@ namespace StaffManagement.Data.Migrations
                     b.HasKey("ProjectId");
 
                     b.ToTable("Projects");
+
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeProject", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EmployeeId", "ProjectId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("EmployeeProjects");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Designation", b =>
@@ -552,6 +568,9 @@ namespace StaffManagement.Data.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
@@ -580,6 +599,8 @@ namespace StaffManagement.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Timesheets");
                 });
@@ -656,6 +677,29 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("ReportingPerson");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeProject", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany("ProjectAssignments")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StaffManagement.Model.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
+                {
+                    b.Navigation("ProjectAssignments");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
                 {
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
@@ -680,6 +724,11 @@ namespace StaffManagement.Data.Migrations
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Timesheet", b =>
                 {
+                    b.HasOne("StaffManagement.Model.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
@@ -687,6 +736,8 @@ namespace StaffManagement.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+
+                    b.Navigation("Project");
                 });
 #pragma warning restore 612, 618
         }

@@ -13,6 +13,57 @@
     <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
+    <div class="col-md-6">
+        <label asp-for="DepartmentId" class="form-label">Department</label>
+        <select asp-for="DepartmentId" class="form-select">
+            <option value="">Select department</option>
+            @foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Model.Entities.Department> ?? [])
+            {
+                <option value="@department.DepartmentId">@department.DepartmentName</option>
+            }
+        </select>
+        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Designation" class="form-label"></label>
+        <select asp-for="Designation" class="form-select">
+            <option value="">Select designation</option>
+            @foreach (var designation in ViewBag.Designations as IReadOnlyList<StaffManagement.Model.Entities.Designation> ?? [])
+            {
+                <option value="@designation.DesignationName">@designation.DesignationName</option>
+            }
+        </select>
+        <span asp-validation-for="Designation" class="text-danger"></span>
+    </div>
+    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+    {
+        var projects = ViewBag.Projects as IReadOnlyList<StaffManagement.Model.Entities.Project> ?? [];
+        <div class="col-md-6">
+            <label asp-for="ProjectIds" class="form-label">Assigned projects</label>
+            @if (projects.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No active projects are available. <a asp-controller="Project" asp-action="Create">Create a project</a> first.
+                </div>
+            }
+            else
+            {
+                <div class="border rounded p-3">
+                @foreach (var project in projects)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="ProjectIds" value="@project.ProjectId" id="project-@project.ProjectId" checked="@(Model.ProjectIds.Contains(project.ProjectId) ? "checked" : null)" />
+                        <label class="form-check-label" for="project-@project.ProjectId">@project.ProjectName</label>
+                    </div>
+                }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="col-md-6"><label class="form-label">Assigned projects</label><input value="@(Model.AssignedProjects.Count == 0 ? "No projects assigned" : string.Join(", ", Model.AssignedProjects.Select(project => project.ProjectName)))" class="form-control" readonly /></div>
+    }
     <div class="col-md-6"><label asp-for="Department" class="form-label"></label><input asp-for="Department" class="form-control" /></div>
     <div class="col-md-6"><label asp-for="Designation" class="form-label"></label><input asp-for="Designation" class="form-control" /></div>
     @if (canAssignReportingPerson)

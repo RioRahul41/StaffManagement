@@ -32,6 +32,8 @@ namespace StaffManagement.Model.Entities
 
         public int? DepartmentId { get; set; }
 
+        public ICollection<EmployeeProject> ProjectAssignments { get; set; } = new List<EmployeeProject>();
+
         [StringLength(100)]
         public string? Department { get; set; }
 

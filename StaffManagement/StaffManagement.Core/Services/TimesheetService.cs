@@ -8,7 +8,8 @@ namespace StaffManagement.Core.Services;
 
 public sealed class TimesheetService(
     ITimesheetRepository timesheetRepository,
-    IEmployeeRepository employeeRepository) : ITimesheetService
+    IEmployeeRepository employeeRepository,
+    IProjectRepository projectRepository) : ITimesheetService
 {
     public async Task<IReadOnlyList<TimesheetDto>> GetAllAsync(
         bool canManage,
@@ -55,10 +56,19 @@ public sealed class TimesheetService(
         if (employee is null)
             return (false, "The selected employee was not found or you are not allowed to use that employee.");
 
+        var project = model.ProjectId.HasValue
+            ? await projectRepository.GetByIdAsync(model.ProjectId.Value)
+            : null;
+        if (project is null)
+            return (false, "Select an active project.");
+        if (!canManage && !employee.ProjectAssignments.Any(assignment => assignment.ProjectId == project.ProjectId))
+            return (false, "You can only record time for a project assigned to you.");
+
         var timesheet = new Timesheet
         {
             EmployeeId = employee.Id,
-            ProjectName = model.ProjectName.Trim(),
+            ProjectId = project.ProjectId,
+            ProjectName = project.ProjectName,
             TaskName = model.TaskName.Trim(),
             Description = model.Description.Trim(),
             StartDate = model.StartDate.Date,
@@ -92,7 +102,16 @@ public sealed class TimesheetService(
         if (!await CanAccessAsync(timesheet, canManage, identityUserId, cancellationToken))
             return (false, "You are not allowed to manage this timesheet.");
 
-        timesheet.ProjectName = model.ProjectName.Trim();
+        var project = model.ProjectId.HasValue
+            ? await projectRepository.GetByIdAsync(model.ProjectId.Value)
+            : null;
+        if (project is null)
+            return (false, "Select an active project.");
+        if (!canManage && !timesheet.Employee.ProjectAssignments.Any(assignment => assignment.ProjectId == project.ProjectId))
+            return (false, "You can only record time for a project assigned to you.");
+
+        timesheet.ProjectId = project.ProjectId;
+        timesheet.ProjectName = project.ProjectName;
         timesheet.TaskName = model.TaskName.Trim();
         timesheet.Description = model.Description.Trim();
         timesheet.StartDate = model.StartDate.Date;
@@ -161,20 +180,26 @@ public sealed class TimesheetService(
         return employee is not null && employee.Id == timesheet.EmployeeId;
     }
 
-    private static TimesheetDto Map(Timesheet timesheet) => new()
+    private static TimesheetDto Map(Timesheet timesheet)
     {
-        Id = timesheet.Id,
-        EmployeeId = timesheet.EmployeeId,
-        EmployeeName = $"{timesheet.Employee.FirstName} {timesheet.Employee.LastName}",
-        ProjectName = timesheet.ProjectName,
-        TaskName = timesheet.TaskName,
-        Description = timesheet.Description,
-        StartDate = timesheet.StartDate,
-        StartTime = timesheet.StartTime,
-        EndTime = timesheet.EndTime,
-        Status = timesheet.Status,
-        DocumentPath = timesheet.DocumentPath
-    };
+        var model = new TimesheetDto
+        {
+            Id = timesheet.Id,
+            EmployeeId = timesheet.EmployeeId,
+            EmployeeName = $"{timesheet.Employee.FirstName} {timesheet.Employee.LastName}",
+            ProjectId = timesheet.ProjectId,
+            ProjectName = timesheet.Project?.ProjectName ?? timesheet.ProjectName,
+            TaskName = timesheet.TaskName,
+            Description = timesheet.Description,
+            StartDate = timesheet.StartDate,
+            StartTime = timesheet.StartTime,
+            EndTime = timesheet.EndTime,
+            Status = timesheet.Status,
+            DocumentPath = timesheet.DocumentPath
+        };
+        model.SetTimeParts();
+        return model;
+    }
 
     private static string? ValidateSchedule(DateTime startDate, TimeSpan startTime, TimeSpan endTime)
     {

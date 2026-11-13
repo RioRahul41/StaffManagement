@@ -11,12 +11,13 @@ namespace StaffManagement.Controllers;
 public sealed class TimesheetController(
     ITimesheetService timesheetService,
     IEmployeeService employeeService,
+    IProjectService projectService,
     IWebHostEnvironment environment) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var timesheets = await timesheetService.GetAllAsync(
-            CanManageTimesheets(),
+            CanViewAllTimesheets(),
             CurrentIdentityUserId(),
             cancellationToken);
 
@@ -27,7 +28,7 @@ public sealed class TimesheetController(
     {
         var timesheet = await timesheetService.GetByIdAsync(
             id,
-            CanManageTimesheets(),
+            CanViewAllTimesheets(),
             CurrentIdentityUserId(),
             cancellationToken);
 
@@ -37,6 +38,7 @@ public sealed class TimesheetController(
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
         await LoadEmployeesAsync(cancellationToken);
+        await LoadProjectsAsync(cancellationToken);
         return View(new CreateTimesheetDto());
     }
 
@@ -47,20 +49,24 @@ public sealed class TimesheetController(
         IFormFile? document,
         CancellationToken cancellationToken)
     {
-        var canManage = CanManageTimesheets();
+        var canManage = CanCreateForOthers();
         var identityUserId = CurrentIdentityUserId();
 
         if (!ModelState.IsValid)
         {
             await LoadEmployeesAsync(cancellationToken);
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
+
+        model.ApplyTimeParts();
 
         var (documentPath, uploadError) = await SaveDocumentAsync(document, cancellationToken);
         if (uploadError is not null)
         {
             ModelState.AddModelError(nameof(document), uploadError);
             await LoadEmployeesAsync(cancellationToken);
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
 
@@ -76,6 +82,7 @@ public sealed class TimesheetController(
             DeleteDocument(documentPath);
             ModelState.AddModelError(string.Empty, result.Error!);
             await LoadEmployeesAsync(cancellationToken);
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
 
@@ -91,7 +98,11 @@ public sealed class TimesheetController(
             CurrentIdentityUserId(),
             cancellationToken);
 
-        return timesheet is null ? NotFound() : View(timesheet);
+        if (timesheet is null)
+            return NotFound();
+
+        await LoadProjectsAsync(cancellationToken);
+        return View(timesheet);
     }
 
     [HttpPost]
@@ -102,7 +113,12 @@ public sealed class TimesheetController(
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
+        {
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
+        }
+
+        model.ApplyTimeParts();
 
         var existingTimesheet = await timesheetService.GetByIdAsync(
             model.Id,
@@ -117,6 +133,7 @@ public sealed class TimesheetController(
         if (uploadError is not null)
         {
             ModelState.AddModelError(nameof(document), uploadError);
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
 
@@ -131,6 +148,7 @@ public sealed class TimesheetController(
         {
             DeleteDocument(documentPath);
             ModelState.AddModelError(string.Empty, result.Error!);
+            await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
 
@@ -181,14 +199,34 @@ public sealed class TimesheetController(
 
     private async Task LoadEmployeesAsync(CancellationToken cancellationToken)
     {
-        if (CanManageTimesheets())
+        if (CanCreateForOthers())
             ViewBag.Employees = await employeeService.GetAllAsync(cancellationToken);
+    }
+
+    private async Task LoadProjectsAsync(CancellationToken cancellationToken)
+    {
+        var projects = await projectService.GetAllAsync();
+        if (!CanCreateForOthers())
+        {
+            var employee = await employeeService.GetByIdentityUserIdAsync(
+                CurrentIdentityUserId(), cancellationToken);
+            projects = projects
+                .Where(project => employee?.ProjectIds.Contains(project.ProjectId) == true)
+                .ToList();
+        }
+
+        ViewBag.Projects = projects;
     }
 
     private bool CanManageTimesheets() =>
         User.IsInRole(RoleNames.Admin) ||
-        User.IsInRole(RoleNames.Hr) ||
         User.IsInRole(RoleNames.Manager);
+
+    private bool CanViewAllTimesheets() =>
+        CanManageTimesheets() || User.IsInRole(RoleNames.Hr);
+
+    private bool CanCreateForOthers() =>
+        CanViewAllTimesheets();
 
     private string CurrentIdentityUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;

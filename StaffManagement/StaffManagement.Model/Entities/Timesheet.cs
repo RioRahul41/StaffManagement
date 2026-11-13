@@ -10,6 +10,10 @@ public class Timesheet
     [Required]
     public int EmployeeId { get; set; }
 
+    public int? ProjectId { get; set; }
+
+    public Project? Project { get; set; }
+
     [Required(ErrorMessage = "Project name is required.")]
     [StringLength(150, ErrorMessage = "Project name cannot exceed 150 characters.")]
     public string ProjectName { get; set; } = string.Empty;
@@ -34,7 +38,7 @@ public class Timesheet
     [DataType(DataType.Time)]
     public TimeSpan EndTime { get; set; }
 
-    public TimesheetStatus Status { get; set; } = TimesheetStatus.Pending;
+    public TimesheetStatus Status { get; set; } = TimesheetStatus.InProgress;
 
     [StringLength(500)]
     public string? DocumentPath { get; set; }
