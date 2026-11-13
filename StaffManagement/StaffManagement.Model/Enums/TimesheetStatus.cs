@@ -4,9 +4,8 @@ namespace StaffManagement.Model.Enums;
 
 public enum TimesheetStatus
 {
-    Pending,
-
-    [Display(Name = "In Progress")]
-    InProgress,
-    Completed
+   
+    Pending=1,
+    InProgress = 2,
+    Completed = 3
 }

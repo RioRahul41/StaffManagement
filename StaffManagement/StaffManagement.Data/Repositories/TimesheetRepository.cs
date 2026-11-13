@@ -11,6 +11,8 @@ public sealed class TimesheetRepository(ApplicationDbContext dbContext) : ITimes
         await dbContext.Timesheets
             .AsNoTracking()
             .Include(timesheet => timesheet.Employee)
+                .ThenInclude(employee => employee.ProjectAssignments)
+            .Include(timesheet => timesheet.Project)
             .Where(timesheet => !timesheet.Employee.EmpIsDeleted)
             .OrderByDescending(timesheet => timesheet.StartDate)
             .ThenBy(timesheet => timesheet.Employee.LastName)
@@ -23,6 +25,8 @@ public sealed class TimesheetRepository(ApplicationDbContext dbContext) : ITimes
         await dbContext.Timesheets
             .AsNoTracking()
             .Include(timesheet => timesheet.Employee)
+                .ThenInclude(employee => employee.ProjectAssignments)
+            .Include(timesheet => timesheet.Project)
             .Where(timesheet => timesheet.EmployeeId == employeeId && !timesheet.Employee.EmpIsDeleted)
             .OrderByDescending(timesheet => timesheet.StartDate)
             .ToListAsync(cancellationToken);
@@ -30,6 +34,8 @@ public sealed class TimesheetRepository(ApplicationDbContext dbContext) : ITimes
     public Task<Timesheet?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         dbContext.Timesheets
             .Include(timesheet => timesheet.Employee)
+                .ThenInclude(employee => employee.ProjectAssignments)
+            .Include(timesheet => timesheet.Project)
             .FirstOrDefaultAsync(
                 timesheet => timesheet.Id == id && !timesheet.Employee.EmpIsDeleted,
                 cancellationToken);

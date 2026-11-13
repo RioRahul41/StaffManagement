@@ -15,6 +15,7 @@ public sealed class EmployeeController(
     IAccountService accountService,
     IDesignationService designationService,
     IDepartmentService departmentService,
+    IProjectService projectService,
     UserManager<ApplicationIdentity> userManager) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
@@ -71,6 +72,7 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+        await LoadProjectChoicesAsync(employee?.ProjectIds);
         return employee is null ? NotFound() : View(employee);
     }
 
@@ -79,13 +81,26 @@ public sealed class EmployeeController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EmployeeDto model, CancellationToken cancellationToken)
     {
+        if (!CanAssignProjects())
+        {
+            var existing = await employeeService.GetByIdAsync(model.Id, cancellationToken);
+            if (existing is null)
+                return NotFound();
+
+            model.ProjectIds = existing.ProjectIds;
+        }
+
         if (!ModelState.IsValid)
+        {
+            await LoadProjectChoicesAsync(model.ProjectIds);
             return View(model);
+        }
 
         var result = await employeeService.UpdateAsync(model, cancellationToken);
         if (!result.Succeeded)
         {
             ModelState.AddModelError(string.Empty, result.Error!);
+            await LoadProjectChoicesAsync(model.ProjectIds);
             return View(model);
         }
 
@@ -104,6 +119,43 @@ public sealed class EmployeeController(
             }
         }
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager)]
+    [HttpGet]
+    public async Task<IActionResult> AssignProjects(int id, CancellationToken cancellationToken)
+    {
+        var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+        if (employee is null)
+            return NotFound();
+
+        ViewBag.Projects = await projectService.GetAllAsync();
+        return View(employee);
+    }
+
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AssignProjects(
+        int id,
+        List<int> projectIds,
+        CancellationToken cancellationToken)
+    {
+        var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+        if (employee is null)
+            return NotFound();
+
+        employee.ProjectIds = projectIds.Distinct().ToList();
+        var result = await employeeService.UpdateAsync(employee, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, result.Error!);
+            ViewBag.Projects = await projectService.GetAllAsync();
+            return View(employee);
+        }
+
+        TempData["Success"] = $"Projects assigned to {employee.FirstName} {employee.LastName}.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -134,5 +186,17 @@ public sealed class EmployeeController(
         ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
             ?? Array.Empty<Department>();
         ViewBag.SelectedDepartmentId = selectedDepartmentId;
+    }
+
+    private bool CanAssignProjects() =>
+        User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Manager);
+
+    private async Task LoadProjectChoicesAsync(IReadOnlyCollection<int>? selectedProjectIds)
+    {
+        if (!CanAssignProjects())
+            return;
+
+        ViewBag.Projects = await projectService.GetAllAsync();
+        ViewBag.SelectedProjectIds = selectedProjectIds ?? Array.Empty<int>();
     }
 }

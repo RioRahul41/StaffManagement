@@ -23,6 +23,10 @@ public class EmployeeDto
     [Required(ErrorMessage = "Department is required.")]
     public int? DepartmentId { get; set; }
 
+    public List<int> ProjectIds { get; set; } = [];
+
+    public List<ProjectAssignmentDto> AssignedProjects { get; set; } = [];
+
     [StringLength(100)]
     public string? Department { get; set; }
 

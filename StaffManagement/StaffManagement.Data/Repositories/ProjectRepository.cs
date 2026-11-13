@@ -21,6 +21,14 @@ public class ProjectRepository(ApplicationDbContext context) : IProjectRepositor
             project.ProjectId == projectId && project.IsActive);
     }
 
+    public async Task<IReadOnlyList<Project>> GetActiveByIdsAsync(IEnumerable<int> projectIds)
+    {
+        var ids = projectIds.Distinct().ToArray();
+        return await context.Projects.AsNoTracking()
+            .Where(project => project.IsActive && ids.Contains(project.ProjectId))
+            .ToListAsync();
+    }
+
     public Task<bool> ExistsByNameAsync(string projectName, int? excludedId = null)
     {
         var normalizedName = projectName.Trim().ToLower();

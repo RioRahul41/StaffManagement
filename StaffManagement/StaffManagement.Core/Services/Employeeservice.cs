@@ -5,7 +5,9 @@ using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Core.Services
 {
-    public sealed class EmployeeService(IEmployeeRepository repository) : IEmployeeService
+    public sealed class EmployeeService(
+        IEmployeeRepository repository,
+        IProjectRepository projectRepository) : IEmployeeService
     {
         public async Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             (await repository.GetAllAsync(cancellationToken)).Select(Map).ToList();
@@ -49,11 +51,25 @@ namespace StaffManagement.Core.Services
             if (await repository.EmailExistsAsync(model.Email, model.Id, cancellationToken))
                 return (false, "An employee with this email already exists.");
 
+            var projectIds = model.ProjectIds.Distinct().ToArray();
+            var projects = await projectRepository.GetActiveByIdsAsync(projectIds);
+            if (projects.Count != projectIds.Length)
+                return (false, "One or more selected projects are no longer active.");
+
             employee.FirstName = model.FirstName;
             employee.LastName = model.LastName;
             employee.Email = model.Email;
             employee.Phone = model.Phone;
             employee.DepartmentId = model.DepartmentId;
+            employee.ProjectAssignments.Clear();
+            foreach (var project in projects)
+            {
+                employee.ProjectAssignments.Add(new EmployeeProject
+                {
+                    EmployeeId = employee.Id,
+                    ProjectId = project.ProjectId
+                });
+            }
             employee.Department = model.Department;
             employee.Location = model.Location;
             employee.DOB = model.DOB;
@@ -88,6 +104,16 @@ namespace StaffManagement.Core.Services
             Email = employee.Email,
             Phone = employee.Phone,
             DepartmentId = employee.DepartmentId,
+            ProjectIds = employee.ProjectAssignments.Select(assignment => assignment.ProjectId).ToList(),
+            AssignedProjects = employee.ProjectAssignments
+                .Where(assignment => assignment.Project.IsActive)
+                .OrderBy(assignment => assignment.Project.ProjectName)
+                .Select(assignment => new ProjectAssignmentDto
+                {
+                    ProjectId = assignment.ProjectId,
+                    ProjectName = assignment.Project.ProjectName
+                })
+                .ToList(),
             Department = employee.Department,
             Location = employee.Location,
             DOB = employee.DOB,

@@ -1,21 +1,41 @@
-@using StaffManagement.Model.Enums
 @model StaffManagement.Core.DTOs.TimesheetModel.TimesheetDto
+@using StaffManagement.Model.Enums
 @{
     ViewData["Title"] = "Edit timesheet";
+    var projects = ViewBag.Projects as IReadOnlyList<StaffManagement.Model.Entities.Project> ?? [];
 }
 <h1>Edit timesheet</h1>
+<p class="text-muted">Update this task’s work notes, times, or status as the day progresses.</p>
 <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-3">
     <input asp-for="Id" type="hidden" />
     <input asp-for="EmployeeId" type="hidden" />
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="col-12"><label class="form-label">Employee</label><input value="@Model.EmployeeName" class="form-control" readonly /></div>
-    <div class="col-md-6"><label asp-for="ProjectName" class="form-label"></label><input asp-for="ProjectName" class="form-control" /><span asp-validation-for="ProjectName" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="ProjectId" class="form-label">Project</label><select asp-for="ProjectId" class="form-select"><option value="">-- Select project --</option>@foreach (var project in projects) { <option value="@project.ProjectId">@project.ProjectName</option> }</select><span asp-validation-for="ProjectId" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="TaskName" class="form-label"></label><input asp-for="TaskName" class="form-control" /><span asp-validation-for="TaskName" class="text-danger"></span></div>
     <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
     <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span></div>
-    <div class="col-md-4"><label asp-for="StartTime" class="form-label"></label><input asp-for="StartTime" class="form-control" type="time" step="60" /><span asp-validation-for="StartTime" class="text-danger"></span></div>
-    <div class="col-md-4"><label asp-for="EndTime" class="form-label"></label><input asp-for="EndTime" class="form-control" type="time" step="60" /><span asp-validation-for="EndTime" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="Status" class="form-label"></label><select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<TimesheetStatus>())"></select><span asp-validation-for="Status" class="text-danger"></span></div>
+    <div class="col-md-6">
+        <label class="form-label">Start time</label>
+        <div class="input-group">
+            <input asp-for="StartHour" class="form-control" type="number" min="1" max="12" aria-label="Start hour" />
+            <span class="input-group-text">:</span>
+            <input asp-for="StartMinute" class="form-control" type="number" min="0" max="59" aria-label="Start minute" />
+            <select asp-for="StartPeriod" class="form-select" aria-label="Start AM or PM"><option>AM</option><option>PM</option></select>
+        </div>
+        <span asp-validation-for="StartHour" class="text-danger"></span><span asp-validation-for="StartMinute" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">End time</label>
+        <div class="input-group">
+            <input asp-for="EndHour" class="form-control" type="number" min="1" max="12" aria-label="End hour" />
+            <span class="input-group-text">:</span>
+            <input asp-for="EndMinute" class="form-control" type="number" min="0" max="59" aria-label="End minute" />
+            <select asp-for="EndPeriod" class="form-select" aria-label="End AM or PM"><option>AM</option><option>PM</option></select>
+        </div>
+        <span asp-validation-for="EndHour" class="text-danger"></span><span asp-validation-for="EndMinute" class="text-danger"></span>
+    </div>
+    <div class="col-md-6"><label asp-for="Status" class="form-label">Work status</label><select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<TimesheetStatus>()"></select><span asp-validation-for="Status" class="text-danger"></span></div>
     <div class="col-md-6"><label class="form-label" for="document">Replace document</label><input class="form-control" type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" /><div class="form-text">Optional. Maximum size: 10 MB.</div></div>
     @if (!string.IsNullOrWhiteSpace(Model.DocumentPath))
     {

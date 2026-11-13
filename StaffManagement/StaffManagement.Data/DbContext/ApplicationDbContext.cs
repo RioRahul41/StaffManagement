@@ -19,6 +19,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<Employee> Employees { get; set; } = null!;
 
+        public DbSet<EmployeeProject> EmployeeProjects { get; set; } = null!;
+
         public DbSet<Timesheet> Timesheets { get; set; } = null!;
 
         public DbSet<EmployeeExpense> EmployeeExpenses { get; set; } = null!;
@@ -37,11 +39,32 @@ namespace StaffManagement.Data.DbContext
                 .HasForeignKey(e => e.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<EmployeeProject>()
+                .HasKey(assignment => new { assignment.EmployeeId, assignment.ProjectId });
+
+            modelBuilder.Entity<EmployeeProject>()
+                .HasOne(assignment => assignment.Employee)
+                .WithMany(employee => employee.ProjectAssignments)
+                .HasForeignKey(assignment => assignment.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeProject>()
+                .HasOne(assignment => assignment.Project)
+                .WithMany()
+                .HasForeignKey(assignment => assignment.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Timesheet>()
                 .HasOne(timesheet => timesheet.Employee)
                 .WithMany()
                 .HasForeignKey(timesheet => timesheet.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Timesheet>()
+                .HasOne(timesheet => timesheet.Project)
+                .WithMany()
+                .HasForeignKey(timesheet => timesheet.ProjectId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<EmployeeExpense>()
                 .HasOne(expense => expense.Employee)

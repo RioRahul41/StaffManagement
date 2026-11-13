@@ -32,10 +32,12 @@
                     else if (User.IsInRole("Manager"))
                     {
                         <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Team records</a>
+                        <a class="sidebar-link" asp-controller="Project" asp-action="Index">Projects</a>
                     }
                     else
                     {
                         <a class="sidebar-link" asp-controller="Employee" asp-action="Index">Staff directory</a>
+                        <a class="sidebar-link" asp-controller="Project" asp-action="Index">My projects</a>
                     }
                     <a class="sidebar-link" asp-controller="Timesheet" asp-action="Index">Timesheets</a>
                     <a class="sidebar-link" asp-controller="Expense" asp-action="Index">Expenses</a>
