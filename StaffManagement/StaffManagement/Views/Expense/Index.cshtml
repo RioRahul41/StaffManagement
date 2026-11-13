@@ -1,0 +1,57 @@
+@using StaffManagement.Core.DTOs
+@model PagedResultDto<StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseDto>
+@{
+    ViewData["Title"] = "Employee Expenses";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">EXPENSE MANAGEMENT</p>
+        <h1 class="mb-1">Employee Expenses</h1>
+        <p class="text-muted mb-0">Submit and review employee expense details.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Add expense</a>
+</div>
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (Model.Items.Count == 0)
+{
+    <div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h4>No expense records found</h4><p class="text-muted">Add an expense record to begin.</p><a asp-action="Create" class="btn btn-primary">Add expense</a></div></div>
+}
+else
+{
+    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>First name</th><th>Title</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Approval notes</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        @foreach (var expense in Model.Items)
+        {
+            <tr>
+                <td>@expense.FirstName</td>
+                <td>@expense.Title</td>
+                <td>@expense.FromDate.ToString("yyyy-MM-dd")</td>
+                <td>@expense.ToDate.ToString("yyyy-MM-dd")</td>
+                <td>@expense.Amount.ToString("C")</td>
+                <td><span class="badge @(expense.Status.ToString() == "Approved" ? "text-bg-success" : expense.Status.ToString() == "Rejected" ? "text-bg-danger" : "text-bg-warning")">@expense.Status</span></td>
+                <td>@(string.IsNullOrWhiteSpace(expense.ApprovalNotes) ? "-" : expense.ApprovalNotes)</td>
+                <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-secondary">Details</a><a asp-action="Edit" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a><a asp-action="Delete" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a></td>
+            </tr>
+        }
+        </tbody>
+    </table></div></div>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-3" aria-label="Expense pages"><ul class="pagination">
+            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)">Previous</a></li>
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@pageNumber">@pageNumber</a></li>
+            }
+            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)">Next</a></li>
+        </ul></nav>
+    }
+}

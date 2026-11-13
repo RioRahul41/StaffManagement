@@ -38,6 +38,10 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ITimesheetRepository, TimesheetRepository>();
+builder.Services.AddScoped<ITimesheetService, TimesheetService>();
+builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository>();
+builder.Services.AddScoped<IEmployeeExpenseService, EmployeeExpenseService>();
 
 
 
