@@ -19,8 +19,15 @@ public class CreateLeaveRequestDto : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (FromDate.Date < DateTime.Today || ToDate.Date < DateTime.Today)
+        if (LeaveType == LeaveType.Sick)
+        {
+            if (FromDate.Date > DateTime.Today || ToDate.Date > DateTime.Today)
+                yield return new ValidationResult("Sick leave can only be requested for today or a past date.", [nameof(FromDate), nameof(ToDate)]);
+        }
+        else if (FromDate.Date < DateTime.Today || ToDate.Date < DateTime.Today)
+        {
             yield return new ValidationResult("Leave can only be applied for today or a future date.", [nameof(FromDate), nameof(ToDate)]);
+        }
 
         if (ToDate.Date < FromDate.Date)
             yield return new ValidationResult("To date must be on or after from date.", [nameof(ToDate)]);

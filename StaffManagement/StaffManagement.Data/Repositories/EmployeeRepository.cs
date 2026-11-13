@@ -18,6 +18,56 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
             .ThenBy(employee => employee.FirstName)
             .ToListAsync(cancellationToken);
 
+    public async Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetPageAsync(
+        string? searchTerm,
+        int? departmentId,
+        string? designation,
+        bool? isActive,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var employees = dbContext.Employees
+            .AsNoTracking()
+            .Include(employee => employee.ProjectAssignments)
+                .ThenInclude(assignment => assignment.Project)
+            .Include(employee => employee.ReportingPerson)
+            .Where(employee => !employee.EmpIsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+            employees = employees.Where(employee =>
+                employee.FirstName.Contains(term) ||
+                employee.LastName.Contains(term) ||
+                (employee.FirstName + " " + employee.LastName).Contains(term) ||
+                employee.Email.Contains(term) ||
+                (employee.Phone != null && employee.Phone.Contains(term)) ||
+                employee.Location.Contains(term) ||
+                (employee.Department != null && employee.Department.Contains(term)) ||
+                (employee.Designation != null && employee.Designation.Contains(term)));
+        }
+
+        if (departmentId.HasValue)
+            employees = employees.Where(employee => employee.DepartmentId == departmentId.Value);
+
+        if (!string.IsNullOrWhiteSpace(designation))
+            employees = employees.Where(employee => employee.Designation == designation);
+
+        if (isActive.HasValue)
+            employees = employees.Where(employee => employee.EmpIsActive == isActive.Value);
+
+        var totalCount = await employees.CountAsync(cancellationToken);
+        var items = await employees
+            .OrderBy(employee => employee.LastName)
+            .ThenBy(employee => employee.FirstName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     public Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         dbContext.Employees
             .Include(employee => employee.IdentityUser)

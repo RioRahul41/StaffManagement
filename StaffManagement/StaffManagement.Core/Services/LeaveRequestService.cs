@@ -69,7 +69,10 @@ public sealed class LeaveRequestService(
 
         var fromDate = model.FromDate.Date;
         var toDate = model.ToDate.Date;
-        if (fromDate < DateTime.Today || toDate < DateTime.Today)
+        if (model.LeaveType == LeaveType.Sick && (fromDate > DateTime.Today || toDate > DateTime.Today))
+            return (false, "Sick leave can only be requested for today or a past date.");
+
+        if (model.LeaveType != LeaveType.Sick && (fromDate < DateTime.Today || toDate < DateTime.Today))
             return (false, "Leave can only be applied for today or a future date.");
 
         if (toDate < fromDate)

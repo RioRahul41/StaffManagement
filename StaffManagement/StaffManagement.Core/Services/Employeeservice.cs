@@ -12,6 +12,20 @@ namespace StaffManagement.Core.Services
         public async Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             (await repository.GetAllAsync(cancellationToken)).Select(Map).ToList();
 
+        public async Task<(IReadOnlyList<EmployeeDto> Items, int TotalCount)> GetPageAsync(
+            string? searchTerm,
+            int? departmentId,
+            string? designation,
+            bool? isActive,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await repository.GetPageAsync(
+                searchTerm, departmentId, designation, isActive, page, pageSize, cancellationToken);
+            return (result.Items.Select(Map).ToList(), result.TotalCount);
+        }
+
         public async Task<EmployeeDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var employee = await repository.GetByIdAsync(id, cancellationToken);

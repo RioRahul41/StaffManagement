@@ -77,6 +77,15 @@ public sealed class AccountCreateControllerTests
 
     private sealed class StubEmployeeService : IEmployeeService
     {
+        public Task<(IReadOnlyList<EmployeeDto> Items, int TotalCount)> GetPageAsync(
+            string? searchTerm,
+            int? departmentId,
+            string? designation,
+            bool? isActive,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         public Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<EmployeeDto>>(
             [

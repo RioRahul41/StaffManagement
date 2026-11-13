@@ -4,7 +4,7 @@
     ViewData["Title"] = "Apply for leave";
 }
 <h1>Apply for leave</h1>
-<p class="text-muted">Leave can be requested for today or a future date. Sick leave lasting 2 or more days requires a supporting document.</p>
+<p class="text-muted">Sick leave can be requested for today or a past date. Other leave can be requested for today or a future date. Sick leave lasting 2 or more days requires a supporting document.</p>
 <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3" id="leave-form">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="col-md-6">
@@ -14,12 +14,12 @@
     </div>
     <div class="col-md-3">
         <label asp-for="FromDate" class="form-label"></label>
-        <input asp-for="FromDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <input asp-for="FromDate" class="form-control" type="date" />
         <span asp-validation-for="FromDate" class="text-danger"></span>
     </div>
     <div class="col-md-3">
         <label asp-for="ToDate" class="form-label"></label>
-        <input asp-for="ToDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <input asp-for="ToDate" class="form-control" type="date" />
         <span asp-validation-for="ToDate" class="text-danger"></span>
     </div>
     <div class="col-12">
@@ -48,6 +48,20 @@
             const documentInput = document.getElementById('document');
             const documentSection = document.getElementById('document-section');
             const sickLeaveValue = leaveType.dataset.sickValue;
+            const today = '@DateTime.Today.ToString("yyyy-MM-dd")';
+            const updateDateLimits = function () {
+                if (leaveType.value === sickLeaveValue) {
+                    fromDate.removeAttribute('min');
+                    toDate.removeAttribute('min');
+                    fromDate.max = today;
+                    toDate.max = today;
+                } else {
+                    fromDate.min = today;
+                    toDate.min = today;
+                    fromDate.removeAttribute('max');
+                    toDate.removeAttribute('max');
+                }
+            };
             const updateDocumentVisibility = function () {
                 const start = fromDate.value ? new Date(fromDate.value + 'T00:00:00') : null;
                 const end = toDate.value ? new Date(toDate.value + 'T00:00:00') : null;
@@ -56,9 +70,13 @@
                 documentInput.required = Boolean(needsDocument);
                 if (!needsDocument) documentInput.value = '';
             };
-            leaveType.addEventListener('change', updateDocumentVisibility);
+            leaveType.addEventListener('change', function () {
+                updateDateLimits();
+                updateDocumentVisibility();
+            });
             fromDate.addEventListener('change', updateDocumentVisibility);
             toDate.addEventListener('change', updateDocumentVisibility);
+            updateDateLimits();
             updateDocumentVisibility();
         })();
     </script>

@@ -6,6 +6,7 @@ using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Security;
 using StaffManagement.Model.Entities;
+using StaffManagement.Models;
 
 namespace StaffManagement.Controllers;
 
@@ -18,8 +19,44 @@ public sealed class EmployeeController(
     IProjectService projectService,
     UserManager<ApplicationIdentity> userManager) : Controller
 {
-    public async Task<IActionResult> Index(CancellationToken cancellationToken) =>
-        View(await employeeService.GetAllAsync(cancellationToken));
+    public async Task<IActionResult> Index(
+        string? searchTerm,
+        int? departmentId,
+        string? designation,
+        bool? isActive,
+        int page = 1,
+        CancellationToken cancellationToken = default)
+    {
+        const int pageSize = 10;
+        page = Math.Max(1, page);
+
+        var result = await employeeService.GetPageAsync(
+            searchTerm, departmentId, designation, isActive, page, pageSize, cancellationToken);
+        var totalPages = Math.Max(1, (int)Math.Ceiling(result.TotalCount / (double)pageSize));
+        if (page > totalPages)
+        {
+            page = totalPages;
+            result = await employeeService.GetPageAsync(
+                searchTerm, departmentId, designation, isActive, page, pageSize, cancellationToken);
+        }
+
+        return View(new EmployeeListViewModel
+        {
+            Employees = result.Items,
+            Departments = await departmentService.GetAllAsync(),
+            Designations = (await designationService.GetAllAsync())
+                .Where(item => item.IsActive)
+                .OrderBy(item => item.DesignationName)
+                .ToList(),
+            SearchTerm = searchTerm?.Trim(),
+            DepartmentId = departmentId,
+            Designation = designation,
+            IsActive = isActive,
+            PageNumber = page,
+            PageSize = pageSize,
+            TotalCount = result.TotalCount
+        });
+    }
 
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
