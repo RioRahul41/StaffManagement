@@ -9,7 +9,6 @@
 <h1>Add timesheet</h1>
 <p class="text-muted">Add one update per task. Start it as In Progress, then edit it later and mark it Completed.</p>
 <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3">
-    <div asp-validation-summary="All" class="text-danger"></div>
     @if (canManage)
     {
         <div class="col-md-6">
