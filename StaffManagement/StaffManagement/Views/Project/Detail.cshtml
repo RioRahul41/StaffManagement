@@ -1,0 +1,18 @@
+@model StaffManagement.Model.Entities.Project
+
+@{ ViewData["Title"] = "Project Details"; }
+
+<div class="d-flex align-items-center mb-4"><a asp-action="Index" class="btn btn-sm btn-outline-secondary me-3">&larr; Back</a><h1 class="mb-0">Project Details</h1></div>
+<div class="card shadow-sm border-0"><div class="card-body p-4">
+    <dl class="row mb-4">
+        <dt class="col-sm-3">Project name</dt><dd class="col-sm-9">@Model.ProjectName</dd>
+        <dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(Model.Description ?? "—")</dd>
+        <dt class="col-sm-3">Start date</dt><dd class="col-sm-9">@(Model.StartDate?.ToString("MMM dd, yyyy") ?? "—")</dd>
+        <dt class="col-sm-3">End date</dt><dd class="col-sm-9">@(Model.EndDate?.ToString("MMM dd, yyyy") ?? "—")</dd>
+        <dt class="col-sm-3">Created</dt><dd class="col-sm-9">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+        <dt class="col-sm-3">Updated</dt><dd class="col-sm-9">@(Model.UpdatedDate?.ToString("MMM dd, yyyy") ?? "Not updated")</dd>
+        <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@(Model.IsActive ? "Active" : "Inactive")</dd>
+    </dl>
+    <a asp-action="Edit" asp-route-id="@Model.ProjectId" class="btn btn-primary">Edit Project</a>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to Projects</a>
+</div></div>
