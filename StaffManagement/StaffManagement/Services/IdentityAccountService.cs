@@ -35,6 +35,10 @@ public sealed class IdentityAccountService(
         if (!await roleManager.RoleExistsAsync(model.Role))
             return new(false, "The selected role does not exist.");
 
+        var leaveAllowance = RoleLeavePolicy.For(model.Role);
+        model.SickLeaveAllowance = leaveAllowance.Sick;
+        model.CasualLeaveAllowance = leaveAllowance.Casual;
+
         var user = new ApplicationIdentity
         {
             UserName = model.Email,
