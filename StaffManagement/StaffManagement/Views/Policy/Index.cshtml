@@ -1,0 +1,79 @@
+@model StaffManagement.Models.PolicyLibraryViewModel
+@using StaffManagement.Core.Security
+@{
+    ViewData["Title"] = "Policy library";
+    var canManagePolicies = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">STAFF RESOURCES</p>
+        <h1 class="mb-2">Policy library</h1>
+        <p class="text-muted mb-0">View the latest privacy, company, leave, and other staff policies.</p>
+    </div>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+
+@if (canManagePolicies)
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5">Add a policy PDF</h2>
+            <p class="text-muted">Give the document a clear name, such as “Company Policy” or “Leave Policy”. Staff will be able to view it here.</p>
+            <form asp-action="Upload" method="post" enctype="multipart/form-data" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-5">
+                    <label for="policyName" class="form-label">Policy name <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input id="policyName" name="policyName" value="@Model.PolicyName" class="form-control" maxlength="120" required placeholder="e.g. Leave Policy" />
+                    <span class="text-danger">@Html.ValidationMessage("policyName")</span>
+                </div>
+                <div class="col-md-5">
+                    <label for="pdf" class="form-label">PDF file <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input id="pdf" name="pdf" type="file" class="form-control" accept="application/pdf,.pdf" required />
+                    <div class="form-text">PDF only, up to 15 MB.</div>
+                    <span class="text-danger">@Html.ValidationMessage("pdf")</span>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Upload policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<section aria-labelledby="available-policies-heading">
+    <h2 id="available-policies-heading" class="h4 mb-3">Available policies</h2>
+    @if (Model.Documents.Count == 0)
+    {
+        <div class="card border-0 shadow-sm"><div class="card-body text-muted">No policy PDFs have been added yet.</div></div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var document in Model.Documents)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <article class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h3 class="h5">@document.PolicyName</h3>
+                            <p class="small text-muted mb-3">PDF · Added @document.UploadedAtUtc.ToLocalTime().ToString("d") by @document.UploadedBy</p>
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-action="ViewPdf" asp-route-id="@document.Id" target="_blank" rel="noopener" class="btn btn-outline-primary">View PDF</a>
+                                @if (canManagePolicies)
+                                {
+                                    <form asp-action="Delete" asp-route-id="@document.Id" method="post" onsubmit="return confirm('Remove this policy from the library?');">
+                                        <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+</section>
