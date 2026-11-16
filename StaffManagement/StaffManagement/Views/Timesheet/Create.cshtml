@@ -25,6 +25,7 @@
     }
     <div class="col-md-6">
         <label asp-for="ProjectId" class="form-label">Project</label>
+        <span class="text-danger" aria-hidden="true">*</span>
         <select asp-for="ProjectId" class="form-select">
             <option value="">-- Select project --</option>
             @foreach (var project in projects)
@@ -38,11 +39,12 @@
             <small class="text-danger">No current project is assigned. Ask your manager to assign one.</small>
         }
     </div>
-    <div class="col-md-6"><label asp-for="TaskName" class="form-label"></label><input asp-for="TaskName" class="form-control" /><span asp-validation-for="TaskName" class="text-danger"></span></div>
-    <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
-    <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="TaskName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="TaskName" class="form-control" /><span asp-validation-for="TaskName" class="text-danger"></span></div>
+    <div class="col-12"><label asp-for="Description" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+    <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="StartDate" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span></div>
     <div class="col-md-6">
         <label class="form-label" for="StartHour">Start time</label>
+        <span class="text-danger" aria-hidden="true">*</span>
 
         <div class="time-input @(!ViewData.ModelState.IsValid ? "" : "")">
             <div class="input-group input-group-sm">
@@ -85,6 +87,7 @@
     </div>
     <div class="col-md-6">
         <label class="form-label" for="EndHour">End time</label>
+        <span class="text-danger" aria-hidden="true">*</span>
 
         <div class="time-input">
             <div class="input-group input-group-sm flex-nowrap">
