@@ -18,12 +18,12 @@
 else
 {
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>First name</th><th>Title</th><th>From date</th><th>To date</th><th>Bill amount</th><th>Approval notes</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+        <thead class="table-light"><tr><th>Employee ID</th><th>Title</th><th>From date</th><th>To date</th><th>Bill amount</th><th>Approval notes</th><th>Status</th><th class="text-end">Action</th></tr></thead>
         <tbody>
         @foreach (var expense in Model.Items)
         {
             <tr>
-                <td>@expense.FirstName</td>
+                <td>@expense.EmployeeId</td>
                 <td>@expense.Title</td>
                 <td>@expense.FromDate.ToString("yyyy-MM-dd")</td>
                 <td>@expense.ToDate.ToString("yyyy-MM-dd")</td>
