@@ -4,8 +4,6 @@
 @model PagedResultDto<StaffManagement.Core.DTOs.LeaveModel.LeaveRequestDto>
 @{
     ViewData["Title"] = "Leave management";
-    var canManageAllowances = User.IsInRole("Admin") || User.IsInRole("HR");
-    var leaveBalances = ViewBag.LeaveBalances as IReadOnlyList<StaffManagement.Core.DTOs.LeaveModel.LeaveBalanceDto> ?? [];
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
@@ -20,29 +18,6 @@
     <div class="row g-3 mb-3">
         <div class="col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Sick leave</h2><div class="d-flex justify-content-between"><span>Available</span><strong>@balance.SickAvailable days</strong></div><small class="text-muted">@balance.SickUsed used · @balance.SickPending pending · @balance.SickAllowance total</small></div></div></div>
         <div class="col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Casual leave</h2><div class="d-flex justify-content-between"><span>Available</span><strong>@balance.CasualAvailable days</strong></div><small class="text-muted">@balance.CasualUsed used · @balance.CasualPending pending · @balance.CasualAllowance total</small></div></div></div>
-    </div>
-}
-@if (canManageAllowances)
-{
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white"><h2 class="h5 mb-0">Employee leave allowances</h2><small class="text-muted">Update annual limits and review usage and pending requests.</small></div>
-        <div class="table-responsive"><table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Employee</th><th>Sick allowance</th><th>Sick used / pending / available</th><th>Casual allowance</th><th>Casual used / pending / available</th><th></th></tr></thead>
-            <tbody>
-            @foreach (var balanceItem in leaveBalances)
-            {
-                <tr>
-                    <td><strong>@balanceItem.EmployeeName</strong><div class="small text-muted">@balanceItem.Email</div></td>
-                        <td><label class="visually-hidden" for="sick-@balanceItem.EmployeeId">Sick leave allowance</label><input form="allowances-@balanceItem.EmployeeId" id="sick-@balanceItem.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balanceItem.SickAllowance" class="form-control form-control-sm" /></td>
-                        <td>@balanceItem.SickUsed used · @balanceItem.SickPending pending · @balanceItem.SickAvailable available</td>
-                        <td><label class="visually-hidden" for="casual-@balanceItem.EmployeeId">Casual leave allowance</label><input form="allowances-@balanceItem.EmployeeId" id="casual-@balanceItem.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balanceItem.CasualAllowance" class="form-control form-control-sm" /></td>
-                        <td>@balanceItem.CasualUsed used · @balanceItem.CasualPending pending · @balanceItem.CasualAvailable available</td>
-                        <td><form id="allowances-@balanceItem.EmployeeId" asp-action="UpdateAllowances" method="post"><input type="hidden" name="employeeId" value="@balanceItem.EmployeeId" /><button type="submit" class="btn btn-sm btn-outline-primary">Save</button></form></td>
-                </tr>
-            }
-            @if (leaveBalances.Count == 0) { <tr><td colspan="6" class="text-center text-muted py-3">No employees found.</td></tr> }
-            </tbody>
-        </table></div>
     </div>
 }
 <div class="card border-0 shadow-sm mb-3">
