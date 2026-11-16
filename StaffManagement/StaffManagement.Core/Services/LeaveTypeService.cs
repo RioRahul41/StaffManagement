@@ -31,6 +31,9 @@ public sealed class LeaveTypeService(ILeaveTypeRepository leaveTypeRepository) :
         if (existing is null) return (false, "Leave type was not found.");
         var name = leaveType.Name.Trim();
         if (string.IsNullOrWhiteSpace(name)) return (false, "Leave type name is required.");
+        if (IsBuiltInAllowanceType(existing.Name) &&
+            !string.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase))
+            return (false, $"The built-in '{existing.Name}' leave type name cannot be changed because leave rules depend on it.");
         if (await leaveTypeRepository.ExistsByNameAsync(name, leaveType.Id, cancellationToken))
             return (false, "A leave type with this name already exists.");
         existing.Name = name;
@@ -39,6 +42,10 @@ public sealed class LeaveTypeService(ILeaveTypeRepository leaveTypeRepository) :
         await leaveTypeRepository.SaveChangesAsync(cancellationToken);
         return (true, null);
     }
+
+    private static bool IsBuiltInAllowanceType(string name) =>
+        string.Equals(name, "Sick", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(name, "Casual", StringComparison.OrdinalIgnoreCase);
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {

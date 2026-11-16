@@ -48,9 +48,15 @@ public sealed class LeaveController(
         ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
         ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
         ViewBag.LeaveBalance = await leaveService.GetOwnBalanceAsync(CurrentIdentityUserId(), cancellationToken);
-        if (CanViewAllLeaves())
-            ViewBag.LeaveBalances = await leaveService.GetAllBalancesAsync(cancellationToken);
+        ViewBag.LeaveTypes = await leaveTypeService.GetAllAsync(cancellationToken: cancellationToken);
         return View(result);
+    }
+
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    public async Task<IActionResult> Allowances(CancellationToken cancellationToken)
+    {
+        var balances = await leaveService.GetAllBalancesAsync(cancellationToken);
+        return View(balances);
     }
 
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
@@ -175,7 +181,7 @@ public sealed class LeaveController(
     {
         var result = await leaveService.UpdateAllowancesAsync(employeeId, sickLeaveAllowance, casualLeaveAllowance, cancellationToken);
         TempData[result.Succeeded ? "Success" : "Error"] = result.Succeeded ? "Leave allowances updated." : result.Error;
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Allowances));
     }
 
     private bool CanReviewLeaves() =>

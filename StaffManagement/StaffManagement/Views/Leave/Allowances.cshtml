@@ -1,0 +1,74 @@
+@model IReadOnlyList<StaffManagement.Core.DTOs.LeaveModel.LeaveBalanceDto>
+@{
+    ViewData["Title"] = "Employee leave allowances";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">LEAVE MANAGEMENT</p>
+        <h1 class="mb-1">Employee leave allowances</h1>
+        <p class="text-muted mb-0">Update annual sick and casual leave limits and review employee usage.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to leave requests</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+        <h2 class="h5 mb-0">Annual allowances</h2>
+        <small class="text-muted">Pending requests reserve days. Approved requests count as used. Allowances can be set from 0 to 365 days.</small>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Employee</th>
+                    <th>Sick allowance</th>
+                    <th>Sick used / pending / available</th>
+                    <th>Casual allowance</th>
+                    <th>Casual used / pending / available</th>
+                    <th><span class="visually-hidden">Save changes</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var balance in Model)
+                {
+                    <tr>
+                        <td><strong>@balance.EmployeeName</strong><div class="small text-muted">@balance.Email</div></td>
+                        <td>
+                            <label class="visually-hidden" for="sick-@balance.EmployeeId">Sick leave allowance</label>
+                            <input form="allowances-@balance.EmployeeId" id="sick-@balance.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balance.SickAllowance" class="form-control form-control-sm" />
+                        </td>
+                        <td>@balance.SickUsed used · @balance.SickPending pending · @balance.SickAvailable available</td>
+                        <td>
+                            <label class="visually-hidden" for="casual-@balance.EmployeeId">Casual leave allowance</label>
+                            <input form="allowances-@balance.EmployeeId" id="casual-@balance.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balance.CasualAllowance" class="form-control form-control-sm" />
+                        </td>
+                        <td>@balance.CasualUsed used · @balance.CasualPending pending · @balance.CasualAvailable available</td>
+                        <td>
+                            <form id="allowances-@balance.EmployeeId" asp-action="UpdateAllowances" method="post">
+                                <input type="hidden" name="employeeId" value="@balance.EmployeeId" />
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">No employees found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @if (TempData["Success"] is string success)
+    {
+        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
+    }
+}
