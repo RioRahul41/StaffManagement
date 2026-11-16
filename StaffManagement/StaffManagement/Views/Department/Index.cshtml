@@ -2,6 +2,10 @@
 
 @{ ViewData["Title"] = "Departments"; }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="mb-1">Departments</h1>
@@ -24,8 +28,31 @@
         }
         else
         {
+            <div class="row g-3 mb-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="departmentNameFilter" class="form-label">Department</label>
+                    <select id="departmentNameFilter" class="form-select">
+                        <option value="">All departments</option>
+                        @foreach (var name in Model.Select(department => department.DepartmentName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().OrderBy(name => name))
+                        {
+                            <option value="@name">@name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="departmentStatusFilter" class="form-label">Status</label>
+                    <select id="departmentStatusFilter" class="form-select">
+                        <option value="">All statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" id="departmentResetSearch" class="btn btn-outline-secondary">Reset search</button>
+                </div>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="departmentTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center">S.No.</th>
@@ -40,7 +67,7 @@
                     @foreach (var department in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
                     {
                         <tr>
-                            <td class="text-center">@department.Index</td>
+                            <td class="text-center"></td>
                             <td class="fw-semibold">@department.Item.DepartmentName</td>
                             <td>@(string.IsNullOrWhiteSpace(department.Item.Description) ? "—" : department.Item.Description)</td>
                             <td>@department.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
@@ -50,17 +77,21 @@
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <a asp-action="Detail" asp-route-id="@department.Item.DepartmentId" class="btn btn-sm btn-outline-info me-1">Details</a>
-                                <a asp-action="Edit" asp-route-id="@department.Item.DepartmentId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                    <form asp-action="Delete"
-                                          asp-route-id="@department.Item.DepartmentId"
-                                          method="post"
-                                          class="d-inline delete-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            Delete
-                                        </button>
-                                    </form>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Department actions">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a asp-action="Detail" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Details</a></li>
+                                        <li><a asp-action="Edit" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Edit</a></li>
+                                        <li>
+                                            <form asp-action="Delete" asp-route-id="@department.Item.DepartmentId" method="post" class="delete-form">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -72,7 +103,37 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @if (Model.Count > 0)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const table = new DataTable('#departmentTable', {
+                    pageLength: 10,
+                    columnDefs: [
+                        { targets: [0, 5], orderable: false, searchable: false }
+                    ],
+                    drawCallback: function () {
+                        const info = this.api().page.info();
+                        this.api().column(0, { page: 'current' }).nodes().each(function (cell, index) {
+                            cell.textContent = info.start + index + 1;
+                        });
+                    }
+                });
+
+                document.getElementById('departmentNameFilter').addEventListener('change', function () {
+                    table.column(1).search(this.value, { exact: true }).draw();
+                });
+                document.getElementById('departmentStatusFilter').addEventListener('change', function () {
+                    table.column(4).search(this.value, { exact: true }).draw();
+                });
+                document.getElementById('departmentResetSearch').addEventListener('click', function () {
+                    window.location.reload();
+                });
+            });
+        </script>
+    }
     @if (TempData["SuccessMessage"] is string)
     {
         <script>
