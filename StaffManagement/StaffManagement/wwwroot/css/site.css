@@ -271,3 +271,77 @@ body.dark-mode .form-control::placeholder { color: #9ca3af; }
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+/* Professional time input */
+.time-input {
+    max-width: 260px;
+}
+
+    .time-input .input-group {
+        flex-wrap: nowrap;
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        background: var(--bs-body-bg);
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    .time-input .form-control,
+    .time-input .form-select {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background-color: transparent;
+    }
+
+    .time-input .form-control {
+        width: 3.25rem;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+    }
+
+    .time-input .form-select {
+        width: 5.25rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .time-input .input-group-text {
+        border: 0;
+        background: transparent;
+        color: var(--bs-secondary-color);
+        font-weight: 600;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .time-input .form-control:focus,
+    .time-input .form-select:focus {
+        outline: 0;
+        z-index: 3;
+    }
+
+    .time-input:focus-within .input-group {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 .25rem rgba(var(--bs-primary-rgb), .25);
+    }
+
+    /* Hide number spinners for a cleaner look */
+    .time-input input[type="number"]::-webkit-outer-spin-button,
+    .time-input input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .time-input input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    /* Validation */
+    .time-input.is-invalid .input-group {
+        border-color: var(--bs-danger);
+    }
+
+    .time-input.is-invalid:focus-within .input-group {
+        box-shadow: 0 0 0 .25rem rgba(var(--bs-danger-rgb), .25);
+    }
