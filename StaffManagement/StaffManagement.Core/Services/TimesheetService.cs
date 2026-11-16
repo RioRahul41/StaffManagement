@@ -23,6 +23,44 @@ public sealed class TimesheetService(
         return timesheets.Select(Map).ToList();
     }
 
+    public async Task<(IReadOnlyList<TimesheetDto> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+        bool canViewAll,
+        string identityUserId,
+        TimesheetDataTableQueryDto query,
+        CancellationToken cancellationToken = default)
+    {
+        var start = Math.Max(query.Start, 0);
+        var length = Math.Clamp(query.Length, 1, 100);
+        var searchTerm = query.SearchTerm?.Trim();
+        if (searchTerm?.Length > 200)
+            searchTerm = searchTerm[..200];
+
+        var normalizedQuery = new TimesheetDataTableQueryDto
+        {
+            Start = start,
+            Length = length,
+            SearchTerm = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm,
+            SortColumn = query.SortColumn,
+            SortAscending = query.SortAscending,
+            Status = query.Status,
+            DateFrom = query.DateFrom,
+            DateTo = query.DateTo
+        };
+
+        int? employeeId = null;
+        if (!canViewAll)
+        {
+            var employee = await employeeRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
+            if (employee is null)
+                return (Array.Empty<TimesheetDto>(), 0, 0);
+
+            employeeId = employee.Id;
+        }
+
+        var page = await timesheetRepository.GetDataTablePageAsync(employeeId, normalizedQuery, cancellationToken);
+        return (page.Items.Select(Map).ToList(), page.TotalCount, page.FilteredCount);
+    }
+
     public async Task<TimesheetDto?> GetByIdAsync(
         int id,
         bool canManage,
@@ -141,6 +179,30 @@ public sealed class TimesheetService(
             return (false, "You are not allowed to manage this timesheet.");
 
         timesheetRepository.Remove(timesheet);
+        await timesheetRepository.SaveChangesAsync(cancellationToken);
+        return (true, null);
+    }
+
+    public async Task<(bool Succeeded, string? Error)> ChangeStatusAsync(
+        int id,
+        TimesheetStatus status,
+        bool canManage,
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(status))
+            return (false, "Select a valid timesheet status.");
+
+        var timesheet = await timesheetRepository.GetByIdAsync(id, cancellationToken);
+        if (timesheet is null)
+            return (false, "Timesheet was not found.");
+
+        if (!await CanAccessAsync(timesheet, canManage, identityUserId, cancellationToken))
+            return (false, "You are not allowed to manage this timesheet.");
+
+        timesheet.Status = status;
+        timesheet.UpdatedTime = DateTime.UtcNow;
+        timesheetRepository.Update(timesheet);
         await timesheetRepository.SaveChangesAsync(cancellationToken);
         return (true, null);
     }

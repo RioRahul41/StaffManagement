@@ -1,4 +1,5 @@
 using StaffManagement.Core.DTOs.TimesheetModel;
+using StaffManagement.Model.Enums;
 
 namespace StaffManagement.Core.Iservices;
 
@@ -7,6 +8,12 @@ public interface ITimesheetService
     Task<IReadOnlyList<TimesheetDto>> GetAllAsync(
         bool canManage,
         string identityUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<(IReadOnlyList<TimesheetDto> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+        bool canViewAll,
+        string identityUserId,
+        TimesheetDataTableQueryDto query,
         CancellationToken cancellationToken = default);
 
     Task<TimesheetDto?> GetByIdAsync(
@@ -27,6 +34,13 @@ public interface ITimesheetService
         bool canManage,
         string identityUserId,
         string? documentPath,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, string? Error)> ChangeStatusAsync(
+        int id,
+        TimesheetStatus status,
+        bool canManage,
+        string identityUserId,
         CancellationToken cancellationToken = default);
 
     Task<(bool Succeeded, string? Error)> DeleteAsync(

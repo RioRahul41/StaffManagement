@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.TimesheetModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
+using StaffManagement.Model.Enums;
 
 namespace StaffManagement.Controllers;
 
@@ -14,14 +15,83 @@ public sealed class TimesheetController(
     IProjectService projectService,
     IWebHostEnvironment environment) : Controller
 {
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
-        var timesheets = await timesheetService.GetAllAsync(
+        return View();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Data(
+        int draw = 1,
+        int start = 0,
+        int length = 10,
+        string? searchTerm = null,
+        string? sortColumn = null,
+        string? sortDirection = null,
+        int? status = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        CancellationToken cancellationToken = default)
+    {
+        TimesheetStatus? statusFilter = null;
+        if (status.HasValue)
+        {
+            if (!Enum.IsDefined(typeof(TimesheetStatus), status.Value))
+                return BadRequest();
+
+            statusFilter = (TimesheetStatus)status.Value;
+        }
+
+        var page = await timesheetService.GetDataTablePageAsync(
             CanViewAllTimesheets(),
             CurrentIdentityUserId(),
+            new TimesheetDataTableQueryDto
+            {
+                Start = start,
+                Length = length,
+                SearchTerm = searchTerm,
+                SortColumn = sortColumn,
+                SortAscending = string.Equals(sortDirection, "asc", StringComparison.OrdinalIgnoreCase),
+                Status = statusFilter,
+                DateFrom = dateFrom,
+                DateTo = dateTo
+            },
             cancellationToken);
 
-        return View(timesheets);
+        var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager") ||
+            (User.IsInRole("User") && !User.IsInRole("HR"));
+
+        return Json(new
+        {
+            draw = Math.Max(draw, 0),
+            recordsTotal = page.TotalCount,
+            recordsFiltered = page.FilteredCount,
+            data = page.Items.Select(item => new
+            {
+                id = item.Id,
+                employeeName = item.EmployeeName,
+                projectName = item.ProjectName,
+                taskName = item.TaskName,
+                description = item.Description,
+                startDate = item.StartDate.ToString("yyyy-MM-dd"),
+                startTime = item.StartTime.ToString("h\\:mm"),
+                endTime = item.EndTime.ToString("h\\:mm"),
+                status = (int)item.Status,
+                statusLabel = item.Status == TimesheetStatus.InProgress ? "In Progress" : item.Status.ToString(),
+                statusClass = item.Status switch
+                {
+                    TimesheetStatus.Completed => "text-bg-success",
+                    TimesheetStatus.Pending => "text-bg-secondary",
+                    _ => "text-bg-warning"
+                },
+                documentUrl = item.DocumentPath?.StartsWith("/uploads/timesheets/", StringComparison.OrdinalIgnoreCase) == true
+                    ? item.DocumentPath
+                    : null,
+                viewUrl = Url.Action(nameof(Details), new { id = item.Id }),
+                editUrl = Url.Action(nameof(Edit), new { id = item.Id }),
+                canEdit
+            })
+        });
     }
 
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
@@ -152,6 +222,28 @@ public sealed class TimesheetController(
             DeleteDocument(existingTimesheet.DocumentPath);
 
         TempData["Success"] = "Timesheet updated successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeStatus(
+        int id,
+        TimesheetStatus status,
+        CancellationToken cancellationToken)
+    {
+        var result = await timesheetService.ChangeStatusAsync(
+            id,
+            status,
+            CanManageTimesheets(),
+            CurrentIdentityUserId(),
+            cancellationToken);
+
+        if (!result.Succeeded)
+            TempData["Error"] = result.Error;
+        else
+            TempData["Success"] = "Timesheet status updated successfully.";
+
         return RedirectToAction(nameof(Index));
     }
 

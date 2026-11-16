@@ -1,8 +1,13 @@
-@model IReadOnlyList<StaffManagement.Core.DTOs.TimesheetModel.TimesheetDto>
+@using StaffManagement.Model.Enums
 @{
     ViewData["Title"] = "Timesheets";
     var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager") || (User.IsInRole("User") && !User.IsInRole("HR"));
 }
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/3.1.5/css/dataTables.dataTables.min.css" />
+}
+
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
         <p class="text-primary fw-semibold mb-1">TIME TRACKING</p>
@@ -11,43 +16,246 @@
     </div>
     <a asp-action="Create" class="btn btn-primary">Add daily update</a>
 </div>
-@if (Model.Count == 0)
-{
-    <div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h4>No daily updates found</h4><p class="text-muted">Add a daily update to begin tracking work.</p><a asp-action="Create" class="btn btn-primary">Add daily update</a></div></div>
-}
-else
-{
-    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee</th><th>Project</th><th>Task</th><th>Description</th><th>Date</th><th>Time</th><th>Status</th><th>Document</th><th class="text-end">Actions</th></tr></thead>
-        <tbody>
-        @foreach (var timesheet in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
-        {
-            <tr>
-                <td class="text-center">@timesheet.Index</td>
-                <td>@timesheet.Item.EmployeeName</td>
-                <td>@timesheet.Item.ProjectName</td>
-                <td>@timesheet.Item.TaskName</td>
-                <td>@timesheet.Item.Description</td>
-                <td>@timesheet.Item.StartDate.ToString("yyyy-MM-dd")</td>
-                <td>@DateTime.Today.Add(timesheet.Item.StartTime).ToString("h:mm tt") – @DateTime.Today.Add(timesheet.Item.EndTime).ToString("h:mm tt")</td>
-                <td><span class="badge @(timesheet.Item.Status == StaffManagement.Model.Enums.TimesheetStatus.Completed ? "text-bg-success" : "text-bg-warning")">@(timesheet.Item.Status == StaffManagement.Model.Enums.TimesheetStatus.InProgress ? "In Progress" : "Completed")</span></td>
-                <td>@if (!string.IsNullOrWhiteSpace(timesheet.Item.DocumentPath)) { <a href="@timesheet.Item.DocumentPath" target="_blank" rel="noopener">View</a> } else { <span class="text-muted">-</span> }</td>
-                <td class="text-end text-nowrap">
-                    <a asp-action="Details" asp-route-id="@timesheet.Item.Id" class="btn btn-sm btn-outline-secondary">Details</a>
-                    @if (canEdit)
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="row g-3 align-items-end mb-3" aria-label="Timesheet filters">
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="statusFilter">Status</label>
+                <select id="statusFilter" class="form-select">
+                    <option value="">All statuses</option>
+                    @foreach (var status in Enum.GetValues<TimesheetStatus>())
                     {
-                        <a asp-action="Edit" asp-route-id="@timesheet.Item.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@timesheet.Item.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a>
+                        <option value="@((int)status)">@(status == TimesheetStatus.InProgress ? "In Progress" : status.ToString())</option>
                     }
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table></div></div>
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="dateFromFilter">From date</label>
+                <input id="dateFromFilter" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="dateToFilter">To date</label>
+                <input id="dateToFilter" type="date" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <button type="button" id="resetTimesheetFilters" class="btn btn-outline-secondary w-100">Reset</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="timesheetTable" class="table table-hover align-middle w-100">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">S.No.</th>
+                        <th>Employee</th>
+                        <th>Project</th>
+                        <th>Task</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Document</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (canEdit)
+{
+    <div class="modal fade" id="changeStatusModal" tabindex="-1" aria-labelledby="changeStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="ChangeStatus" method="post">
+                    <input type="hidden" id="changeStatusTimesheetId" name="id" />
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="changeStatusModalLabel">Change timesheet status</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="changeStatusValue">Status</label>
+                        <select class="form-select" id="changeStatusValue" name="status" required>
+                            @foreach (var status in Enum.GetValues<TimesheetStatus>())
+                            {
+                                <option value="@((int)status)">@(status == TimesheetStatus.InProgress ? "In Progress" : status.ToString())</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save status</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 
 @section Scripts {
+    <script src="https://cdn.datatables.net/3.1.5/js/dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const timesheetTable = new DataTable('#timesheetTable', {
+            processing: true,
+            serverSide: true,
+            searchDelay: 350,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[5, 'desc']],
+            ajax: {
+                url: '@Url.Action("Data", "Timesheet")',
+                type: 'GET',
+                data: function (request) {
+                    const sort = request.order.length ? request.order[0] : { column: 5, dir: 'desc' };
+                    return {
+                        draw: request.draw,
+                        start: request.start,
+                        length: request.length,
+                        searchTerm: request.search.value,
+                        sortColumn: request.columns[sort.column].name,
+                        sortDirection: sort.dir,
+                        status: document.getElementById('statusFilter').value,
+                        dateFrom: document.getElementById('dateFromFilter').value,
+                        dateTo: document.getElementById('dateToFilter').value
+                    };
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                    name: 'rowNumber',
+                    searchable: false,
+                    orderable: false,
+                    className: 'text-center',
+                    render: function (_data, type, _row, meta) {
+                        return type === 'display' ? meta.row + meta.settings._iDisplayStart + 1 : '';
+                    }
+                },
+                { data: 'employeeName', name: 'employeeName', render: DataTable.render.text() },
+                { data: 'projectName', name: 'projectName', render: DataTable.render.text() },
+                { data: 'taskName', name: 'taskName', render: DataTable.render.text() },
+                { data: 'description', name: 'description', render: DataTable.render.text() },
+                { data: 'startDate', name: 'startDate', render: DataTable.render.text() },
+                {
+                    data: null,
+                    name: 'startTime',
+                    searchable: false,
+                    render: function (_data, type, row) {
+                        return type === 'display'
+                            ? DataTable.render.text().display(row.startTime + ' – ' + row.endTime)
+                            : row.startTime + ' ' + row.endTime;
+                    }
+                },
+                {
+                    data: 'statusLabel',
+                    name: 'status',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return DataTable.render.text().display(data);
+                        const badge = document.createElement('span');
+                        badge.className = 'badge ' + row.statusClass;
+                        badge.textContent = data;
+                        return badge.outerHTML;
+                    }
+                },
+                {
+                    data: 'documentUrl',
+                    name: 'document',
+                    searchable: false,
+                    orderable: false,
+                    render: function (data, type) {
+                        if (type !== 'display') return '';
+                        if (!data) return '<span class="text-muted">-</span>';
+                        const link = document.createElement('a');
+                        link.href = data;
+                        link.target = '_blank';
+                        link.rel = 'noopener';
+                        link.textContent = 'View';
+                        return link.outerHTML;
+                    }
+                },
+                {
+                    data: null,
+                    name: 'actions',
+                    searchable: false,
+                    orderable: false,
+                    className: 'text-end text-nowrap',
+                    render: function (_data, type, row) {
+                        if (type !== 'display') return '';
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'dropdown';
+                        const trigger = document.createElement('button');
+                        trigger.type = 'button';
+                        trigger.className = 'btn btn-sm btn-outline-secondary';
+                        trigger.setAttribute('data-bs-toggle', 'dropdown');
+                        trigger.setAttribute('data-bs-boundary', 'viewport');
+                        trigger.setAttribute('aria-expanded', 'false');
+                        trigger.setAttribute('aria-label', 'Timesheet actions');
+                        trigger.innerHTML = '<span aria-hidden="true">&#8942;</span>';
+                        const menu = document.createElement('ul');
+                        menu.className = 'dropdown-menu dropdown-menu-end';
+
+                        const addLink = (label, url) => {
+                            const item = document.createElement('li');
+                            const link = document.createElement('a');
+                            link.className = 'dropdown-item';
+                            link.href = url;
+                            link.textContent = label;
+                            item.appendChild(link);
+                            menu.appendChild(item);
+                        };
+
+                        addLink('View', row.viewUrl);
+                        if (row.canEdit) {
+                            addLink('Edit', row.editUrl);
+                            const item = document.createElement('li');
+                            const changeStatus = document.createElement('button');
+                            changeStatus.type = 'button';
+                            changeStatus.className = 'dropdown-item';
+                            changeStatus.textContent = 'Change Status';
+                            changeStatus.setAttribute('data-bs-toggle', 'modal');
+                            changeStatus.setAttribute('data-bs-target', '#changeStatusModal');
+                            changeStatus.dataset.timesheetId = row.id;
+                            changeStatus.dataset.currentStatus = row.status;
+                            item.appendChild(changeStatus);
+                            menu.appendChild(item);
+                        }
+
+                        wrapper.append(trigger, menu);
+                        return wrapper.outerHTML;
+                    }
+                }
+            ],
+            language: {
+                emptyTable: 'No timesheets found.',
+                processing: 'Loading timesheets…',
+                search: 'Search:'
+            }
+        });
+
+        document.querySelectorAll('#statusFilter, #dateFromFilter, #dateToFilter').forEach(filter => {
+            filter.addEventListener('change', () => timesheetTable.ajax.reload(null, true));
+        });
+
+        document.getElementById('resetTimesheetFilters').addEventListener('click', () => {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+            timesheetTable.search('').order([[5, 'desc']]).page('first').draw();
+        });
+
+        const changeStatusModal = document.getElementById('changeStatusModal');
+        if (changeStatusModal) {
+            changeStatusModal.addEventListener('show.bs.modal', event => {
+                const trigger = event.relatedTarget;
+                document.getElementById('changeStatusTimesheetId').value = trigger.dataset.timesheetId;
+                document.getElementById('changeStatusValue').value = trigger.dataset.currentStatus;
+            });
+        }
+    </script>
     @if (TempData["Success"] is string success)
     {
         <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>

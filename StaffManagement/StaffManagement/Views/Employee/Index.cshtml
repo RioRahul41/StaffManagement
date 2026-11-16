@@ -87,7 +87,7 @@ else
         <span class="text-muted">Page @Model.PageNumber of @Model.TotalPages</span>
     </div>
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-                <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Name</th><th>Email</th><th>Department</th><th>Assigned projects</th><th>Reporting-Person</th> <th>Account</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Name</th><th>Email</th><th>Department</th><th>Assigned projects</th><th>Reporting-Person</th><th>Account</th><th>Status</th><th>Project assignment</th><th class="text-end">Actions</th></tr></thead>
         <tbody>
         @foreach (var employee in Model.Employees.Select((item, index) => new { Item = item, Index = (Model.PageNumber - 1) * Model.PageSize + index + 1 }))
         {
@@ -100,7 +100,34 @@ else
                 <td>@(employee.Item.ReportingPersonName ?? "-")</td>
                 <td>@if (employee.Item.IdentityUserId is null) { <span class="badge text-bg-warning">Not linked</span> } else { <span class="badge text-bg-success">Linked</span> }</td>
                 <td>@if (employee.Item.EmpIsActive) { <span class="badge text-bg-success">Active</span> } else { <span class="badge text-bg-secondary">Inactive</span> }</td>
-                <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-secondary">Details</a>@if (canEdit) { <a asp-action="Edit" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a> }@if (canDelete) { <a asp-action="Delete" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a> }@if (User.IsInRole("Admin") || User.IsInRole("Manager")) { <a asp-action="AssignProjects" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-success ms-1">Assign projects</a> }</td>
+                <td class="text-nowrap">
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <a asp-action="AssignProjects" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-success">Assign projects</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+                <td class="text-end text-nowrap">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @employee.Item.FirstName @employee.Item.LastName" title="Actions">
+                            <span aria-hidden="true">&#8942;</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a asp-action="Details" asp-route-id="@employee.Item.Id" class="dropdown-item">View</a></li>
+                            @if (canEdit)
+                            {
+                                <li><a asp-action="Edit" asp-route-id="@employee.Item.Id" class="dropdown-item">Edit</a></li>
+                            }
+                            @if (canDelete)
+                            {
+                                <li><a asp-action="Delete" asp-route-id="@employee.Item.Id" class="dropdown-item text-danger">Delete</a></li>
+                            }
+                        </ul>
+                    </div>
+                </td>
             </tr>
         }
         </tbody>
