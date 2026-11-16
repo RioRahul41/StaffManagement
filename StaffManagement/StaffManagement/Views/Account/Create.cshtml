@@ -22,8 +22,34 @@
         <div id="Phone-hint" class="form-text">Optional. If entered, use exactly 10 digits.</div>
         <span asp-validation-for="Phone" class="text-danger"></span>
     </div>
-    <div class="col-md-6"><label asp-for="Password" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Password" class="form-control" /><span asp-validation-for="Password" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="ConfirmPassword" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="ConfirmPassword" class="form-control" /><span asp-validation-for="ConfirmPassword" class="text-danger"></span></div>
+    <div class="col-md-6">
+        <label asp-for="Password" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span>
+        <div class="input-group">
+            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+            <button type="button" class="btn btn-outline-secondary toggle-password" data-password-target="Password" aria-label="Show password" aria-pressed="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" />
+                    <circle cx="8" cy="8" r="2" />
+                    <line class="password-eye-slash" x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.5" style="display:none" />
+                </svg>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="ConfirmPassword" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span>
+        <div class="input-group">
+            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+            <button type="button" class="btn btn-outline-secondary toggle-password" data-password-target="ConfirmPassword" aria-label="Show confirm password" aria-pressed="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" />
+                    <circle cx="8" cy="8" r="2" />
+                    <line class="password-eye-slash" x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.5" style="display:none" />
+                </svg>
+            </button>
+        </div>
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
     <div class="col-md-4"><label asp-for="Role" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><select asp-for="Role" class="form-select"><option value="">Select role</option>@foreach (var role in roles) { <option value="@role">@role</option> }</select><span asp-validation-for="Role" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><span id="reporting-person-required" class="text-danger" aria-hidden="true" hidden>*</span><select asp-for="ReportingPersonId" class="form-select"><option value="">-- Select reporting person --</option>@foreach (var manager in managers) { var managerRole = reportingPersonRoles.TryGetValue(manager.Id, out var assignedRole) ? assignedRole : ""; <option value="@manager.Id" data-reporting-role="@managerRole">@manager.FirstName @manager.LastName (@managerRole) (@manager.Email)</option> }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div id="reporting-person-help" class="form-text">HR and Managers report to Admin; Users report to HR or Manager.</div></div>
     <div class="col-md-4"><label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span><select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentId", "DepartmentName", Model.DepartmentId))"><option value="">-- Select Department --</option></select><span asp-validation-for="DepartmentId" class="text-danger"></span></div>
@@ -49,6 +75,17 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (() => {
+            document.querySelectorAll('.toggle-password[data-password-target]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const input = document.getElementById(button.dataset.passwordTarget);
+                    const isVisible = input.type === 'text';
+                    input.type = isVisible ? 'password' : 'text';
+                    button.setAttribute('aria-label', `${isVisible ? 'Show' : 'Hide'} ${input.labels[0].textContent.trim()}`);
+                    button.setAttribute('aria-pressed', String(!isVisible));
+                    button.querySelector('.password-eye-slash').style.display = isVisible ? 'none' : 'block';
+                });
+            });
+
             const role = document.getElementById('@Html.IdFor(model => model.Role)');
             const reportingPersonRequired = document.getElementById('reporting-person-required');
             const reportingPerson = document.getElementById('@Html.IdFor(model => model.ReportingPersonId)');
