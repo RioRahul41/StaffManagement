@@ -44,6 +44,8 @@ builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository
 builder.Services.AddScoped<IEmployeeExpenseService, EmployeeExpenseService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddScoped<IPolicyDocumentRepository, PolicyDocumentRepository>();
+builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 
 
 
@@ -54,7 +56,7 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.EnsureCreated();
+    await dbContext.Database.MigrateAsync();
 
     if (!await dbContext.Departments.AnyAsync(department => department.IsActive))
     {

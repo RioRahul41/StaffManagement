@@ -14,21 +14,24 @@
     </div>
     <div class="col-md-3">
         <label asp-for="FromDate" class="form-label"></label>
+        <span class="text-danger" aria-hidden="true">*</span>
         <input asp-for="FromDate" class="form-control" type="date" />
         <span asp-validation-for="FromDate" class="text-danger"></span>
     </div>
     <div class="col-md-3">
         <label asp-for="ToDate" class="form-label"></label>
+        <span class="text-danger" aria-hidden="true">*</span>
         <input asp-for="ToDate" class="form-control" type="date" />
         <span asp-validation-for="ToDate" class="text-danger"></span>
     </div>
     <div class="col-12">
         <label asp-for="Reason" class="form-label"></label>
+        <span class="text-danger" aria-hidden="true">*</span>
         <textarea asp-for="Reason" class="form-control" rows="3" maxlength="250"></textarea>
         <span asp-validation-for="Reason" class="text-danger"></span>
     </div>
     <div class="col-md-8" id="document-section" hidden>
-        <label class="form-label" for="document">Supporting document <span class="text-danger">(required for sick leave of 2+ days)</span></label>
+        <label class="form-label" for="document">Supporting document <span class="text-danger" id="document-required-marker" aria-hidden="true" hidden>*</span> <span class="text-danger">(required for sick leave of 2+ days)</span></label>
         <input class="form-control" type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" />
         <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
         <span class="text-danger">@Html.ValidationMessage("document")</span>
@@ -47,6 +50,7 @@
             const leaveType = document.getElementById('LeaveType');
             const documentInput = document.getElementById('document');
             const documentSection = document.getElementById('document-section');
+            const documentRequiredMarker = document.getElementById('document-required-marker');
             const sickLeaveValue = leaveType.dataset.sickValue;
             const today = '@DateTime.Today.ToString("yyyy-MM-dd")';
             const updateDateLimits = function () {
@@ -68,6 +72,7 @@
                 const needsDocument = leaveType.value === sickLeaveValue && start && end && end >= start && (end - start) / 86400000 + 1 >= 2;
                 documentSection.hidden = !needsDocument;
                 documentInput.required = Boolean(needsDocument);
+                documentRequiredMarker.hidden = !needsDocument;
                 if (!needsDocument) documentInput.value = '';
             };
             leaveType.addEventListener('change', function () {

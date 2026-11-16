@@ -27,6 +27,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<LeaveRequest> LeaveRequests { get; set; } = null!;
 
+        public DbSet<PolicyDocument> PolicyDocuments { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

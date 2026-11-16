@@ -9,12 +9,13 @@
     <input asp-for="Id" type="hidden" />
     <input asp-for="IdentityUserId" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Email" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
     <div class="col-md-6">
         <label asp-for="DepartmentId" class="form-label">Department</label>
+        <span class="text-danger" aria-hidden="true">*</span>
         <select asp-for="DepartmentId" class="form-select">
             <option value="">Select department</option>
             @foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Model.Entities.Department> ?? [])
@@ -72,7 +73,7 @@
     {
         <div class="col-md-6"><label class="form-label">Reporting person</label><input class="form-control" value="@(Model.ReportingPersonName ?? "Not assigned")" readonly /></div>
     }
-    <div class="col-md-6"><label asp-for="Location" class="form-label"></label><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="DOB" class="form-label"></label><input asp-for="DOB" class="form-control" /></div>
     <div class="col-12 form-check"><input asp-for="EmpIsActive" class="form-check-input" /><label asp-for="EmpIsActive" class="form-check-label"></label></div>
     <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>
