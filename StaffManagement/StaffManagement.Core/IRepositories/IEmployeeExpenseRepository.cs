@@ -11,6 +11,13 @@ public interface IEmployeeExpenseRepository
         CancellationToken cancellationToken = default);
 
     Task<EmployeeExpense?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<EmployeeExpense>> GetByGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default);
     Task AddAsync(EmployeeExpense expense, CancellationToken cancellationToken = default);
     void Update(EmployeeExpense expense);
     void Remove(EmployeeExpense expense);

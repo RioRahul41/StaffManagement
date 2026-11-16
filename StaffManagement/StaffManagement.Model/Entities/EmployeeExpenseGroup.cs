@@ -5,6 +5,7 @@ namespace StaffManagement.Model.Entities;
 public sealed class EmployeeExpenseGroup
 {
     public int EmployeeId { get; set; }
+    public Guid? BatchId { get; set; }
     public string Title { get; set; } = string.Empty;
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }

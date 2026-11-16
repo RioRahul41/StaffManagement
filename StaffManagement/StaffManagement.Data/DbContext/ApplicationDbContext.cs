@@ -31,6 +31,7 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<Holiday> Holidays { get; set; } = null!;
 
+        public DbSet<HelpDeskTicket> HelpDeskTickets { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,12 +104,20 @@ namespace StaffManagement.Data.DbContext
                 .Property(expense => expense.BillAmount)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<EmployeeExpense>()
+                .HasIndex(expense => new { expense.EmployeeId, expense.BatchId });
+
             modelBuilder.Entity<LeaveRequest>()
                 .HasOne(request => request.Employee)
                 .WithMany()
                 .HasForeignKey(request => request.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<HelpDeskTicket>()
+                .HasOne(ticket => ticket.Employee)
+                .WithMany()
+                .HasForeignKey(ticket => ticket.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }
