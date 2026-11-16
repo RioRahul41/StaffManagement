@@ -57,11 +57,11 @@
                 'HR': ['Admin'],
                 'Manager': ['Admin'],
                 'User': ['HR', 'Manager'],
-                'Technical Support': []
+                'Technical Support': ['Admin']
             };
             const updateReportingPersonOptions = () => {
                 const allowed = allowedReportingRoles[role.value] || [];
-                const required = ['HR', 'Manager', 'User'].includes(role.value);
+                const required = ['HR', 'Manager', 'User', 'Technical Support'].includes(role.value);
                 reportingPerson.required = required;
                 reportingPersonRequired.hidden = !required;
                 Array.from(reportingPerson.options).forEach(option => {
@@ -75,7 +75,9 @@
                     ? 'HR and Managers must report to an Admin.'
                     : role.value === 'User'
                         ? 'Users must report to an HR or Manager.'
-                        : role.value === 'Admin'
+                        : role.value === 'Technical Support'
+                            ? 'Technical Support must report to an Admin.'
+                            : role.value === 'Admin'
                             ? 'Admin accounts do not have a reporting person.'
                             : 'No reporting person is assigned for this role.';
             };

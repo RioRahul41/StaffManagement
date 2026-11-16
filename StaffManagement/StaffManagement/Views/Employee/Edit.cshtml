@@ -102,7 +102,7 @@
     <script>
         const reportingPerson = document.getElementById('@Html.IdFor(model => model.ReportingPersonId)');
         if (reportingPerson) {
-            const allowedByRole = { 'HR': ['Admin'], 'Manager': ['Admin'], 'User': ['HR', 'Manager'] };
+            const allowedByRole = { 'HR': ['Admin'], 'Manager': ['Admin'], 'User': ['HR', 'Manager'], 'Technical Support': ['Admin'] };
             const allowed = allowedByRole[reportingPerson.dataset.targetRole] || [];
             Array.from(reportingPerson.options).forEach(option => {
                 if (!option.value) return;
@@ -111,7 +111,7 @@
                 option.disabled = !visible;
                 if (!visible && option.selected) reportingPerson.value = '';
             });
-            reportingPerson.required = ['HR', 'Manager', 'User'].includes(reportingPerson.dataset.targetRole);
+            reportingPerson.required = ['HR', 'Manager', 'User', 'Technical Support'].includes(reportingPerson.dataset.targetRole);
         }
     </script>
 }
