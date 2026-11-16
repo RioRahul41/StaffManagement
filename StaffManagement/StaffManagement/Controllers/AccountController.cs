@@ -91,6 +91,8 @@ public sealed class AccountController(
         model.Salary = currentEmployee.Salary;
         model.ProjectIds = currentEmployee.ProjectIds;
         model.EmpIsActive = currentEmployee.EmpIsActive;
+        model.SickLeaveAllowance = currentEmployee.SickLeaveAllowance;
+        model.CasualLeaveAllowance = currentEmployee.CasualLeaveAllowance;
 
         // These employee-management fields are intentionally not editable in the
         // self-service profile form. Their values are restored above, so remove
@@ -101,6 +103,8 @@ public sealed class AccountController(
         ModelState.Remove(nameof(EmployeeDto.Salary));
         ModelState.Remove(nameof(EmployeeDto.ProjectIds));
         ModelState.Remove(nameof(EmployeeDto.EmpIsActive));
+        ModelState.Remove(nameof(EmployeeDto.SickLeaveAllowance));
+        ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
 
         if (!ModelState.IsValid)
             return View(model);
@@ -184,15 +188,19 @@ public sealed class AccountController(
     {
         var creatorRoles = GetCreatorRoles();
         var allowedRoles = accountService.GetCreatableRoles(creatorRoles);
+        var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
         if (!allowedRoles.Contains(model.Role, StringComparer.OrdinalIgnoreCase))
             ModelState.AddModelError(nameof(model.Role), "You cannot create an account with this role.");
+        if (string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase) && !model.ReportingPersonId.HasValue)
+            ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person to this user.");
+        else if (model.ReportingPersonId.HasValue && !reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value))
+            ModelState.AddModelError(nameof(model.ReportingPersonId), "Select an active employee with the Admin, HR, or Manager role.");
 
         if (!ModelState.IsValid)
         {
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
-            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
         }
 
@@ -203,7 +211,6 @@ public sealed class AccountController(
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
-            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View(model);
         }
 
@@ -211,17 +218,23 @@ public sealed class AccountController(
         return RedirectToAction("Index", "Employee");
     }
 
-    private async Task LoadReportingPersonsAsync(int? selectedReportingPersonId = null)
+    private async Task<IReadOnlyList<EmployeeDto>> LoadReportingPersonsAsync(int? selectedReportingPersonId = null)
     {
-        var reportingUsers = await userManager.GetUsersInRoleAsync(RoleNames.Manager);
-        var reportingUserIds = reportingUsers.Select(user => user.Id).ToHashSet(StringComparer.Ordinal);
+        var reportingUserIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var role in new[] { RoleNames.Admin, RoleNames.Hr, RoleNames.Manager })
+        {
+            var reportingUsers = await userManager.GetUsersInRoleAsync(role);
+            reportingUserIds.UnionWith(reportingUsers.Select(user => user.Id));
+        }
 
-        ViewBag.Managers = (await employeeService.GetAllAsync())
+        var people = (await employeeService.GetAllAsync())
             .Where(employee => employee.EmpIsActive &&
                 employee.IdentityUserId is not null &&
                 reportingUserIds.Contains(employee.IdentityUserId))
             .ToList();
+        ViewBag.Managers = people;
         ViewBag.SelectedReportingPersonId = selectedReportingPersonId;
+        return people;
     }
 
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)

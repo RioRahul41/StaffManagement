@@ -81,6 +81,24 @@ public sealed class LeaveRequestRepository(ApplicationDbContext dbContext) : ILe
                 request => request.Id == id && !request.Employee.EmpIsDeleted,
                 cancellationToken);
 
+    public async Task<(int SickUsed, int SickPending, int CasualUsed, int CasualPending)> GetLeaveTotalsAsync(
+        int employeeId, CancellationToken cancellationToken = default)
+    {
+        var totals = await dbContext.LeaveRequests.AsNoTracking()
+            .Where(request => request.EmployeeId == employeeId &&
+                (request.LeaveType == LeaveType.Sick || request.LeaveType == LeaveType.Casual))
+            .GroupBy(request => new { request.LeaveType, request.Status })
+            .Select(group => new { group.Key.LeaveType, group.Key.Status, Days = group.Sum(request => request.AppliedDays) })
+            .ToListAsync(cancellationToken);
+
+        int Sum(LeaveType type, LeaveStatus status) => totals
+            .Where(item => item.LeaveType == type && item.Status == status)
+            .Sum(item => item.Days);
+
+        return (Sum(LeaveType.Sick, LeaveStatus.Approved), Sum(LeaveType.Sick, LeaveStatus.Pending),
+            Sum(LeaveType.Casual, LeaveStatus.Approved), Sum(LeaveType.Casual, LeaveStatus.Pending));
+    }
+
     public async Task AddAsync(LeaveRequest request, CancellationToken cancellationToken = default) =>
         await dbContext.LeaveRequests.AddAsync(request, cancellationToken);
 

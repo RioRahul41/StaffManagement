@@ -46,6 +46,9 @@ public sealed class LeaveController(
         ViewBag.LeaveType = leaveType;
         ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
         ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+        ViewBag.LeaveBalance = await leaveService.GetOwnBalanceAsync(CurrentIdentityUserId(), cancellationToken);
+        if (CanViewAllLeaves())
+            ViewBag.LeaveBalances = await leaveService.GetAllBalancesAsync(cancellationToken);
         return View(result);
     }
 
@@ -109,12 +112,22 @@ public sealed class LeaveController(
     public Task<IActionResult> Reject(int id, CancellationToken cancellationToken) =>
         ReviewAsync(id, LeaveStatus.Rejected, cancellationToken);
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+    {
+        var result = await leaveService.CancelAsync(id, CurrentIdentityUserId(), cancellationToken);
+        TempData[result.Succeeded ? "Success" : "Error"] = result.Succeeded ? "Leave request cancelled." : result.Error;
+        return RedirectToAction(nameof(Index));
+    }
+
     public async Task<IActionResult> Document(int id, CancellationToken cancellationToken)
     {
         var documentPath = await leaveService.GetDocumentPathAsync(
             id,
             CurrentIdentityUserId(),
             CanReviewLeaves(),
+            CanViewAllLeaves(),
             cancellationToken);
 
         if (documentPath is null)
@@ -134,7 +147,7 @@ public sealed class LeaveController(
         LeaveStatus status,
         CancellationToken cancellationToken)
     {
-        var result = await leaveService.ReviewAsync(id, status, CurrentIdentityUserId(), cancellationToken);
+        var result = await leaveService.ReviewAsync(id, status, CurrentIdentityUserId(), User.IsInRole(RoleNames.Hr), cancellationToken);
         if (result.Succeeded)
             TempData["Success"] = status == LeaveStatus.Approved
                 ? "Leave request approved."
@@ -142,6 +155,16 @@ public sealed class LeaveController(
         else
             TempData["Error"] = result.Error;
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateAllowances(int employeeId, int sickLeaveAllowance, int casualLeaveAllowance, CancellationToken cancellationToken)
+    {
+        var result = await leaveService.UpdateAllowancesAsync(employeeId, sickLeaveAllowance, casualLeaveAllowance, cancellationToken);
+        TempData[result.Succeeded ? "Success" : "Error"] = result.Succeeded ? "Leave allowances updated." : result.Error;
         return RedirectToAction(nameof(Index));
     }
 

@@ -131,6 +131,11 @@ public sealed class EmployeeController(
         if (existingEmployee is null)
             return NotFound();
 
+        model.SickLeaveAllowance = existingEmployee.SickLeaveAllowance;
+        model.CasualLeaveAllowance = existingEmployee.CasualLeaveAllowance;
+        ModelState.Remove(nameof(EmployeeDto.SickLeaveAllowance));
+        ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
+
         var canAssignReportingPerson = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
         if (!canAssignReportingPerson)
             model.ReportingPersonId = existingEmployee.ReportingPersonId;

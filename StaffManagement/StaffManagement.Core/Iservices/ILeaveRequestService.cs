@@ -6,6 +6,9 @@ namespace StaffManagement.Core.Iservices;
 
 public interface ILeaveRequestService
 {
+    Task<LeaveBalanceDto?> GetOwnBalanceAsync(string identityUserId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<LeaveBalanceDto>> GetAllBalancesAsync(CancellationToken cancellationToken = default);
+    Task<(bool Succeeded, string? Error)> UpdateAllowancesAsync(int employeeId, int sickAllowance, int casualAllowance, CancellationToken cancellationToken = default);
     Task<PagedResultDto<LeaveRequestDto>> GetPagedAsync(
         string identityUserId,
         bool canReviewAssignedRequests,
@@ -29,11 +32,14 @@ public interface ILeaveRequestService
         int id,
         string identityUserId,
         bool canReviewAssignedRequests,
+        bool canViewAllRequests,
         CancellationToken cancellationToken = default);
 
     Task<(bool Succeeded, string? Error)> ReviewAsync(
         int id,
         LeaveStatus status,
         string identityUserId,
+        bool canReviewAllRequests,
         CancellationToken cancellationToken = default);
+    Task<(bool Succeeded, string? Error)> CancelAsync(int id, string identityUserId, CancellationToken cancellationToken = default);
 }

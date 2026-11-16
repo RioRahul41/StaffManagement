@@ -31,6 +31,7 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<Holiday> Holidays { get; set; } = null!;
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -38,6 +39,9 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Employee>().Property(employee => employee.SickLeaveAllowance).HasDefaultValue(10);
+            modelBuilder.Entity<Employee>().Property(employee => employee.CasualLeaveAllowance).HasDefaultValue(10);
 
             modelBuilder.Entity<Holiday>()
                 .Property(holiday => holiday.HolidayDate)
@@ -104,6 +108,7 @@ namespace StaffManagement.Data.DbContext
                 .WithMany()
                 .HasForeignKey(request => request.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
 
         }
     }

@@ -56,6 +56,7 @@ public sealed class HrLeaveVisibilityTests
         public Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddAsync(Employee employee, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public void Update(Employee employee) => throw new NotSupportedException();
+        public void UpdateLeaveAllowances(Employee employee) => throw new NotSupportedException();
         public void Remove(Employee employee) => throw new NotSupportedException();
         public Task<bool> EmailExistsAsync(string email, int? excludedId = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -90,6 +91,7 @@ public sealed class HrLeaveVisibilityTests
         }
 
         public Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<(int SickUsed, int SickPending, int CasualUsed, int CasualPending)> GetLeaveTotalsAsync(int employeeId, CancellationToken cancellationToken = default) => Task.FromResult((0, 0, 0, 0));
         public Task AddAsync(LeaveRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public void Update(LeaveRequest request) => throw new NotSupportedException();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();

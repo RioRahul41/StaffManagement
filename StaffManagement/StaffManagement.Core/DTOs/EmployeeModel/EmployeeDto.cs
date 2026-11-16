@@ -48,4 +48,10 @@ public class EmployeeDto
 
     public Gender? Gender { get; set; }
     public bool EmpIsActive { get; set; } = true;
+
+    [Range(0, 365, ErrorMessage = "Sick leave allowance must be between 0 and 365 days.")]
+    public int SickLeaveAllowance { get; set; } = 10;
+
+    [Range(0, 365, ErrorMessage = "Casual leave allowance must be between 0 and 365 days.")]
+    public int CasualLeaveAllowance { get; set; } = 10;
 }

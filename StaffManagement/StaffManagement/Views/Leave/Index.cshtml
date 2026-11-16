@@ -3,6 +3,8 @@
 @model PagedResultDto<StaffManagement.Core.DTOs.LeaveModel.LeaveRequestDto>
 @{
     ViewData["Title"] = "Leave management";
+    var canManageAllowances = User.IsInRole("Admin") || User.IsInRole("HR");
+    var leaveBalances = ViewBag.LeaveBalances as IReadOnlyList<StaffManagement.Core.DTOs.LeaveModel.LeaveBalanceDto> ?? [];
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
@@ -10,8 +12,38 @@
         <h1 class="mb-1">Leave requests</h1>
         <p class="text-muted mb-0">Review your leave history and requests assigned to you.</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Apply for leave</a>
+    @if (ViewBag.LeaveBalance is not null) { <a asp-action="Create" class="btn btn-primary">Apply for leave</a> }
 </div>
+@if (ViewBag.LeaveBalance is StaffManagement.Core.DTOs.LeaveModel.LeaveBalanceDto balance)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Sick leave</h2><div class="d-flex justify-content-between"><span>Available</span><strong>@balance.SickAvailable days</strong></div><small class="text-muted">@balance.SickUsed used · @balance.SickPending pending · @balance.SickAllowance total</small></div></div></div>
+        <div class="col-md-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Casual leave</h2><div class="d-flex justify-content-between"><span>Available</span><strong>@balance.CasualAvailable days</strong></div><small class="text-muted">@balance.CasualUsed used · @balance.CasualPending pending · @balance.CasualAllowance total</small></div></div></div>
+    </div>
+}
+@if (canManageAllowances)
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Employee leave allowances</h2><small class="text-muted">Update annual limits and review usage and pending requests.</small></div>
+        <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Employee</th><th>Sick allowance</th><th>Sick used / pending / available</th><th>Casual allowance</th><th>Casual used / pending / available</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var balanceItem in leaveBalances)
+            {
+                <tr>
+                    <td><strong>@balanceItem.EmployeeName</strong><div class="small text-muted">@balanceItem.Email</div></td>
+                        <td><label class="visually-hidden" for="sick-@balanceItem.EmployeeId">Sick leave allowance</label><input form="allowances-@balanceItem.EmployeeId" id="sick-@balanceItem.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balanceItem.SickAllowance" class="form-control form-control-sm" /></td>
+                        <td>@balanceItem.SickUsed used · @balanceItem.SickPending pending · @balanceItem.SickAvailable available</td>
+                        <td><label class="visually-hidden" for="casual-@balanceItem.EmployeeId">Casual leave allowance</label><input form="allowances-@balanceItem.EmployeeId" id="casual-@balanceItem.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balanceItem.CasualAllowance" class="form-control form-control-sm" /></td>
+                        <td>@balanceItem.CasualUsed used · @balanceItem.CasualPending pending · @balanceItem.CasualAvailable available</td>
+                        <td><form id="allowances-@balanceItem.EmployeeId" asp-action="UpdateAllowances" method="post"><input type="hidden" name="employeeId" value="@balanceItem.EmployeeId" /><button type="submit" class="btn btn-sm btn-outline-primary">Save</button></form></td>
+                </tr>
+            }
+            @if (leaveBalances.Count == 0) { <tr><td colspan="6" class="text-center text-muted py-3">No employees found.</td></tr> }
+            </tbody>
+        </table></div>
+    </div>
+}
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body d-flex justify-content-between align-items-center">
         <span class="text-muted">Total leave applications</span>
@@ -65,11 +97,11 @@
     </div>
 </form>
 <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Applied count</th><th>Reason</th><th>Document</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+        <thead class="table-light"><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Applied count</th><th>Deducted</th><th>Reason</th><th>Document</th><th>Status</th><th class="text-end">Action</th></tr></thead>
         <tbody>
         @if (Model.Items.Count == 0)
         {
-            <tr><td colspan="9" class="text-center text-muted py-4">No leave requests found.</td></tr>
+            <tr><td colspan="10" class="text-center text-muted py-4">No leave requests found.</td></tr>
         }
         else
         {
@@ -81,9 +113,10 @@
                     <td>@request.FromDate.ToString("yyyy-MM-dd")</td>
                     <td>@request.ToDate.ToString("yyyy-MM-dd")</td>
                     <td>@request.AppliedDays @(request.AppliedDays == 1 ? "day" : "days")</td>
+                    <td>@(request.Status == LeaveStatus.Approved && (request.LeaveType == LeaveType.Sick || request.LeaveType == LeaveType.Casual) ? $"{request.AppliedDays} days" : "0 days")</td>
                     <td>@request.Reason</td>
                     <td>@if (!string.IsNullOrWhiteSpace(request.DocumentPath)) { <a asp-action="Document" asp-route-id="@request.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
-                    <td><span class="badge @(request.Status == LeaveStatus.Approved ? "text-bg-success" : request.Status == LeaveStatus.Rejected ? "text-bg-danger" : "text-bg-warning")">@request.Status</span></td>
+                    <td><span class="badge @(request.Status == LeaveStatus.Approved ? "text-bg-success" : request.Status == LeaveStatus.Rejected ? "text-bg-danger" : request.Status == LeaveStatus.Cancelled ? "text-bg-secondary" : "text-bg-warning")">@request.Status</span></td>
                     <td class="text-end text-nowrap">
                         @if (request.CanReview)
                         {
@@ -92,6 +125,12 @@
                             </form>
                             <form asp-action="Reject" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Reject this leave?" data-confirm-text="This request will be marked as rejected.">
                                 <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                            </form>
+                        }
+                        else if (request.CanCancel)
+                        {
+                            <form asp-action="Cancel" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Cancel this leave?" data-confirm-text="The pending days will be released back to your available balance.">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
                             </form>
                         }
                         else

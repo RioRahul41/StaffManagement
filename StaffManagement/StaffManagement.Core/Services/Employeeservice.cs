@@ -91,6 +91,8 @@ namespace StaffManagement.Core.Services
             employee.Designation = model.Designation;
             employee.Gender = model.Gender;
             employee.EmpIsActive = model.EmpIsActive;
+            employee.SickLeaveAllowance = model.SickLeaveAllowance;
+            employee.CasualLeaveAllowance = model.CasualLeaveAllowance;
             employee.UpdatedTime = DateTime.UtcNow;
 
             repository.Update(employee);
@@ -138,7 +140,9 @@ namespace StaffManagement.Core.Services
             Salary = employee.Salary,
             Designation = employee.Designation,
             Gender = employee.Gender,
-            EmpIsActive = employee.EmpIsActive
+            EmpIsActive = employee.EmpIsActive,
+            SickLeaveAllowance = employee.SickLeaveAllowance,
+            CasualLeaveAllowance = employee.CasualLeaveAllowance
         };
 
         private static Employee Map(EmployeeDto model) => new()
@@ -156,7 +160,9 @@ namespace StaffManagement.Core.Services
             Salary = model.Salary,
             Designation = model.Designation,
             Gender = model.Gender,
-            EmpIsActive = model.EmpIsActive
+            EmpIsActive = model.EmpIsActive,
+            SickLeaveAllowance = model.SickLeaveAllowance,
+            CasualLeaveAllowance = model.CasualLeaveAllowance
         };
     }
 }

@@ -89,6 +89,13 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
 
     public void Update(Employee employee) => dbContext.Employees.Update(employee);
 
+    public void UpdateLeaveAllowances(Employee employee)
+    {
+        dbContext.Entry(employee).Property(item => item.SickLeaveAllowance).IsModified = true;
+        dbContext.Entry(employee).Property(item => item.CasualLeaveAllowance).IsModified = true;
+        dbContext.Entry(employee).Property(item => item.UpdatedTime).IsModified = true;
+    }
+
     public void Remove(Employee employee)
     {
         employee.EmpIsDeleted = true;

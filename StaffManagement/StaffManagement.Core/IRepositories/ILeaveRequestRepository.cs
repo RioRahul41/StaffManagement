@@ -19,6 +19,7 @@ public interface ILeaveRequestRepository
         CancellationToken cancellationToken = default);
 
     Task<LeaveRequest?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<(int SickUsed, int SickPending, int CasualUsed, int CasualPending)> GetLeaveTotalsAsync(int employeeId, CancellationToken cancellationToken = default);
     Task AddAsync(LeaveRequest request, CancellationToken cancellationToken = default);
     void Update(LeaveRequest request);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

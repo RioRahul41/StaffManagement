@@ -55,6 +55,10 @@ namespace StaffManagement.Model.Entities
         public bool EmpIsDeleted { get; set; } = false;
 
         public bool EmpIsActive { get; set; } = false;
+        [Range(0, 365)]
+        public int SickLeaveAllowance { get; set; } = 10;
+        [Range(0, 365)]
+        public int CasualLeaveAllowance { get; set; } = 10;
         [EnumDataType(typeof(Gender))]
         public Gender? Gender { get; set; }
 

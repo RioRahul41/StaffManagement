@@ -17,6 +17,7 @@ namespace StaffManagement.Core.IRepositories
         Task<Employee?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default);
         Task AddAsync(Employee employee, CancellationToken cancellationToken = default);
         void Update(Employee employee);
+        void UpdateLeaveAllowances(Employee employee);
         void Remove(Employee employee);
         Task<bool> EmailExistsAsync(string email, int? excludedId = null, CancellationToken cancellationToken = default);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

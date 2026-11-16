@@ -125,6 +125,24 @@
                     }
                 </header>
                 <div class="container-fluid px-4 pb-4">
+                    @{
+                        var breadcrumbAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+                        var breadcrumbController = currentController ?? "Home";
+                        var breadcrumbLabel = ViewData["BreadcrumbTitle"]?.ToString() ?? ViewData["Title"]?.ToString() ?? breadcrumbAction;
+                    }
+                    @if (breadcrumbController == "Leave")
+                    {
+                        <nav aria-label="Breadcrumb" class="mb-3">
+                            <ol class="breadcrumb small mb-0">
+                                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                                @if (breadcrumbAction != "Index")
+                                {
+                                    <li class="breadcrumb-item"><a asp-controller="Leave" asp-action="Index">Leave management</a></li>
+                                }
+                                <li class="breadcrumb-item active" aria-current="page">@breadcrumbLabel</li>
+                            </ol>
+                        </nav>
+                    }
                     @RenderBody()
                 </div>
             </main>

@@ -33,11 +33,7 @@
                     <input asp-for="HolidayDate" type="date" class="form-control" />
                     <span asp-validation-for="HolidayDate" class="text-danger"></span>
                 </div>
-                <div class="col-md-5">
-                    <label asp-for="Description" class="form-label">Details (optional)</label>
-                    <input asp-for="Description" class="form-control" maxlength="500" placeholder="Optional note" />
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
+                
                 <div class="col-12"><button type="submit" class="btn btn-primary">Add holiday</button></div>
             </form>
         </div>
@@ -58,7 +54,6 @@
                     <tr>
                         <th scope="col">Date</th>
                         <th scope="col">Holiday</th>
-                        <th scope="col">Details</th>
                         @if (canManageHolidays)
                         {
                             <th scope="col">Actions</th>
@@ -71,7 +66,6 @@
                         <tr>
                             <td><time datetime="@(holiday.HolidayDate.ToString("yyyy-MM-dd"))">@holiday.HolidayDate.ToString("ddd, dd MMM yyyy")</time></td>
                             <td class="fw-semibold">@holiday.HolidayName</td>
-                            <td>@(string.IsNullOrWhiteSpace(holiday.Description) ? "—" : holiday.Description)</td>
                             @if (canManageHolidays)
                             {
                                 <td>

@@ -25,4 +25,12 @@ public class LeaveRequestDto
     public string? DocumentPath { get; set; }
 
     public bool CanReview { get; set; }
+    public bool CanCancel { get; set; }
+
+    public int SickLeaveAllowance { get; set; }
+    public int SickLeaveUsed { get; set; }
+    public int SickLeavePending { get; set; }
+    public int CasualLeaveAllowance { get; set; }
+    public int CasualLeaveUsed { get; set; }
+    public int CasualLeavePending { get; set; }
 }
