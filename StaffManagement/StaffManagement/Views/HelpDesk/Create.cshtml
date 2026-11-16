@@ -17,9 +17,9 @@
             <span asp-validation-for="TicketType" class="text-danger"></span>
         </div>
         <div class="col-md-6">
-            <label asp-for="Status" class="form-label">Status <span class="text-danger">*</span></label>
-            <select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<HelpDeskStatus>())" required></select>
-            <span asp-validation-for="Status" class="text-danger"></span>
+            <label class="form-label">Ticket status</label>
+            <input class="form-control" value="Open" readonly />
+            <div class="form-text">New tickets start as Open. Technical Support updates the status.</div>
         </div>
         <div class="col-12">
             <label asp-for="Description" class="form-label">Description <span class="text-danger">*</span></label>

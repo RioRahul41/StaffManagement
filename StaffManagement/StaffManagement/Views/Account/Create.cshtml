@@ -7,6 +7,7 @@
     var designations = ViewBag.Designations as IReadOnlyList<StaffManagement.Model.Entities.Designation> ?? [];
     var departments = ViewBag.Departments as IEnumerable<StaffManagement.Model.Entities.Department> ?? [];
     var managers = ViewBag.Managers as IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto> ?? [];
+    var reportingPersonRoles = ViewBag.ReportingPersonRoles as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
 }
 <h1>Create employee account</h1>
 <p class="text-muted">The account and linked employee record are created together.</p>
@@ -24,7 +25,7 @@
     <div class="col-md-6"><label asp-for="Password" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Password" class="form-control" /><span asp-validation-for="Password" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="ConfirmPassword" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="ConfirmPassword" class="form-control" /><span asp-validation-for="ConfirmPassword" class="text-danger"></span></div>
     <div class="col-md-4"><label asp-for="Role" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><select asp-for="Role" class="form-select"><option value="">Select role</option>@foreach (var role in roles) { <option value="@role">@role</option> }</select><span asp-validation-for="Role" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><span id="reporting-person-required" class="text-danger" aria-hidden="true" hidden>*</span><select asp-for="ReportingPersonId" class="form-select"><option value="">-- Select reporting person --</option>@foreach (var manager in managers) { <option value="@manager.Id">@manager.FirstName @manager.LastName (@manager.Email)</option> }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div class="form-text">Select an active Admin, HR, or Manager. Required when creating a User account.</div></div>
+    <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><span id="reporting-person-required" class="text-danger" aria-hidden="true" hidden>*</span><select asp-for="ReportingPersonId" class="form-select"><option value="">-- Select reporting person --</option>@foreach (var manager in managers) { var managerRole = reportingPersonRoles.TryGetValue(manager.Id, out var assignedRole) ? assignedRole : ""; <option value="@manager.Id" data-reporting-role="@managerRole">@manager.FirstName @manager.LastName (@managerRole) (@manager.Email)</option> }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div id="reporting-person-help" class="form-text">HR and Managers report to Admin; Users report to HR or Manager.</div></div>
     <div class="col-md-4"><label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span><select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentId", "DepartmentName", Model.DepartmentId))"><option value="">-- Select Department --</option></select><span asp-validation-for="DepartmentId" class="text-danger"></span></div>
     
     <div class="col-md-4">
@@ -50,11 +51,36 @@
         (() => {
             const role = document.getElementById('@Html.IdFor(model => model.Role)');
             const reportingPersonRequired = document.getElementById('reporting-person-required');
-            const updateReportingPersonRequired = () => {
-                reportingPersonRequired.hidden = role.value !== 'User';
+            const reportingPerson = document.getElementById('@Html.IdFor(model => model.ReportingPersonId)');
+            const reportingPersonHelp = document.getElementById('reporting-person-help');
+            const allowedReportingRoles = {
+                'HR': ['Admin'],
+                'Manager': ['Admin'],
+                'User': ['HR', 'Manager'],
+                'Technical Support': []
             };
-            role.addEventListener('change', updateReportingPersonRequired);
-            updateReportingPersonRequired();
+            const updateReportingPersonOptions = () => {
+                const allowed = allowedReportingRoles[role.value] || [];
+                const required = ['HR', 'Manager', 'User'].includes(role.value);
+                reportingPerson.required = required;
+                reportingPersonRequired.hidden = !required;
+                Array.from(reportingPerson.options).forEach(option => {
+                    if (!option.value) return;
+                    const visible = allowed.includes(option.dataset.reportingRole);
+                    option.hidden = !visible;
+                    option.disabled = !visible;
+                    if (!visible && option.selected) reportingPerson.value = '';
+                });
+                reportingPersonHelp.textContent = role.value === 'HR' || role.value === 'Manager'
+                    ? 'HR and Managers must report to an Admin.'
+                    : role.value === 'User'
+                        ? 'Users must report to an HR or Manager.'
+                        : role.value === 'Admin'
+                            ? 'Admin accounts do not have a reporting person.'
+                            : 'No reporting person is assigned for this role.';
+            };
+            role.addEventListener('change', updateReportingPersonOptions);
+            updateReportingPersonOptions();
         })();
     </script>
 }

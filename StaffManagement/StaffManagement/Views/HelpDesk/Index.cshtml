@@ -3,7 +3,8 @@
 @model PagedResultDto<StaffManagement.Core.DTOs.HelpDeskModel.HelpDeskTicketDto>
 @{
     ViewData["Title"] = "Help Desk";
-    var canManageTickets = User.IsInRole("Admin") || User.IsInRole("HR");
+    var canManageTickets = User.IsInRole("Admin") || User.IsInRole("HR") || User.IsInRole("Technical Support");
+    var isTechnicalSupport = User.IsInRole("Technical Support");
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
@@ -13,9 +14,41 @@
     </div>
     <a asp-action="Create" class="btn btn-primary">Create ticket</a>
 </div>
+@if (Model.Items.Count > 0)
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-5 col-md-4">
+                    <label for="helpDeskTypeFilter" class="form-label">Filter by ticket type</label>
+                    <select id="helpDeskTypeFilter" class="form-select">
+                        <option value="">All ticket types</option>
+                        @foreach (var ticketType in Enum.GetValues<HelpDeskTicketType>())
+                        {
+                            <option value="@ticketType">@ticketType</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-5 col-md-4">
+                    <label for="helpDeskStatusFilter" class="form-label">Filter by ticket status</label>
+                    <select id="helpDeskStatusFilter" class="form-select">
+                        <option value="">All ticket statuses</option>
+                        @foreach (var status in Enum.GetValues<HelpDeskStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-2 col-md-4">
+                    <button id="helpDeskResetFilters" type="button" class="btn btn-outline-secondary">Reset search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 <div class="card border-0 shadow-sm"><div class="table-responsive">
     <table id="helpDeskTable" class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>First name</th><th>Ticket type</th><th>Date</th><th>Update date</th><th>Status</th><th>Description</th><th class="text-center">Action</th></tr></thead>
+        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>First name</th><th>Ticket type</th><th>Date</th><th>Update date</th><th>Ticket status</th><th>Description</th><th class="text-center">Action</th></tr></thead>
         <tbody>
         @if (Model.Items.Count == 0)
         {
@@ -44,15 +77,35 @@
                         }
                         @if (canManageTickets)
                         {
-                            <form asp-action="UpdateStatus" asp-route-id="@ticket.Item.Id" method="post" class="d-inline-flex align-items-center gap-1 ms-1">
-                                <select name="status" class="form-select form-select-sm" aria-label="Update ticket status">
-                                    @foreach (var status in Enum.GetValues<HelpDeskStatus>())
-                                    {
-                                        <option value="@status" selected="@(status == ticket.Item.Status)">@status</option>
-                                    }
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                            </form>
+                            @if (isTechnicalSupport)
+                            {
+                                <div class="dropdown d-inline-block ms-1">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Change ticket status">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @foreach (var status in Enum.GetValues<HelpDeskStatus>())
+                                        {
+                                            <li>
+                                                <form asp-action="UpdateStatus" asp-route-id="@ticket.Item.Id" method="post">
+                                                    <input type="hidden" name="status" value="@status" />
+                                                    <button type="submit" class="dropdown-item @(status == ticket.Item.Status ? "active" : "")">@status</button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@ticket.Item.Id" method="post" class="d-inline-flex align-items-center gap-1 ms-1">
+                                    <select name="status" class="form-select form-select-sm" aria-label="Update Help Desk ticket status">
+                                        @foreach (var status in Enum.GetValues<HelpDeskStatus>())
+                                        {
+                                            <option value="@status" selected="@(status == ticket.Item.Status)">@status</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                </form>
+                            }
                         }
                     </td>
                 </tr>
@@ -79,7 +132,7 @@
     <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script>
         if (document.querySelector('#helpDeskTable tbody tr td[colspan]') === null) {
-            new DataTable('#helpDeskTable', {
+            const helpDeskTable = new DataTable('#helpDeskTable', {
                 paging: false,
                 info: false,
                 lengthChange: false,
@@ -91,6 +144,22 @@
                         cell.textContent = offset + index + 1;
                     });
                 }
+            });
+
+            document.getElementById('helpDeskTypeFilter').addEventListener('change', function () {
+                const value = this.value;
+                helpDeskTable.column(2).search(value ? '^' + value + '$' : '', true, false).draw();
+            });
+            document.getElementById('helpDeskStatusFilter').addEventListener('change', function () {
+                const value = this.value;
+                helpDeskTable.column(5).search(value ? '^' + value + '$' : '', true, false).draw();
+            });
+            document.getElementById('helpDeskResetFilters').addEventListener('click', function () {
+                document.getElementById('helpDeskTypeFilter').value = '';
+                document.getElementById('helpDeskStatusFilter').value = '';
+                helpDeskTable.search('').columns().search('').draw();
+                const searchInput = document.querySelector('#helpDeskTable_wrapper .dt-search input');
+                if (searchInput) searchInput.value = '';
             });
         }
     </script>

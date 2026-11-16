@@ -75,6 +75,7 @@ namespace StaffManagement.Core.Services
             employee.Email = model.Email;
             employee.Phone = model.Phone;
             employee.DepartmentId = model.DepartmentId;
+            employee.ReportingPersonId = model.ReportingPersonId;
             employee.ProjectAssignments.Clear();
             foreach (var project in projects)
             {

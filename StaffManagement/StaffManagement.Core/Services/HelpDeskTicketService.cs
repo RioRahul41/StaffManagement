@@ -48,9 +48,6 @@ public sealed class HelpDeskTicketService(
     {
         if (!Enum.IsDefined(model.TicketType))
             return (false, "Select a valid ticket type.");
-        if (!Enum.IsDefined(model.Status))
-            return (false, "Select a valid status.");
-
         var employee = await employeeRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
         if (employee is null)
             return (false, "Your employee profile could not be found.");
@@ -60,7 +57,7 @@ public sealed class HelpDeskTicketService(
             EmployeeId = employee.Id,
             TicketType = model.TicketType,
             Date = DateTime.UtcNow,
-            Status = model.Status,
+            Status = HelpDeskStatus.Open,
             Description = model.Description.Trim(),
             DocumentPath = documentPath
         };

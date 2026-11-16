@@ -25,6 +25,8 @@ namespace StaffManagement.Controllers
                 return RedirectToAction(nameof(Hr));
             if (User.IsInRole(RoleNames.Manager))
                 return RedirectToAction(nameof(Manager));
+            if (User.IsInRole(RoleNames.TechnicalSupport))
+                return RedirectToAction(nameof(TechnicalSupport));
 
             return RedirectToAction("User");
         }
@@ -47,12 +49,18 @@ namespace StaffManagement.Controllers
             return View(await BuildDashboardViewModelAsync(RoleNames.Manager, cancellationToken));
         }
 
-        [Authorize(Roles = RoleNames.User)]
+        [Authorize(Roles = RoleNames.User + "," + RoleNames.TechnicalSupport)]
         [ActionName("User")]
         public async Task<IActionResult> UserDashboard(CancellationToken cancellationToken)
         {
+            if (User.IsInRole(RoleNames.TechnicalSupport))
+                return RedirectToAction(nameof(TechnicalSupport));
+
             return View("User", await BuildDashboardViewModelAsync(RoleNames.User, cancellationToken));
         }
+
+        [Authorize(Roles = RoleNames.TechnicalSupport)]
+        public IActionResult TechnicalSupport() => View();
 
         private async Task<DashboardViewModel> BuildDashboardViewModelAsync(
             string role,

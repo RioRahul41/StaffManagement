@@ -3,6 +3,9 @@
     ViewData["Title"] = "Edit employee";
     var managers = ViewBag.Managers as IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto> ?? [];
     var canAssignReportingPerson = User.IsInRole("Admin") || User.IsInRole("HR");
+    var reportingPersonRoles = ViewBag.ReportingPersonRoles as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
+    var targetEmployeeRole = ViewBag.TargetEmployeeRole as string ?? "";
+    var allowedReportingPersonRoles = StaffManagement.Core.Security.RoleNames.ReportingRolesFor(targetEmployeeRole);
 }
 <h1>Edit employee</h1>
 <form asp-action="Edit" method="post" class="row g-3">
@@ -72,7 +75,18 @@
     }
     @if (canAssignReportingPerson)
     {
-        <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><select asp-for="ReportingPersonId" class="form-select"><option value="">-- No reporting person assigned --</option>@foreach (var manager in managers) { if (manager.Id != Model.Id) { <option value="@manager.Id">@manager.FirstName @manager.LastName (@manager.Email)</option> } }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div class="form-text">Eligible roles: Admin, HR, and Manager.</div></div>
+        @if (targetEmployeeRole == StaffManagement.Core.Security.RoleNames.Admin)
+        {
+            <div class="col-md-6"><label class="form-label">Reporting person</label><input class="form-control" value="Not applicable to Admin accounts" readonly /></div>
+        }
+        else if (allowedReportingPersonRoles.Count > 0)
+        {
+            <div class="col-md-6"><label asp-for="ReportingPersonId" class="form-label">Reporting person</label><span class="text-danger" aria-hidden="true">*</span><select asp-for="ReportingPersonId" class="form-select" data-target-role="@targetEmployeeRole"><option value="">-- Select reporting person --</option>@foreach (var manager in managers) { if (manager.Id != Model.Id) { var managerRole = reportingPersonRoles.TryGetValue(manager.Id, out var assignedRole) ? assignedRole : ""; <option value="@manager.Id" data-reporting-role="@managerRole">@manager.FirstName @manager.LastName (@managerRole) (@manager.Email)</option> } }</select><span asp-validation-for="ReportingPersonId" class="text-danger"></span><div id="reporting-person-help" class="form-text">Allowed roles: @string.Join(" or ", allowedReportingPersonRoles).</div></div>
+        }
+        else
+        {
+            <div class="col-md-6"><label class="form-label">Reporting person</label><input class="form-control" value="Not required for this role" readonly /></div>
+        }
     }
     else
     {
@@ -83,4 +97,21 @@
     <div class="col-12 form-check"><input asp-for="EmpIsActive" class="form-check-input" /><label asp-for="EmpIsActive" class="form-check-label"></label></div>
     <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>
 </form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const reportingPerson = document.getElementById('@Html.IdFor(model => model.ReportingPersonId)');
+        if (reportingPerson) {
+            const allowedByRole = { 'HR': ['Admin'], 'Manager': ['Admin'], 'User': ['HR', 'Manager'] };
+            const allowed = allowedByRole[reportingPerson.dataset.targetRole] || [];
+            Array.from(reportingPerson.options).forEach(option => {
+                if (!option.value) return;
+                const visible = allowed.includes(option.dataset.reportingRole);
+                option.hidden = !visible;
+                option.disabled = !visible;
+                if (!visible && option.selected) reportingPerson.value = '';
+            });
+            reportingPerson.required = ['HR', 'Manager', 'User'].includes(reportingPerson.dataset.targetRole);
+        }
+    </script>
+}

@@ -19,12 +19,12 @@
     <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
     @if (canApprove)
     {
-        <div class="col-md-4"><label asp-for="Status" class="form-label"></label><select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<ExpenseStatus>())"></select></div>
+        <div class="col-md-4"><label asp-for="Status" class="form-label">Expense status</label><select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<ExpenseStatus>())"></select></div>
         <div class="col-12"><label asp-for="ApprovalNotes" class="form-label"></label><textarea asp-for="ApprovalNotes" class="form-control" rows="3"></textarea><span asp-validation-for="ApprovalNotes" class="text-danger"></span></div>
     }
     else
     {
-        <div class="col-md-4"><label class="form-label">Status</label><input value="@Model.Status" class="form-control" readonly /><input asp-for="Status" type="hidden" /></div>
+        <div class="col-md-4"><label class="form-label">Expense status</label><input value="@Model.Status" class="form-control" readonly /><input asp-for="Status" type="hidden" /></div>
         <div class="col-12"><label class="form-label">Approval notes</label><textarea class="form-control" rows="3" readonly>@Model.ApprovalNotes</textarea></div>
     }
     <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>

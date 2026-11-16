@@ -119,6 +119,7 @@ public sealed class EmployeeController(
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
         await LoadEditChoicesAsync(employee?.ProjectIds);
         await LoadReportingPersonsAsync(employee?.ReportingPersonId);
+        ViewBag.TargetEmployeeRole = await GetEmployeeRoleAsync(employee);
         return employee is null ? NotFound() : View(employee);
     }
 
@@ -137,15 +138,25 @@ public sealed class EmployeeController(
         ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
 
         var canAssignReportingPerson = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+        var targetEmployeeRole = await GetEmployeeRoleAsync(existingEmployee);
+        ViewBag.TargetEmployeeRole = targetEmployeeRole;
         if (!canAssignReportingPerson)
             model.ReportingPersonId = existingEmployee.ReportingPersonId;
         else
         {
             var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
-            if (model.ReportingPersonId.HasValue &&
-                (!reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value) || model.ReportingPersonId == model.Id))
+            var allowedReportingRoles = RoleNames.ReportingRolesFor(targetEmployeeRole);
+            var personRoles = ViewBag.ReportingPersonRoles as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
+            if (RoleNames.RequiresReportingPerson(targetEmployeeRole) && !model.ReportingPersonId.HasValue)
+                ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person for this role.");
+            else if (model.ReportingPersonId.HasValue &&
+                (!reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value) ||
+                 model.ReportingPersonId == model.Id ||
+                 !personRoles.TryGetValue(model.ReportingPersonId.Value, out var selectedRole) ||
+                 !allowedReportingRoles.Contains(selectedRole, StringComparer.OrdinalIgnoreCase)))
             {
-                ModelState.AddModelError(nameof(model.ReportingPersonId), "Select a different active employee with the Admin, HR, or Manager role.");
+                var allowedRoleText = allowedReportingRoles.Count == 0 ? "none" : string.Join(" or ", allowedReportingRoles);
+                ModelState.AddModelError(nameof(model.ReportingPersonId), $"This account can only report to: {allowedRoleText}.");
             }
         }
 
@@ -293,10 +304,13 @@ public sealed class EmployeeController(
     {
         var reportingRoles = new[] { RoleNames.Admin, RoleNames.Hr, RoleNames.Manager };
         var reportingUserIds = new HashSet<string>(StringComparer.Ordinal);
+        var reportingRolesByUserId = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var role in reportingRoles)
         {
             var users = await userManager.GetUsersInRoleAsync(role);
             reportingUserIds.UnionWith(users.Select(user => user.Id));
+            foreach (var user in users)
+                reportingRolesByUserId[user.Id] = role;
         }
 
         var reportingPersons = (await employeeService.GetAllAsync())
@@ -306,7 +320,21 @@ public sealed class EmployeeController(
             .ToList();
 
         ViewBag.Managers = reportingPersons;
+        ViewBag.ReportingPersonRoles = reportingPersons.ToDictionary(
+            employee => employee.Id,
+            employee => reportingRolesByUserId[employee.IdentityUserId!]);
         ViewBag.SelectedReportingPersonId = selectedReportingPersonId;
         return reportingPersons;
+    }
+
+    private async Task<string?> GetEmployeeRoleAsync(EmployeeDto? employee)
+    {
+        if (string.IsNullOrWhiteSpace(employee?.IdentityUserId))
+            return null;
+        var user = await userManager.FindByIdAsync(employee.IdentityUserId);
+        if (user is null)
+            return null;
+        var roles = await userManager.GetRolesAsync(user);
+        return roles.FirstOrDefault(role => RoleNames.All.Contains(role, StringComparer.OrdinalIgnoreCase));
     }
 }

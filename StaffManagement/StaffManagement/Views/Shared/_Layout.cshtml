@@ -19,7 +19,7 @@
             <aside class="app-sidebar">
                 <a class="sidebar-brand" asp-controller="Home" asp-action="Index">StaffManagement</a>
                 <div class="sidebar-user">
-                    <span class="badge bg-primary">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("HR") ? "HR" : User.IsInRole("Manager") ? "Manager" : "User")</span>
+                    <span class="badge bg-primary">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("HR") ? "HR" : User.IsInRole("Manager") ? "Manager" : User.IsInRole("Technical Support") ? "Technical Support" : "User")</span>
                     <span class="sidebar-user-name">@User.Identity.Name</span>
                 </div>
                 @{ var currentController = ViewContext.RouteData.Values["controller"]?.ToString(); }

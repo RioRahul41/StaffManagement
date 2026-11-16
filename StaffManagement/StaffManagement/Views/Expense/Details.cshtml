@@ -15,7 +15,7 @@
         <dt class="col-sm-3">Bill amount</dt><dd class="col-sm-9">@Model.BillAmount.ToString("N2")</dd>
         <dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
         <dt class="col-sm-3">Document</dt><dd class="col-sm-9">@if (!string.IsNullOrWhiteSpace(Model.DocumentPath)) { <a asp-action="Document" asp-route-id="@Model.Id">Download</a> } else { <span class="text-muted">None</span> }</dd>
-        <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@Model.Status</dd>
+        <dt class="col-sm-3">Expense status</dt><dd class="col-sm-9">@Model.Status</dd>
         <dt class="col-sm-3">Approval notes</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.ApprovalNotes) ? "-" : Model.ApprovalNotes)</dd>
     </dl>
 </div></div>

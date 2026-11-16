@@ -28,8 +28,25 @@
         }
         else
         {
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-sm-6 col-md-4">
+                            <label for="projectStatusFilter" class="form-label">Filter by project status</label>
+                            <select id="projectStatusFilter" class="form-select">
+                                <option value="">All project statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6 col-md-8">
+                            <button id="projectResetSearch" type="button" class="btn btn-outline-secondary">Reset search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="projectTable" class="table table-hover align-middle mb-0">
                     <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Project</th><th>Description</th><th>Timeline</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                     @foreach (var project in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
@@ -41,15 +58,22 @@
                             <td>@(project.Item.StartDate?.ToString("MMM dd, yyyy") ?? "—") – @(project.Item.EndDate?.ToString("MMM dd, yyyy") ?? "—")</td>
                             <td><span class="badge @(project.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">@(project.Item.IsActive ? "Active" : "Inactive")</span></td>
                             <td class="text-end text-nowrap">
-                                <a asp-action="Detail" asp-route-id="@project.Item.ProjectId" class="btn btn-sm btn-outline-info me-1">Details</a>
-                                @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
-                                {
-                                    <a asp-action="Edit" asp-route-id="@project.Item.ProjectId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                    <form asp-action="Delete" asp-route-id="@project.Item.ProjectId" method="post" class="d-inline delete-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
-                                }
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Project actions">⋮</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a asp-action="Detail" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Details</a></li>
+                                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                                        {
+                                            <li><a asp-action="Edit" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Edit</a></li>
+                                            <li>
+                                                <form asp-action="Delete" asp-route-id="@project.Item.ProjectId" method="post" class="delete-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -60,7 +84,40 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+}
+
 @section Scripts {
+    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
+    <script>
+        if (document.querySelector('#projectTable')) {
+            const projectTable = new DataTable('#projectTable', {
+                pageLength: 10,
+                lengthChange: true,
+                autoWidth: false,
+                columnDefs: [{ targets: [0, -1], orderable: false, searchable: false }],
+                drawCallback: function () {
+                    const api = this.api();
+                    const pageStart = api.page.info().start;
+                    api.column(0, { page: 'current', order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
+                        cell.textContent = pageStart + index + 1;
+                    });
+                }
+            });
+
+            document.getElementById('projectStatusFilter').addEventListener('change', function () {
+                const value = this.value;
+                projectTable.column(4).search(value ? '^' + value + '$' : '', true, false).draw();
+            });
+            document.getElementById('projectResetSearch').addEventListener('click', function () {
+                document.getElementById('projectStatusFilter').value = '';
+                projectTable.search('').columns().search('').draw();
+                const searchInput = document.querySelector('#projectTable_wrapper .dt-search input');
+                if (searchInput) searchInput.value = '';
+            });
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @if (TempData["SuccessMessage"] is string)
     {

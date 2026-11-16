@@ -21,7 +21,7 @@ else
 {
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
         <colgroup><col style="width: 4%" /><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 18%" /></colgroup>
-        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead>
+        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Expense status</th><th class="text-center">Actions</th></tr></thead>
         <tbody>
         @{ var rowNumber = (Model.PageNumber - 1) * Model.PageSize; }
         @foreach (var expense in Model.Items)
@@ -86,17 +86,20 @@ else
                                        asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
                                        asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
                                        asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Details</a></li>
-                                @if (!expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Approved))
+                                @if (expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
                                 {
                                     <li><a class="dropdown-item" asp-action="EditGroup"
                                            asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
                                            asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
                                            asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Edit</a></li>
                                 }
-                                <li><a class="dropdown-item text-danger" asp-action="DeleteGroup"
-                                       asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
-                                       asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
-                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Delete</a></li>
+@if (expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
+                                {
+                                    <li><a class="dropdown-item text-danger" asp-action="DeleteGroup"
+                                           asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                           asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Delete</a></li>
+                                }
                             </ul>
                         </div>
                     }

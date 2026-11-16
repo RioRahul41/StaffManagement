@@ -26,6 +26,9 @@ public sealed class AccountController(
         return View(new LoginDto { ReturnUrl = returnUrl });
     }
 
+    [AllowAnonymous]
+    public IActionResult AccessDenied() => View();
+
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
@@ -191,10 +194,20 @@ public sealed class AccountController(
         var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
         if (!allowedRoles.Contains(model.Role, StringComparer.OrdinalIgnoreCase))
             ModelState.AddModelError(nameof(model.Role), "You cannot create an account with this role.");
-        if (string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase) && !model.ReportingPersonId.HasValue)
-            ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person to this user.");
-        else if (model.ReportingPersonId.HasValue && !reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value))
-            ModelState.AddModelError(nameof(model.ReportingPersonId), "Select an active employee with the Admin, HR, or Manager role.");
+        if (RoleNames.RequiresReportingPerson(model.Role) && !model.ReportingPersonId.HasValue)
+            ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person for this role.");
+        else if (model.ReportingPersonId.HasValue)
+        {
+            var personRoles = ViewBag.ReportingPersonRoles as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
+            var allowedReportingRoles = RoleNames.ReportingRolesFor(model.Role);
+            if (!reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value) ||
+                !personRoles.TryGetValue(model.ReportingPersonId.Value, out var selectedRole) ||
+                !allowedReportingRoles.Contains(selectedRole, StringComparer.OrdinalIgnoreCase))
+            {
+                var allowedRoleText = allowedReportingRoles.Count == 0 ? "none" : string.Join(" or ", allowedReportingRoles);
+                ModelState.AddModelError(nameof(model.ReportingPersonId), $"{model.Role} accounts can only report to: {allowedRoleText}.");
+            }
+        }
 
         if (!ModelState.IsValid)
         {
@@ -221,10 +234,13 @@ public sealed class AccountController(
     private async Task<IReadOnlyList<EmployeeDto>> LoadReportingPersonsAsync(int? selectedReportingPersonId = null)
     {
         var reportingUserIds = new HashSet<string>(StringComparer.Ordinal);
+        var reportingRolesByUserId = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var role in new[] { RoleNames.Admin, RoleNames.Hr, RoleNames.Manager })
         {
             var reportingUsers = await userManager.GetUsersInRoleAsync(role);
             reportingUserIds.UnionWith(reportingUsers.Select(user => user.Id));
+            foreach (var user in reportingUsers)
+                reportingRolesByUserId[user.Id] = role;
         }
 
         var people = (await employeeService.GetAllAsync())
@@ -233,6 +249,9 @@ public sealed class AccountController(
                 reportingUserIds.Contains(employee.IdentityUserId))
             .ToList();
         ViewBag.Managers = people;
+        ViewBag.ReportingPersonRoles = people.ToDictionary(
+            employee => employee.Id,
+            employee => reportingRolesByUserId[employee.IdentityUserId!]);
         ViewBag.SelectedReportingPersonId = selectedReportingPersonId;
         return people;
     }

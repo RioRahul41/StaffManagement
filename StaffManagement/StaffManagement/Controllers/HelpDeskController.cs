@@ -56,7 +56,7 @@ public sealed class HelpDeskController(
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.TechnicalSupport)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(int id, HelpDeskStatus status, CancellationToken cancellationToken)
     {
@@ -118,7 +118,7 @@ public sealed class HelpDeskController(
             System.IO.File.Delete(path);
     }
 
-    private bool CanViewAllTickets() => User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+    private bool CanViewAllTickets() => User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr) || User.IsInRole(RoleNames.TechnicalSupport);
 
     private string CurrentIdentityUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;

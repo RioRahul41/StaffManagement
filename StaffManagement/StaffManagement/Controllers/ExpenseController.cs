@@ -62,9 +62,9 @@ public sealed class ExpenseController(
         var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
         if (group is null)
             return NotFound();
-        if (group.Expenses.Any(expense => expense.Status == StaffManagement.Model.Enums.ExpenseStatus.Approved))
+        if (group.Expenses.Any(expense => expense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending))
         {
-            TempData["Error"] = "Approved expense groups cannot be edited.";
+            TempData["Error"] = "Reviewed expense groups cannot be edited.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -93,7 +93,20 @@ public sealed class ExpenseController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditGroup(EditEmployeeExpenseGroupDto model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+                var existingGroup = await GetExpenseGroupAsync(
+            model.EmployeeId,
+            model.BatchId,
+            string.IsNullOrWhiteSpace(model.LookupTitle) ? model.Title : model.LookupTitle,
+            model.LookupFromDate == default ? model.FromDate : model.LookupFromDate,
+            model.LookupToDate == default ? model.ToDate : model.LookupToDate,
+            cancellationToken);
+        if (existingGroup is null)
+            return NotFound();
+        if (existingGroup.Expenses.Any(expense => expense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending))
+        {
+            TempData["Error"] = "Reviewed expense groups cannot be edited.";
+            return RedirectToAction(nameof(Index));
+        }        if (!ModelState.IsValid)
             return View("EditGroup", model);
 
         var result = await expenseService.UpdateGroupAsync(
@@ -115,7 +128,14 @@ public sealed class ExpenseController(
         CancellationToken cancellationToken)
     {
         var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
-        return group is null ? NotFound() : View("DeleteGroup", group);
+        if (group is null)
+            return NotFound();
+        if (group.Expenses.Any(expense => expense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending))
+        {
+            TempData["Error"] = "Reviewed expense groups cannot be deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+        return View("DeleteGroup", group);
     }
 
     [HttpPost, ActionName("DeleteGroup")]
@@ -246,9 +266,9 @@ public sealed class ExpenseController(
 
         if (expense is null)
             return NotFound();
-        if (expense.Status == StaffManagement.Model.Enums.ExpenseStatus.Approved)
+        if (expense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending)
         {
-            TempData["Error"] = "Approved expense records cannot be edited.";
+            TempData["Error"] = "Reviewed expense records cannot be edited.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -261,7 +281,15 @@ public sealed class ExpenseController(
         EmployeeExpenseDto model,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+                var existingExpense = await expenseService.GetByIdAsync(
+            model.Id, CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
+        if (existingExpense is null)
+            return NotFound();
+        if (existingExpense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending)
+        {
+            TempData["Error"] = "Reviewed expense records cannot be edited.";
+            return RedirectToAction(nameof(Index));
+        }        if (!ModelState.IsValid)
             return View(model);
 
         var result = await expenseService.UpdateAsync(
@@ -314,7 +342,14 @@ public sealed class ExpenseController(
             CurrentIdentityUserId(),
             cancellationToken);
 
-        return expense is null ? NotFound() : View(expense);
+        if (expense is null)
+            return NotFound();
+        if (expense.Status != StaffManagement.Model.Enums.ExpenseStatus.Pending)
+        {
+            TempData["Error"] = "Reviewed expense records cannot be deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+        return View(expense);
     }
 
     [HttpPost, ActionName("Delete")]

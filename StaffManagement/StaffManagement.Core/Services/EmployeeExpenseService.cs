@@ -143,8 +143,8 @@ public sealed class EmployeeExpenseService(
             cancellationToken);
         if (expenses.Count == 0)
             return (false, "Expense group was not found.");
-        if (expenses.Any(expense => expense.Status == ExpenseStatus.Approved))
-            return (false, "Approved expense records cannot be edited.");
+        if (expenses.Any(expense => expense.Status != ExpenseStatus.Pending))
+            return (false, "Reviewed expense records cannot be edited.");
         foreach (var expense in expenses)
         {
             if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
@@ -197,6 +197,8 @@ public sealed class EmployeeExpenseService(
             employeeId, batchId, title, fromDate, toDate, cancellationToken);
         if (expenses.Count == 0)
             return (false, "Expense group was not found.");
+        if (expenses.Any(expense => expense.Status != ExpenseStatus.Pending))
+            return (false, "Reviewed expense groups cannot be deleted.");
         foreach (var expense in expenses)
         {
             if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
@@ -330,8 +332,8 @@ public sealed class EmployeeExpenseService(
         if (!await CanAccessAsync(expense, canApprove, identityUserId, cancellationToken))
             return (false, "You are not allowed to manage this expense record.");
 
-        if (expense.Status == ExpenseStatus.Approved)
-            return (false, "Approved expense records cannot be edited.");
+        if (expense.Status != ExpenseStatus.Pending)
+            return (false, "Reviewed expense records cannot be edited.");
 
         expense.Title = model.Title.Trim();
         expense.FromDate = model.FromDate.Date;
@@ -401,6 +403,8 @@ public sealed class EmployeeExpenseService(
 
         if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
             return (false, "You are not allowed to delete this expense record.");
+        if (expense.Status != ExpenseStatus.Pending)
+            return (false, "Reviewed expense records cannot be deleted.");
 
         expenseRepository.Remove(expense);
         await expenseRepository.SaveChangesAsync(cancellationToken);

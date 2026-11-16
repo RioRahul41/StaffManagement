@@ -15,7 +15,7 @@ public sealed class IdentityAccountService(
     public IReadOnlyList<string> GetCreatableRoles(IReadOnlyCollection<string> creatorRoles)
     {
         if (creatorRoles.Contains(RoleNames.Admin, StringComparer.OrdinalIgnoreCase))
-            return [RoleNames.Hr, RoleNames.Manager, RoleNames.User];
+            return [RoleNames.Hr, RoleNames.Manager, RoleNames.User, RoleNames.TechnicalSupport];
 
         if (creatorRoles.Contains(RoleNames.Hr, StringComparer.OrdinalIgnoreCase))
             return [RoleNames.User];
