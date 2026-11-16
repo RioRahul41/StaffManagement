@@ -29,6 +29,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<PolicyDocument> PolicyDocuments { get; set; } = null!;
 
+        public DbSet<Holiday> Holidays { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -36,6 +38,13 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Holiday>()
+                .Property(holiday => holiday.HolidayDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<Holiday>()
+                .HasIndex(holiday => holiday.HolidayDate);
 
             modelBuilder.Entity<Employee>()
                 .HasOne<Department>()

@@ -1,0 +1,91 @@
+@model StaffManagement.Models.HolidayListViewModel
+@using StaffManagement.Core.Security
+@{
+    ViewData["Title"] = "Holiday calendar";
+    var canManageHolidays = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+}
+
+<div class="mb-4">
+    <p class="text-primary fw-semibold mb-1">STAFF RESOURCES</p>
+    <h1 class="mb-2">Holiday calendar</h1>
+    <p class="text-muted mb-0">Check upcoming and past company holidays.</p>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+
+@if (canManageHolidays)
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5">Add a holiday</h2>
+            <form asp-action="Create" method="post" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-4">
+                    <label asp-for="HolidayName" class="form-label">Holiday name <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input asp-for="HolidayName" class="form-control" maxlength="120" placeholder="e.g. Independence Day" />
+                    <span asp-validation-for="HolidayName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="HolidayDate" class="form-label">Holiday date <span class="text-danger" aria-hidden="true">*</span></label>
+                    <input asp-for="HolidayDate" type="date" class="form-control" />
+                    <span asp-validation-for="HolidayDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Description" class="form-label">Details (optional)</label>
+                    <input asp-for="Description" class="form-control" maxlength="500" placeholder="Optional note" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                <div class="col-12"><button type="submit" class="btn btn-primary">Add holiday</button></div>
+            </form>
+        </div>
+    </div>
+}
+
+<section aria-labelledby="holiday-list-heading">
+    <h2 id="holiday-list-heading" class="h4 mb-3">Holiday dates</h2>
+    @if (Model.Holidays.Count == 0)
+    {
+        <div class="card border-0 shadow-sm"><div class="card-body text-muted">No holidays have been added yet.</div></div>
+    }
+    else
+    {
+        <div class="table-responsive card border-0 shadow-sm">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Holiday</th>
+                        <th scope="col">Details</th>
+                        @if (canManageHolidays)
+                        {
+                            <th scope="col">Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var holiday in Model.Holidays)
+                    {
+                        <tr>
+                            <td><time datetime="@(holiday.HolidayDate.ToString("yyyy-MM-dd"))">@holiday.HolidayDate.ToString("ddd, dd MMM yyyy")</time></td>
+                            <td class="fw-semibold">@holiday.HolidayName</td>
+                            <td>@(string.IsNullOrWhiteSpace(holiday.Description) ? "—" : holiday.Description)</td>
+                            @if (canManageHolidays)
+                            {
+                                <td>
+                                    <form asp-action="Delete" asp-route-id="@holiday.Id" method="post" onsubmit="return confirm('Remove this holiday from the calendar?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

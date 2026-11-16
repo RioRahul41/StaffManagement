@@ -46,6 +46,8 @@ builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IPolicyDocumentRepository, PolicyDocumentRepository>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
+builder.Services.AddScoped<IHolidayRepository, HolidayRepository>();
+builder.Services.AddScoped<IHolidayService, HolidayService>();
 
 
 
