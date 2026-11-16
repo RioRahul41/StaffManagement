@@ -26,6 +26,21 @@ public class EmployeeExpense
     [DataType(DataType.Date)]
     public DateTime ToDate { get; set; } = DateTime.Today;
 
+    [Required, StringLength(100)]
+    public string Category { get; set; } = string.Empty;
+
+    [Required, StringLength(100)]
+    public string BillNumber { get; set; } = string.Empty;
+
+    [StringLength(2000)]
+    public string? Description { get; set; }
+
+    [Range(typeof(decimal), "0.01", "999999999", ErrorMessage = "Bill amount must be greater than zero.")]
+    public decimal BillAmount { get; set; }
+
+    [StringLength(500)]
+    public string? DocumentPath { get; set; }
+
     [Range(typeof(decimal), "0.01", "999999999", ErrorMessage = "Amount must be greater than zero.")]
     public decimal Amount { get; set; }
 

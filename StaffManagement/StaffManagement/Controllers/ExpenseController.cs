@@ -1,15 +1,18 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.ExpenseModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
+using StaffManagement.Models;
 
 namespace StaffManagement.Controllers;
 
 [Authorize]
 public sealed class ExpenseController(
     IEmployeeExpenseService expenseService,
-    IEmployeeService employeeService) : Controller
+    IEmployeeService employeeService,
+    IWebHostEnvironment environment) : Controller
 {
     private const int PageSize = 10;
 
@@ -36,10 +39,26 @@ public sealed class ExpenseController(
         return expense is null ? NotFound() : View(expense);
     }
 
+    public async Task<IActionResult> Document(int id, CancellationToken cancellationToken)
+    {
+        var expense = await expenseService.GetByIdAsync(
+            id, CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
+        if (expense is null || string.IsNullOrWhiteSpace(expense.DocumentPath))
+            return NotFound();
+
+        var storagePath = Path.Combine(environment.ContentRootPath, "App_Data", "ExpenseDocuments");
+        var fullPath = Path.GetFullPath(Path.Combine(storagePath, Path.GetFileName(expense.DocumentPath)));
+        var rootPath = Path.GetFullPath(storagePath) + Path.DirectorySeparatorChar;
+        if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+            return NotFound();
+
+        return PhysicalFile(fullPath, "application/octet-stream", Path.GetFileName(fullPath));
+    }
+
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
-        var model = new CreateEmployeeExpenseDto();
-        await PopulateFirstNameAsync(model, cancellationToken);
+        var model = new CreateExpenseBatchViewModel();
+        await PopulateEmployeeIdAsync(model.Expenses[0], "Expenses[0].EmployeeId", cancellationToken);
         await LoadEmployeesAsync(cancellationToken);
         return View(model);
     }
@@ -47,10 +66,19 @@ public sealed class ExpenseController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        CreateEmployeeExpenseDto model,
+        CreateExpenseBatchViewModel model,
         CancellationToken cancellationToken)
     {
-        await PopulateFirstNameAsync(model, cancellationToken);
+        model.Expenses ??= [];
+        if (model.Expenses.Count == 0)
+            model.Expenses.Add(new CreateEmployeeExpenseDto());
+
+        for (var index = 0; index < model.Expenses.Count; index++)
+        {
+            await PopulateEmployeeIdAsync(model.Expenses[index], $"Expenses[{index}].EmployeeId", cancellationToken);
+            model.Expenses[index].BillAmount = model.Expenses[index].Amount;
+            ModelState.Remove($"Expenses[{index}].BillAmount");
+        }
 
         if (!ModelState.IsValid)
         {
@@ -58,20 +86,44 @@ public sealed class ExpenseController(
             return View(model);
         }
 
-        var result = await expenseService.CreateAsync(
-            model,
+        var documentPaths = new List<string?>(model.Expenses.Count);
+        for (var index = 0; index < model.Expenses.Count; index++)
+        {
+            var documentFieldName = $"Documents[{index}]";
+            var document = Request.Form.Files.FirstOrDefault(file =>
+                string.Equals(file.Name, documentFieldName, StringComparison.OrdinalIgnoreCase));
+            var (documentPath, uploadError) = await SaveDocumentAsync(document, cancellationToken);
+            if (uploadError is not null)
+            {
+                foreach (var savedPath in documentPaths)
+                    DeleteDocument(savedPath);
+                ModelState.AddModelError($"Documents[{index}]", uploadError);
+                await LoadEmployeesAsync(cancellationToken);
+                return View(model);
+            }
+
+            documentPaths.Add(documentPath);
+        }
+
+        var result = await expenseService.CreateManyAsync(
+            model.Expenses,
+            documentPaths,
             CanApproveExpenses(),
             CurrentIdentityUserId(),
             cancellationToken);
 
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(string.Empty, result.Error!);
+            foreach (var documentPath in documentPaths)
+                DeleteDocument(documentPath);
+            AddExpenseFieldError(result.Error!, result.FailedIndex ?? 0);
             await LoadEmployeesAsync(cancellationToken);
             return View(model);
         }
 
-        TempData["Success"] = "Expense record created successfully.";
+        TempData["Success"] = model.Expenses.Count == 1
+            ? "Expense record created successfully."
+            : $"{model.Expenses.Count} expense records created successfully.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -126,6 +178,8 @@ public sealed class ExpenseController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken cancellationToken)
     {
+        var existingExpense = await expenseService.GetByIdAsync(
+            id, CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
         var result = await expenseService.DeleteAsync(
             id,
             CanApproveExpenses(),
@@ -135,7 +189,10 @@ public sealed class ExpenseController(
         if (!result.Succeeded)
             TempData["Error"] = result.Error;
         else
+        {
+            DeleteDocument(existingExpense?.DocumentPath);
             TempData["Success"] = "Expense record deleted successfully.";
+        }
 
         return RedirectToAction(nameof(Index));
     }
@@ -146,19 +203,73 @@ public sealed class ExpenseController(
             ViewBag.Employees = await employeeService.GetAllAsync(cancellationToken);
     }
 
-    private async Task PopulateFirstNameAsync(
+    private async Task PopulateEmployeeIdAsync(
         CreateEmployeeExpenseDto model,
+        string modelStateKey,
         CancellationToken cancellationToken)
     {
-        var employee = CanApproveExpenses() && model.EmployeeId.HasValue
-            ? await employeeService.GetByIdAsync(model.EmployeeId.Value, cancellationToken)
-            : await employeeService.GetByIdentityUserIdAsync(CurrentIdentityUserId(), cancellationToken);
+        if (CanApproveExpenses())
+            return;
+
+        var employee = await employeeService.GetByIdentityUserIdAsync(CurrentIdentityUserId(), cancellationToken);
 
         if (employee is not null)
         {
-            model.FirstName = employee.FirstName;
-            ModelState.Remove(nameof(model.FirstName));
+            model.EmployeeId = employee.Id;
+            ModelState.Remove(modelStateKey);
         }
+    }
+
+    private void AddExpenseFieldError(string error, int index)
+    {
+        var field = error.Contains("employee", StringComparison.OrdinalIgnoreCase)
+            ? nameof(CreateEmployeeExpenseDto.EmployeeId)
+            : error.Contains("to date", StringComparison.OrdinalIgnoreCase)
+                ? nameof(CreateEmployeeExpenseDto.ToDate)
+                : error.Contains("bill amount", StringComparison.OrdinalIgnoreCase)
+                    ? nameof(CreateEmployeeExpenseDto.BillAmount)
+                    : error.Contains("amount", StringComparison.OrdinalIgnoreCase)
+                        ? nameof(CreateEmployeeExpenseDto.Amount)
+                        : error.Contains("bill number", StringComparison.OrdinalIgnoreCase)
+                            ? nameof(CreateEmployeeExpenseDto.BillNumber)
+                            : nameof(CreateEmployeeExpenseDto.Category);
+
+        ModelState.AddModelError($"Expenses[{index}].{field}", error);
+    }
+
+    private async Task<(string? Path, string? Error)> SaveDocumentAsync(
+        IFormFile? document,
+        CancellationToken cancellationToken)
+    {
+        if (document is null || document.Length == 0)
+            return (null, "Upload the bill document.");
+
+        const long maxFileSize = 10 * 1024 * 1024;
+        var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg" };
+        var extension = Path.GetExtension(document.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            return (null, "Only PDF, Word, Excel, PNG, and JPEG files are allowed.");
+        if (document.Length > maxFileSize)
+            return (null, "The document cannot be larger than 10 MB.");
+
+        var uploadDirectory = Path.Combine(environment.ContentRootPath, "App_Data", "ExpenseDocuments");
+        Directory.CreateDirectory(uploadDirectory);
+        var storedFileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadDirectory, storedFileName);
+        await using var stream = System.IO.File.Create(filePath);
+        await document.CopyToAsync(stream, cancellationToken);
+        return (storedFileName, null);
+    }
+
+    private void DeleteDocument(string? documentPath)
+    {
+        if (string.IsNullOrWhiteSpace(documentPath))
+            return;
+
+        var filePath = Path.Combine(
+            environment.ContentRootPath, "App_Data", "ExpenseDocuments", Path.GetFileName(documentPath));
+        if (System.IO.File.Exists(filePath))
+            System.IO.File.Delete(filePath);
     }
 
     private bool CanApproveExpenses() =>

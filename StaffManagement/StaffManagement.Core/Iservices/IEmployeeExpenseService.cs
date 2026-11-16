@@ -22,6 +22,14 @@ public interface IEmployeeExpenseService
         CreateEmployeeExpenseDto model,
         bool canApprove,
         string identityUserId,
+        string? documentPath = null,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, string? Error, int? FailedIndex)> CreateManyAsync(
+        IReadOnlyList<CreateEmployeeExpenseDto> models,
+        IReadOnlyList<string?> documentPaths,
+        bool canApprove,
+        string identityUserId,
         CancellationToken cancellationToken = default);
 
     Task<(bool Succeeded, string? Error)> UpdateAsync(

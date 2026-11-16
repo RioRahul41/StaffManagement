@@ -9,7 +9,12 @@
         <dt class="col-sm-3">Title</dt><dd class="col-sm-9">@Model.Title</dd>
         <dt class="col-sm-3">From date</dt><dd class="col-sm-9">@Model.FromDate.ToString("yyyy-MM-dd")</dd>
         <dt class="col-sm-3">To date</dt><dd class="col-sm-9">@Model.ToDate.ToString("yyyy-MM-dd")</dd>
-        <dt class="col-sm-3">Amount</dt><dd class="col-sm-9">@Model.Amount.ToString("C")</dd>
+        <dt class="col-sm-3">Category</dt><dd class="col-sm-9">@Model.Category</dd>
+        <dt class="col-sm-3">Amount</dt><dd class="col-sm-9">@Model.Amount.ToString("N2")</dd>
+        <dt class="col-sm-3">Bill number</dt><dd class="col-sm-9">@Model.BillNumber</dd>
+        <dt class="col-sm-3">Bill amount</dt><dd class="col-sm-9">@Model.BillAmount.ToString("N2")</dd>
+        <dt class="col-sm-3">Description</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+        <dt class="col-sm-3">Document</dt><dd class="col-sm-9">@if (!string.IsNullOrWhiteSpace(Model.DocumentPath)) { <a asp-action="Document" asp-route-id="@Model.Id">Download</a> } else { <span class="text-muted">None</span> }</dd>
         <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@Model.Status</dd>
         <dt class="col-sm-3">Approval notes</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.ApprovalNotes) ? "-" : Model.ApprovalNotes)</dd>
     </dl>

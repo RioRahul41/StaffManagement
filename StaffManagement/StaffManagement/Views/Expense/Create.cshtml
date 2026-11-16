@@ -1,33 +1,166 @@
-@using StaffManagement.Model.Enums
-@model StaffManagement.Core.DTOs.ExpenseModel.CreateEmployeeExpenseDto
+@model StaffManagement.Models.CreateExpenseBatchViewModel
 @{
     ViewData["Title"] = "Add Expense";
     var canApprove = User.IsInRole("Admin") || User.IsInRole("HR");
     var employees = ViewBag.Employees as IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto> ?? [];
 }
-<h1>Add employee expense</h1>
-<p class="text-muted">Submit an expense for review.</p>
-<form asp-action="Create" method="post" class="row g-3">
-    <div asp-validation-summary="All" class="text-danger"></div>
-    @if (canApprove)
-    {
-        <div class="col-md-6"><label asp-for="EmployeeId" class="form-label">Employee</label><select asp-for="EmployeeId" class="form-select"><option value="">-- Select employee --</option>@foreach (var employee in employees) { <option value="@employee.Id">@employee.FirstName @employee.LastName (@employee.Email)</option> }</select></div>
-    }
-    <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><input asp-for="FirstName" class="form-control" readonly /><span asp-validation-for="FirstName" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /><span asp-validation-for="Title" class="text-danger"></span></div>
-    <div class="col-md-3"><label asp-for="FromDate" class="form-label"></label><input asp-for="FromDate" class="form-control" /><span asp-validation-for="FromDate" class="text-danger"></span></div>
-    <div class="col-md-3"><label asp-for="ToDate" class="form-label"></label><input asp-for="ToDate" class="form-control" /><span asp-validation-for="ToDate" class="text-danger"></span></div>
-    <div class="col-md-4"><label asp-for="Amount" class="form-label"></label><input asp-for="Amount" class="form-control" type="number" min="0.01" step="0.01" /><span asp-validation-for="Amount" class="text-danger"></span></div>
-    @if (canApprove)
-    {
-        <div class="col-md-4"><label asp-for="Status" class="form-label"></label><select asp-for="Status" class="form-select" asp-items="@(Html.GetEnumSelectList<ExpenseStatus>())"></select></div>
-        <div class="col-12"><label asp-for="ApprovalNotes" class="form-label"></label><textarea asp-for="ApprovalNotes" class="form-control" rows="3"></textarea><span asp-validation-for="ApprovalNotes" class="text-danger"></span></div>
-    }
-    else
-    {
-        <div class="col-md-4"><label class="form-label">Status</label><input class="form-control" value="Pending" readonly /><input asp-for="Status" type="hidden" /></div>
-        <div class="col-12"><label class="form-label">Approval notes</label><textarea class="form-control" rows="3" readonly>Approval notes will be added by Admin or HR.</textarea></div>
-    }
-    <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>
+<h1>Add employee expenses</h1>
+<p class="text-muted">Add one entry for each bill. The total below adds the amounts from all entries.</p>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3" id="expense-form">
+    <div id="expense-entries" class="col-12">
+        @for (var i = 0; i < Model.Expenses.Count; i++)
+        {
+            <section class="card border-0 shadow-sm mb-3 expense-entry" data-entry-index="@i">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong class="expense-entry-title">Expense @(i + 1)</strong>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-remove-expense>Remove</button>
+                </div>
+                <div class="card-body row g-3">
+                    @if (canApprove)
+                    {
+                        <div class="col-md-6">
+                            <label asp-for="Expenses[i].EmployeeId" class="form-label">Employee ID <span class="text-danger">*</span></label>
+                            <select asp-for="Expenses[i].EmployeeId" class="form-select"><option value="">-- Select employee --</option>@foreach (var employee in employees) { <option value="@employee.Id">@employee.Id - @employee.FirstName @employee.LastName (@employee.Email)</option> }</select>
+                            <span asp-validation-for="Expenses[i].EmployeeId" class="text-danger"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        @* Employee ID is assigned from the signed-in employee profile. *@
+                        <input asp-for="Expenses[i].EmployeeId" type="hidden" />
+                    }
+                    <div class="col-md-6"><label asp-for="Expenses[i].Title" class="form-label">Title <span class="text-danger">*</span></label><input asp-for="Expenses[i].Title" class="form-control" /><span asp-validation-for="Expenses[i].Title" class="text-danger"></span></div>
+                    <div class="col-md-3"><label asp-for="Expenses[i].FromDate" class="form-label">From date <span class="text-danger">*</span></label><input asp-for="Expenses[i].FromDate" class="form-control" type="date" /><span asp-validation-for="Expenses[i].FromDate" class="text-danger"></span></div>
+                    <div class="col-md-3"><label asp-for="Expenses[i].ToDate" class="form-label">To date <span class="text-danger">*</span></label><input asp-for="Expenses[i].ToDate" class="form-control" type="date" /><span asp-validation-for="Expenses[i].ToDate" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].Category" class="form-label">Category <span class="text-danger">*</span></label><input asp-for="Expenses[i].Category" class="form-control" /><span asp-validation-for="Expenses[i].Category" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].Amount" class="form-label">Amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].Amount" class="form-control expense-amount" type="number" min="0.01" step="0.01" /><span asp-validation-for="Expenses[i].Amount" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillNumber" class="form-control" /><span asp-validation-for="Expenses[i].BillNumber" class="text-danger"></span></div>
+                    <div class="col-md-6">
+                        <label for="Documents_@i" class="form-label">Document <span class="text-danger">*</span></label>
+                        <input type="file" id="Documents_@i" name="Documents[@i]" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required />
+                        @Html.ValidationMessage($"Documents[{i}]", "", new { @class = "text-danger" })
+                        <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
+                    </div>
+                    <div class="col-12"><label asp-for="Expenses[i].Description" class="form-label"></label><textarea asp-for="Expenses[i].Description" class="form-control" rows="2"></textarea><span asp-validation-for="Expenses[i].Description" class="text-danger"></span></div>
+                    <div class="col-md-6"><label asp-for="Expenses[i].BillAmount" class="form-label">Bill amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillAmount" class="form-control expense-total" type="number" readonly /><span asp-validation-for="Expenses[i].BillAmount" class="text-danger"></span><div class="form-text">Automatically matches this entry's Amount.</div></div>
+                </div>
+            </section>
+        }
+    </div>
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-body row align-items-center">
+                <label for="grand-total" class="col-md-6 col-form-label fw-semibold">Total amount for all entries</label>
+                <div class="col-md-6"><input id="grand-total" class="form-control fw-semibold" type="number" value="" readonly aria-describedby="grand-total-help" /><div id="grand-total-help" class="form-text">Updates automatically as you enter amounts.</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 d-flex gap-2">
+        <button type="button" id="add-expense" class="btn btn-outline-primary">Add another expense</button>
+        <button class="btn btn-primary" type="submit">Save expenses</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
 </form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+<template id="expense-entry-template">
+    <section class="card border-0 shadow-sm mb-3 expense-entry" data-entry-index="__index__">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong class="expense-entry-title">Expense</strong>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-remove-expense>Remove</button>
+        </div>
+        <div class="card-body row g-3">
+            @if (canApprove)
+            {
+                <div class="col-md-6">
+                    <label for="Expenses___index____EmployeeId" class="form-label">Employee ID <span class="text-danger">*</span></label>
+                    <select name="Expenses[__index__].EmployeeId" id="Expenses___index____EmployeeId" class="form-select" required>
+                        <option value="">-- Select employee --</option>
+                        @foreach (var employee in employees)
+                        {
+                            <option value="@employee.Id">@employee.Id - @employee.FirstName @employee.LastName (@employee.Email)</option>
+                        }
+                    </select>
+                    <span class="text-danger" data-valmsg-for="Expenses[__index__].EmployeeId" data-valmsg-replace="true"></span>
+                </div>
+            }
+            else
+            {
+                @* Employee ID is assigned from the signed-in employee profile. *@
+                <input type="hidden" name="Expenses[__index__].EmployeeId" value="@(Model.Expenses[0].EmployeeId)" />
+            }
+            <div class="col-md-6"><label for="Expenses___index____Title" class="form-label">Title <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].Title" id="Expenses___index____Title" class="form-control" required maxlength="200" /><span class="text-danger" data-valmsg-for="Expenses[__index__].Title" data-valmsg-replace="true"></span></div>
+            <div class="col-md-3"><label for="Expenses___index____FromDate" class="form-label">From date <span class="text-danger">*</span></label><input type="date" name="Expenses[__index__].FromDate" id="Expenses___index____FromDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].FromDate" data-valmsg-replace="true"></span></div>
+            <div class="col-md-3"><label for="Expenses___index____ToDate" class="form-label">To date <span class="text-danger">*</span></label><input type="date" name="Expenses[__index__].ToDate" id="Expenses___index____ToDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].ToDate" data-valmsg-replace="true"></span></div>
+            <div class="col-md-4"><label for="Expenses___index____Category" class="form-label">Category <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].Category" id="Expenses___index____Category" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].Category" data-valmsg-replace="true"></span></div>
+            <div class="col-md-4"><label for="Expenses___index____Amount" class="form-label">Amount <span class="text-danger">*</span></label><input type="number" name="Expenses[__index__].Amount" id="Expenses___index____Amount" class="form-control expense-amount" min="0.01" step="0.01" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].Amount" data-valmsg-replace="true"></span></div>
+            <div class="col-md-4"><label for="Expenses___index____BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].BillNumber" id="Expenses___index____BillNumber" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].BillNumber" data-valmsg-replace="true"></span></div>
+            <div class="col-md-6">
+                <label for="Documents___index__" class="form-label">Document <span class="text-danger">*</span></label>
+                <input type="file" id="Documents___index__" name="Documents[__index__]" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required />
+                <span class="text-danger" data-valmsg-for="Documents[__index__]" data-valmsg-replace="true"></span>
+                <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
+            </div>
+            <div class="col-12"><label for="Expenses___index____Description" class="form-label">Description</label><textarea name="Expenses[__index__].Description" id="Expenses___index____Description" class="form-control" rows="2" maxlength="2000"></textarea><span class="text-danger" data-valmsg-for="Expenses[__index__].Description" data-valmsg-replace="true"></span></div>
+            <div class="col-md-6"><label for="Expenses___index____BillAmount" class="form-label">Bill amount <span class="text-danger">*</span></label><input type="number" name="Expenses[__index__].BillAmount" id="Expenses___index____BillAmount" class="form-control expense-total" readonly /><span class="text-danger" data-valmsg-for="Expenses[__index__].BillAmount" data-valmsg-replace="true"></span><div class="form-text">Automatically matches this entry's Amount.</div></div>
+        </div>
+    </section>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const entries = document.getElementById('expense-entries');
+            const template = document.getElementById('expense-entry-template');
+            const reindexEntries = function () {
+                const cards = entries.querySelectorAll('.expense-entry');
+                cards.forEach(function (card, index) {
+                    card.dataset.entryIndex = index;
+                    card.querySelector('.expense-entry-title').textContent = 'Expense ' + (index + 1);
+                    card.querySelectorAll('[name], [id], [for], [data-valmsg-for]').forEach(function (element) {
+                        ['name', 'id', 'for', 'data-valmsg-for'].forEach(function (attribute) {
+                            const value = element.getAttribute(attribute);
+                            if (!value) return;
+                            element.setAttribute(attribute, value
+                                .replace(/\[\d+\]/g, '[' + index + ']')
+                                .replace(/_\d+__/g, '_' + index + '__'));
+                        });
+                    });
+                    const removeButton = card.querySelector('[data-remove-expense]');
+                    removeButton.hidden = cards.length === 1;
+                });
+            };
+            const updateGrandTotal = function () {
+                const total = Array.from(entries.querySelectorAll('.expense-amount')).reduce(function (sum, amount) {
+                    return sum + (Number.parseFloat(amount.value) || 0);
+                }, 0);
+                document.getElementById('grand-total').value = total > 0 ? total.toFixed(2) : '';
+            };
+            const syncTotal = function (amount) {
+                const card = amount.closest('.expense-entry');
+                card.querySelector('.expense-total').value = amount.value;
+                updateGrandTotal();
+            };
+
+            document.getElementById('add-expense').addEventListener('click', function () {
+                const index = entries.querySelectorAll('.expense-entry').length;
+                entries.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__index__', index));
+                reindexEntries();
+            });
+            entries.addEventListener('click', function (event) {
+                const button = event.target.closest('[data-remove-expense]');
+                if (!button) return;
+                button.closest('.expense-entry').remove();
+                reindexEntries();
+            });
+            entries.addEventListener('input', function (event) {
+                if (event.target.matches('.expense-amount')) syncTotal(event.target);
+            });
+            entries.addEventListener('change', function (event) {
+                if (event.target.matches('.expense-amount')) syncTotal(event.target);
+            });
+            entries.querySelectorAll('.expense-amount').forEach(syncTotal);
+            reindexEntries();
+        })();
+    </script>
+}

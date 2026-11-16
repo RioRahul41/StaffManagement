@@ -67,9 +67,12 @@ public sealed class EmployeeExpenseService(
         CreateEmployeeExpenseDto model,
         bool canApprove,
         string identityUserId,
+        string? documentPath = null,
         CancellationToken cancellationToken = default)
     {
-        var validationError = Validate(model.FromDate, model.ToDate, model.Amount, model.Status);
+        var validationError = Validate(
+            model.FromDate, model.ToDate, model.Amount, model.BillAmount,
+            model.Category, model.BillNumber, model.Status);
         if (validationError is not null)
             return (false, validationError);
 
@@ -89,7 +92,12 @@ public sealed class EmployeeExpenseService(
             Title = model.Title.Trim(),
             FromDate = model.FromDate.Date,
             ToDate = model.ToDate.Date,
-            Amount = model.Amount,
+            Category = model.Category.Trim(),
+            Amount = model.Amount.GetValueOrDefault(),
+            BillNumber = model.BillNumber.Trim(),
+            Description = model.Description?.Trim(),
+            BillAmount = model.BillAmount.GetValueOrDefault(),
+            DocumentPath = documentPath,
             ApprovalNotes = canApprove ? model.ApprovalNotes?.Trim() : null,
             Status = canApprove ? model.Status : ExpenseStatus.Pending,
             CreatedTime = DateTime.UtcNow
@@ -100,13 +108,69 @@ public sealed class EmployeeExpenseService(
         return (true, null);
     }
 
+    public async Task<(bool Succeeded, string? Error, int? FailedIndex)> CreateManyAsync(
+        IReadOnlyList<CreateEmployeeExpenseDto> models,
+        IReadOnlyList<string?> documentPaths,
+        bool canApprove,
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        if (models.Count == 0 || models.Count != documentPaths.Count)
+            return (false, "Add at least one expense and upload its document.", 0);
+
+        var expenses = new List<EmployeeExpense>(models.Count);
+        for (var index = 0; index < models.Count; index++)
+        {
+            var model = models[index];
+            model.BillAmount = model.Amount;
+            var validationError = Validate(
+                model.FromDate, model.ToDate, model.Amount, model.BillAmount,
+                model.Category, model.BillNumber, model.Status);
+            if (validationError is not null)
+                return (false, validationError, index);
+
+            if (string.IsNullOrWhiteSpace(documentPaths[index]))
+                return (false, "Upload the bill document.", index);
+
+            var employee = await GetTargetEmployeeAsync(
+                model.EmployeeId, canApprove, identityUserId, cancellationToken);
+            if (employee is null)
+                return (false, "The selected employee was not found or you are not allowed to use that employee.", index);
+
+            expenses.Add(new EmployeeExpense
+            {
+                EmployeeId = employee.Id,
+                FirstName = employee.FirstName,
+                Title = model.Title.Trim(),
+                FromDate = model.FromDate.Date,
+                ToDate = model.ToDate.Date,
+                Category = model.Category.Trim(),
+                Amount = model.Amount.GetValueOrDefault(),
+                BillNumber = model.BillNumber.Trim(),
+                Description = model.Description?.Trim(),
+                BillAmount = model.Amount.GetValueOrDefault(),
+                DocumentPath = documentPaths[index],
+                Status = canApprove ? model.Status : ExpenseStatus.Pending,
+                CreatedTime = DateTime.UtcNow
+            });
+        }
+
+        foreach (var expense in expenses)
+            await expenseRepository.AddAsync(expense, cancellationToken);
+
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+        return (true, null, null);
+    }
+
     public async Task<(bool Succeeded, string? Error)> UpdateAsync(
         EmployeeExpenseDto model,
         bool canApprove,
         string identityUserId,
         CancellationToken cancellationToken = default)
     {
-        var validationError = Validate(model.FromDate, model.ToDate, model.Amount, model.Status);
+        var validationError = Validate(
+            model.FromDate, model.ToDate, model.Amount, model.BillAmount,
+            model.Category, model.BillNumber, model.Status);
         if (validationError is not null)
             return (false, validationError);
 
@@ -121,6 +185,10 @@ public sealed class EmployeeExpenseService(
         expense.FromDate = model.FromDate.Date;
         expense.ToDate = model.ToDate.Date;
         expense.Amount = model.Amount;
+        expense.Category = model.Category.Trim();
+        expense.BillNumber = model.BillNumber.Trim();
+        expense.Description = model.Description?.Trim();
+        expense.BillAmount = model.BillAmount;
         if (canApprove)
         {
             expense.Status = model.Status;
@@ -179,14 +247,26 @@ public sealed class EmployeeExpenseService(
     private static string? Validate(
         DateTime fromDate,
         DateTime toDate,
-        decimal amount,
+        decimal? amount,
+        decimal? billAmount,
+        string category,
+        string billNumber,
         ExpenseStatus status)
     {
         if (toDate.Date < fromDate.Date)
             return "To date cannot be earlier than From date.";
 
-        if (amount <= 0)
+        if (!amount.HasValue || amount.Value <= 0)
             return "Amount must be greater than zero.";
+
+        if (!billAmount.HasValue || billAmount.Value <= 0)
+            return "Total amount must be greater than zero.";
+
+        if (string.IsNullOrWhiteSpace(category))
+            return "Category is required.";
+
+        if (string.IsNullOrWhiteSpace(billNumber))
+            return "Bill number is required.";
 
         if (!Enum.IsDefined(status))
             return "The selected status is invalid.";
@@ -202,6 +282,11 @@ public sealed class EmployeeExpenseService(
         Title = expense.Title,
         FromDate = expense.FromDate,
         ToDate = expense.ToDate,
+        Category = expense.Category,
+        BillNumber = expense.BillNumber,
+        Description = expense.Description,
+        BillAmount = expense.BillAmount,
+        DocumentPath = expense.DocumentPath,
         Amount = expense.Amount,
         ApprovalNotes = expense.ApprovalNotes,
         Status = expense.Status

@@ -17,8 +17,8 @@
 }
 else
 {
-    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>First name</th><th>Title</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Approval notes</th><th class="text-end">Actions</th></tr></thead>
+    <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>First name</th><th>Title</th><th>From date</th><th>To date</th><th>Bill amount</th><th>Approval notes</th><th>Status</th><th class="text-end">Action</th></tr></thead>
         <tbody>
         @foreach (var expense in Model.Items)
         {
@@ -27,9 +27,9 @@ else
                 <td>@expense.Title</td>
                 <td>@expense.FromDate.ToString("yyyy-MM-dd")</td>
                 <td>@expense.ToDate.ToString("yyyy-MM-dd")</td>
-                <td>@expense.Amount.ToString("C")</td>
-                <td><span class="badge @(expense.Status.ToString() == "Approved" ? "text-bg-success" : expense.Status.ToString() == "Rejected" ? "text-bg-danger" : "text-bg-warning")">@expense.Status</span></td>
+                <td data-order="@expense.BillAmount">@expense.BillAmount.ToString("N2")</td>
                 <td>@(string.IsNullOrWhiteSpace(expense.ApprovalNotes) ? "-" : expense.ApprovalNotes)</td>
+                <td><span class="badge @(expense.Status.ToString() == "Approved" ? "text-bg-success" : expense.Status.ToString() == "Rejected" ? "text-bg-danger" : "text-bg-warning")">@expense.Status</span></td>
                 <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-secondary">Details</a><a asp-action="Edit" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a><a asp-action="Delete" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a></td>
             </tr>
         }
@@ -48,7 +48,22 @@ else
     }
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+}
+
 @section Scripts {
+    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
+    <script>
+        if (document.querySelector('#expenseTable')) {
+            new DataTable('#expenseTable', {
+                paging: false,
+                info: false,
+                lengthChange: false,
+                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+            });
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @if (TempData["Success"] is string success)
     {

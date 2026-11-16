@@ -84,6 +84,10 @@ namespace StaffManagement.Data.DbContext
                 .Property(expense => expense.Amount)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<EmployeeExpense>()
+                .Property(expense => expense.BillAmount)
+                .HasPrecision(18, 2);
+
             modelBuilder.Entity<LeaveRequest>()
                 .HasOne(request => request.Employee)
                 .WithMany()

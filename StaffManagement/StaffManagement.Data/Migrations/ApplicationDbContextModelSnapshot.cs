@@ -281,59 +281,6 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Departments");
                 });
 
-            modelBuilder.Entity("StaffManagement.Model.Entities.Project", b =>
-                {
-                    b.Property<int>("ProjectId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProjectId"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ProjectName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ProjectId");
-
-                    b.ToTable("Projects");
-
-                });
-
-            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeProject", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("EmployeeId", "ProjectId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("EmployeeProjects");
-                });
-
             modelBuilder.Entity("StaffManagement.Model.Entities.Designation", b =>
                 {
                     b.Property<int>("DesignationId")
@@ -462,8 +409,30 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<decimal>("BillAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DocumentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -495,6 +464,21 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("EmployeeExpenses");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeProject", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EmployeeId", "ProjectId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("EmployeeProjects");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.LeaveRequest", b =>
@@ -545,6 +529,43 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("LeaveRequests");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.Project", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProjectId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProjectName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ProjectId");
+
+                    b.ToTable("Projects");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.Timesheet", b =>
                 {
                     b.Property<int>("Id")
@@ -568,11 +589,11 @@ namespace StaffManagement.Data.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("int");
-
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ProjectName")
                         .IsRequired()
@@ -677,6 +698,17 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("ReportingPerson");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeProject", b =>
                 {
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
@@ -692,23 +724,8 @@ namespace StaffManagement.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+
                     b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
-                {
-                    b.Navigation("ProjectAssignments");
-                });
-
-            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
-                {
-                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.LeaveRequest", b =>
@@ -724,20 +741,25 @@ namespace StaffManagement.Data.Migrations
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Timesheet", b =>
                 {
-                    b.HasOne("StaffManagement.Model.Entities.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("StaffManagement.Model.Entities.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Employee");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
+                {
+                    b.Navigation("ProjectAssignments");
                 });
 #pragma warning restore 612, 618
         }
