@@ -39,6 +39,115 @@ public sealed class ExpenseController(
         return expense is null ? NotFound() : View(expense);
     }
 
+    public async Task<IActionResult> DetailsGroup(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken)
+    {
+        var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        return group is null ? NotFound() : View("DetailsGroup", group);
+    }
+
+    public async Task<IActionResult> EditGroup(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken)
+    {
+        var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        if (group is null)
+            return NotFound();
+        if (group.Expenses.Any(expense => expense.Status == StaffManagement.Model.Enums.ExpenseStatus.Approved))
+        {
+            TempData["Error"] = "Approved expense groups cannot be edited.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View("EditGroup", new EditEmployeeExpenseGroupDto
+        {
+            EmployeeId = group.EmployeeId,
+            BatchId = group.BatchId,
+            Title = group.Title,
+            FromDate = group.FromDate,
+            ToDate = group.ToDate,
+            LookupTitle = group.Title,
+            LookupFromDate = group.FromDate,
+            LookupToDate = group.ToDate,
+            Bills = group.Expenses.Select(expense => new EditEmployeeExpenseBillDto
+            {
+                Id = expense.Id,
+                Category = expense.Category,
+                Amount = expense.Amount,
+                BillNumber = expense.BillNumber,
+                Description = expense.Description
+            }).ToList()
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditGroup(EditEmployeeExpenseGroupDto model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return View("EditGroup", model);
+
+        var result = await expenseService.UpdateGroupAsync(
+            model, CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
+        if (!result.Succeeded)
+            TempData["Error"] = result.Error;
+        else
+            TempData["Success"] = "Expense group updated successfully.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> DeleteGroup(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken)
+    {
+        var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        return group is null ? NotFound() : View("DeleteGroup", group);
+    }
+
+    [HttpPost, ActionName("DeleteGroup")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteGroupConfirmed(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken)
+    {
+        var group = await GetExpenseGroupAsync(employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        var result = await expenseService.DeleteGroupAsync(
+            employeeId, batchId, title, fromDate, toDate,
+            CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
+
+        if (!result.Succeeded)
+            TempData["Error"] = result.Error;
+        else
+        {
+            if (group is not null)
+            {
+                foreach (var expense in group.Expenses)
+                    DeleteDocument(expense.DocumentPath);
+            }
+            TempData["Success"] = "Expense group deleted successfully.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     public async Task<IActionResult> Document(int id, CancellationToken cancellationToken)
     {
         var expense = await expenseService.GetByIdAsync(
@@ -135,7 +244,15 @@ public sealed class ExpenseController(
             CurrentIdentityUserId(),
             cancellationToken);
 
-        return expense is null ? NotFound() : View(expense);
+        if (expense is null)
+            return NotFound();
+        if (expense.Status == StaffManagement.Model.Enums.ExpenseStatus.Approved)
+        {
+            TempData["Error"] = "Approved expense records cannot be edited.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(expense);
     }
 
     [HttpPost]
@@ -155,13 +272,39 @@ public sealed class ExpenseController(
 
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(string.Empty, result.Error!);
-            return View(model);
+            TempData["Error"] = result.Error;
+            return RedirectToAction(nameof(Index));
         }
 
         TempData["Success"] = "Expense record updated successfully.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> ApproveGroup(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        string approvalNotes,
+        CancellationToken cancellationToken) =>
+        ReviewGroupAsync(employeeId, batchId, title, fromDate, toDate, approvalNotes, StaffManagement.Model.Enums.ExpenseStatus.Approved, cancellationToken);
+
+    [HttpPost]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> RejectGroup(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        string approvalNotes,
+        CancellationToken cancellationToken) =>
+        ReviewGroupAsync(employeeId, batchId, title, fromDate, toDate, approvalNotes, StaffManagement.Model.Enums.ExpenseStatus.Rejected, cancellationToken);
 
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
@@ -202,6 +345,17 @@ public sealed class ExpenseController(
         if (CanApproveExpenses())
             ViewBag.Employees = await employeeService.GetAllAsync(cancellationToken);
     }
+
+    private Task<EmployeeExpenseGroupDto?> GetExpenseGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken) =>
+        expenseService.GetGroupAsync(
+            employeeId, batchId, title, fromDate, toDate,
+            CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
 
     private async Task PopulateEmployeeIdAsync(
         CreateEmployeeExpenseDto model,
@@ -270,6 +424,28 @@ public sealed class ExpenseController(
             environment.ContentRootPath, "App_Data", "ExpenseDocuments", Path.GetFileName(documentPath));
         if (System.IO.File.Exists(filePath))
             System.IO.File.Delete(filePath);
+    }
+
+    private async Task<IActionResult> ReviewGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        string approvalNotes,
+        StaffManagement.Model.Enums.ExpenseStatus status,
+        CancellationToken cancellationToken)
+    {
+        var result = await expenseService.ReviewGroupAsync(
+            employeeId, batchId, title, fromDate, toDate, approvalNotes, status, cancellationToken);
+        if (result.Succeeded)
+            TempData["Success"] = status == StaffManagement.Model.Enums.ExpenseStatus.Approved
+                ? $"Expense approved successfully. Approval notes: {approvalNotes.Trim()}"
+                : $"Expense rejected successfully. Approval notes: {approvalNotes.Trim()}";
+        else
+            TempData["Error"] = result.Error;
+
+        return RedirectToAction(nameof(Index));
     }
 
     private bool CanApproveExpenses() =>

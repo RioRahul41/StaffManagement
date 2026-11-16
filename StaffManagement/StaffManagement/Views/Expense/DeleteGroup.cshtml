@@ -1,0 +1,47 @@
+@model StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseGroupDto
+@{
+    ViewData["Title"] = "Delete expense group";
+}
+<h1>Delete expense group</h1>
+<div class="alert alert-warning">This deletes all @Model.Expenses.Count bill(s) in this expense group.</div>
+<p>Delete <strong>@Model.Title</strong> for employee <strong>@Model.EmployeeId</strong>?</p>
+<div class="card border-0 shadow-sm mb-3"><div class="table-responsive"><table class="table mb-0">
+    <thead class="table-light"><tr><th>Category</th><th>Bill number</th><th>Amount</th></tr></thead>
+    <tbody>
+    @foreach (var bill in Model.Expenses)
+    {
+        <tr><td>@bill.Category</td><td>@bill.BillNumber</td><td class="text-end">@bill.BillAmount.ToString("N2")</td></tr>
+    }
+    </tbody>
+    <tfoot class="table-light"><tr><th colspan="2" class="text-end">Group total</th><th class="text-end">@Model.BillAmount.ToString("N2")</th></tr></tfoot>
+</table></div></div>
+<form asp-action="DeleteGroup" method="post" id="delete-expense-group-form">
+    <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
+    <input type="hidden" name="batchId" value="@Model.BatchId" />
+    <input type="hidden" name="title" value="@Model.Title" />
+    <input type="hidden" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+    <input type="hidden" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+    <button class="btn btn-danger" type="submit">Delete all bills</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('delete-expense-group-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const form = this;
+            Swal.fire({
+                title: 'Delete the entire expense group?',
+                text: 'All bills in this group will be deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Delete all bills',
+                cancelButtonText: 'Cancel'
+            }).then(function (result) {
+                if (result.isConfirmed) form.submit();
+            });
+        });
+    </script>
+}

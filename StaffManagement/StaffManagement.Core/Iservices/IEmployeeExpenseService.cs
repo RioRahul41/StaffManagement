@@ -18,6 +18,32 @@ public interface IEmployeeExpenseService
         string identityUserId,
         CancellationToken cancellationToken = default);
 
+    Task<EmployeeExpenseGroupDto?> GetGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, string? Error)> UpdateGroupAsync(
+        EditEmployeeExpenseGroupDto model,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, string? Error)> DeleteGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default);
+
     Task<(bool Succeeded, string? Error)> CreateAsync(
         CreateEmployeeExpenseDto model,
         bool canApprove,
@@ -36,6 +62,16 @@ public interface IEmployeeExpenseService
         EmployeeExpenseDto model,
         bool canApprove,
         string identityUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, string? Error)> ReviewGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        string approvalNotes,
+        StaffManagement.Model.Enums.ExpenseStatus status,
         CancellationToken cancellationToken = default);
 
     Task<(bool Succeeded, string? Error)> DeleteAsync(

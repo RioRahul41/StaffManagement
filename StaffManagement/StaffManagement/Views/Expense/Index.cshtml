@@ -1,7 +1,9 @@
 @using StaffManagement.Core.DTOs
+@using StaffManagement.Model.Enums
 @model PagedResultDto<StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseGroupDto>
 @{
     ViewData["Title"] = "Employee Expenses";
+    var canApproveExpenses = User.IsInRole("Admin") || User.IsInRole("HR");
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
@@ -18,7 +20,7 @@
 else
 {
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
-        <colgroup><col style="width: 8%" /><col style="width: 13%" /><col style="width: 14%" /><col style="width: 10%" /><col style="width: 10%" /><col style="width: 12%" /><col style="width: 13%" /><col style="width: 8%" /><col style="width: 12%" /></colgroup>
+        <colgroup><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 22%" /></colgroup>
         <thead class="table-light"><tr><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead>
         <tbody>
         @foreach (var expense in Model.Items)
@@ -30,28 +32,72 @@ else
                 <td class="text-center text-nowrap">@expense.FromDate.ToString("yyyy-MM-dd")</td>
                 <td class="text-center text-nowrap">@expense.ToDate.ToString("yyyy-MM-dd")</td>
                 <td class="text-end text-nowrap" data-order="@expense.BillAmount">@expense.BillAmount.ToString("N2")</td>
-                <td class="expense-wrap-cell">@(string.IsNullOrWhiteSpace(expense.ApprovalNotes) ? "-" : expense.ApprovalNotes)</td>
+                <td class="expense-wrap-cell">
+                    @if (string.IsNullOrWhiteSpace(expense.ApprovalNotes))
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                    else
+                    {
+                        @expense.ApprovalNotes
+                    }
+                </td>
                 <td class="text-center text-nowrap"><span class="badge @(expense.Status == "Approved" ? "text-bg-success" : expense.Status == "Rejected" ? "text-bg-danger" : expense.Status == "Mixed" ? "text-bg-info" : "text-bg-warning")">@expense.Status</span></td>
                 <td class="text-center text-nowrap">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            @foreach (var bill in expense.Expenses)
-                            {
-                                @if (expense.Expenses.Count > 1)
+                    @if (canApproveExpenses)
+                    {
+                        var hasPendingBills = expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Pending);
+                        @if (!hasPendingBills)
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                        else
+                        {
+                            <div class="d-flex justify-content-center gap-1">
+                                <form asp-action="ApproveGroup" method="post" class="expense-review-form" data-review-title="Approve this expense?" data-review-text="All pending bills in this grouped expense will be approved.">
+                                    <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
+                                    <input type="hidden" name="batchId" value="@expense.BatchId" />
+                                    <input type="hidden" name="title" value="@expense.Title" />
+                                    <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="approvalNotes" value="" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-action="RejectGroup" method="post" class="expense-review-form" data-review-title="Reject this expense?" data-review-text="All pending bills in this grouped expense will be rejected.">
+                                    <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
+                                    <input type="hidden" name="batchId" value="@expense.BatchId" />
+                                    <input type="hidden" name="title" value="@expense.Title" />
+                                    <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="approvalNotes" value="" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Expense actions">⋮</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-action="DetailsGroup"
+                                       asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                       asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Details</a></li>
+                                @if (!expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Approved))
                                 {
-                                    <li><h6 class="dropdown-header">@bill.Category - @bill.BillNumber</h6></li>
+                                    <li><a class="dropdown-item" asp-action="EditGroup"
+                                           asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                           asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Edit</a></li>
                                 }
-                                <li><a class="dropdown-item" asp-action="Details" asp-route-id="@bill.Id">Details</a></li>
-                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@bill.Id">Edit</a></li>
-                                <li><a class="dropdown-item" asp-action="Delete" asp-route-id="@bill.Id">Delete</a></li>
-                                @if (expense.Expenses.Count > 1 && bill != expense.Expenses[^1])
-                                {
-                                    <li><hr class="dropdown-divider" /></li>
-                                }
-                            }
-                        </ul>
-                    </div>
+                                <li><a class="dropdown-item text-danger" asp-action="DeleteGroup"
+                                       asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                       asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Delete</a></li>
+                            </ul>
+                        </div>
+                    }
                 </td>
             </tr>
         }
@@ -73,7 +119,7 @@ else
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
     <style>
-        .expense-table { min-width: 1250px; table-layout: fixed; }
+        .expense-table { min-width: 1450px; table-layout: fixed; }
         .expense-table th, .expense-table td { vertical-align: middle; }
         .expense-wrap-cell { overflow-wrap: anywhere; white-space: normal; }
     </style>
@@ -99,10 +145,42 @@ else
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @if (TempData["Success"] is string success)
     {
-        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), confirmButtonText: 'OK' });</script>
     }
     @if (TempData["Error"] is string error)
     {
         <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
     }
+    <script>
+        document.querySelectorAll('.expense-review-form').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const currentForm = this;
+                const isReject = currentForm.action.includes('/Reject');
+                Swal.fire({
+                    title: currentForm.dataset.reviewTitle,
+                    text: currentForm.dataset.reviewText,
+                    icon: 'question',
+                    input: 'textarea',
+                    inputLabel: 'Approval notes (required)',
+                    inputPlaceholder: 'Enter approval or rejection notes',
+                    inputAttributes: { maxlength: '1000', 'aria-label': 'Approval notes' },
+                    inputValidator: function (value) {
+                        if (!value || !value.trim()) return 'Enter approval notes.';
+                        if (value.trim().length > 1000) return 'Approval notes cannot exceed 1,000 characters.';
+                    },
+                    showCancelButton: true,
+                    confirmButtonColor: isReject ? '#dc3545' : '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: isReject ? 'Reject' : 'Approve',
+                    cancelButtonText: 'Cancel'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        currentForm.querySelector('[name="approvalNotes"]').value = result.value.trim();
+                        currentForm.submit();
+                    }
+                });
+            });
+        });
+    </script>
 }

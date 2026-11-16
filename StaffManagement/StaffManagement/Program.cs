@@ -48,6 +48,8 @@ builder.Services.AddScoped<IPolicyDocumentRepository, PolicyDocumentRepository>(
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IHolidayRepository, HolidayRepository>();
 builder.Services.AddScoped<IHolidayService, HolidayService>();
+builder.Services.AddScoped<IHelpDeskTicketRepository, HelpDeskTicketRepository>();
+builder.Services.AddScoped<IHelpDeskTicketService, HelpDeskTicketService>();
 
 
 

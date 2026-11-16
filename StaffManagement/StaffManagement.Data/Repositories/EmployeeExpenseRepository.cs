@@ -23,13 +23,21 @@ public sealed class EmployeeExpenseRepository(ApplicationDbContext dbContext) : 
             query = query.Where(expense => expense.EmployeeId == employeeId.Value);
 
         var groupedQuery = query
-            .GroupBy(expense => new { expense.EmployeeId, expense.Title, expense.FromDate, expense.ToDate })
+            .GroupBy(expense => new
+            {
+                expense.EmployeeId,
+                expense.BatchId,
+                LegacyTitle = expense.BatchId == null ? expense.Title : string.Empty,
+                LegacyFromDate = expense.BatchId == null ? expense.FromDate : DateTime.MinValue,
+                LegacyToDate = expense.BatchId == null ? expense.ToDate : DateTime.MinValue
+            })
             .Select(group => new EmployeeExpenseGroup
             {
                 EmployeeId = group.Key.EmployeeId,
-                Title = group.Key.Title,
-                FromDate = group.Key.FromDate,
-                ToDate = group.Key.ToDate,
+                BatchId = group.Key.BatchId,
+                Title = group.Min(expense => expense.Title) ?? string.Empty,
+                FromDate = group.Min(expense => expense.FromDate),
+                ToDate = group.Max(expense => expense.ToDate),
                 BillAmount = group.Sum(expense => expense.BillAmount)
             });
 
@@ -49,14 +57,31 @@ public sealed class EmployeeExpenseRepository(ApplicationDbContext dbContext) : 
         Expression predicateBody = Expression.Constant(false);
         foreach (var group in groups)
         {
-            Expression keyMatch = Expression.AndAlso(
-                Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.EmployeeId)), Expression.Constant(group.EmployeeId)),
-                Expression.AndAlso(
-                    Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.Title)), Expression.Constant(group.Title)),
+            var employeeMatch = Expression.Equal(
+                Expression.Property(parameter, nameof(EmployeeExpense.EmployeeId)),
+                Expression.Constant(group.EmployeeId));
+            Expression groupMatch;
+            if (group.BatchId.HasValue)
+            {
+                groupMatch = Expression.AndAlso(
+                    employeeMatch,
+                    Expression.Equal(
+                        Expression.Property(parameter, nameof(EmployeeExpense.BatchId)),
+                        Expression.Constant(group.BatchId, typeof(Guid?))));
+            }
+            else
+            {
+                groupMatch = Expression.AndAlso(
+                    employeeMatch,
                     Expression.AndAlso(
-                        Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.FromDate)), Expression.Constant(group.FromDate)),
-                        Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.ToDate)), Expression.Constant(group.ToDate)))));
-            predicateBody = Expression.OrElse(predicateBody, keyMatch);
+                        Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.BatchId)), Expression.Constant(null, typeof(Guid?))),
+                        Expression.AndAlso(
+                            Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.Title)), Expression.Constant(group.Title)),
+                            Expression.AndAlso(
+                                Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.FromDate)), Expression.Constant(group.FromDate)),
+                                Expression.Equal(Expression.Property(parameter, nameof(EmployeeExpense.ToDate)), Expression.Constant(group.ToDate))))));
+            }
+            predicateBody = Expression.OrElse(predicateBody, groupMatch);
         }
 
         var predicate = Expression.Lambda<Func<EmployeeExpense, bool>>(predicateBody, parameter);
@@ -67,10 +92,13 @@ public sealed class EmployeeExpenseRepository(ApplicationDbContext dbContext) : 
         foreach (var group in groups)
         {
             group.Expenses = expenses
-                .Where(expense => expense.EmployeeId == group.EmployeeId
-                    && expense.Title == group.Title
-                    && expense.FromDate == group.FromDate
-                    && expense.ToDate == group.ToDate)
+                .Where(expense => expense.EmployeeId == group.EmployeeId && (
+                    group.BatchId.HasValue
+                        ? expense.BatchId == group.BatchId
+                        : expense.BatchId is null
+                            && expense.Title == group.Title
+                            && expense.FromDate == group.FromDate
+                            && expense.ToDate == group.ToDate))
                 .OrderBy(expense => expense.Id)
                 .ToList();
             group.Status = group.Expenses[0].Status;
@@ -86,6 +114,25 @@ public sealed class EmployeeExpenseRepository(ApplicationDbContext dbContext) : 
             .FirstOrDefaultAsync(
                 expense => expense.Id == id && !expense.Employee.EmpIsDeleted,
                 cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeExpense>> GetByGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default) =>
+        await dbContext.EmployeeExpenses
+            .Include(expense => expense.Employee)
+            .Where(expense => !expense.Employee.EmpIsDeleted
+                && expense.EmployeeId == employeeId
+                && (batchId.HasValue
+                    ? expense.BatchId == batchId
+                    : expense.BatchId == null
+                        && expense.Title == title
+                        && expense.FromDate == fromDate.Date
+                        && expense.ToDate == toDate.Date))
+            .ToListAsync(cancellationToken);
 
     public async Task AddAsync(EmployeeExpense expense, CancellationToken cancellationToken = default) =>
         await dbContext.EmployeeExpenses.AddAsync(expense, cancellationToken);

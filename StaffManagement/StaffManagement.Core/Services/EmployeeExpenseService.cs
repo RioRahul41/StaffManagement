@@ -46,12 +46,15 @@ public sealed class EmployeeExpenseService(
             Items = result.Groups.Select(group => new EmployeeExpenseGroupDto
             {
                 EmployeeId = group.EmployeeId,
+                BatchId = group.BatchId,
                 Title = group.Title,
                 FromDate = group.FromDate,
                 ToDate = group.ToDate,
                 Categories = group.Expenses.Select(expense => expense.Category).Distinct().Order().ToList(),
                 BillAmount = group.BillAmount,
-                ApprovalNotes = group.ApprovalNotes,
+                ApprovalNotes = group.Expenses
+                    .OrderByDescending(expense => expense.UpdatedTime ?? expense.CreatedTime)
+                    .First().ApprovalNotes,
                 Status = group.Expenses.Select(expense => expense.Status).Distinct().Count() == 1
                     ? group.Status.ToString()
                     : "Mixed",
@@ -74,6 +77,136 @@ public sealed class EmployeeExpenseService(
             return null;
 
         return Map(expense);
+    }
+
+    public async Task<EmployeeExpenseGroupDto?> GetGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var expenses = await expenseRepository.GetByGroupAsync(
+            employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        if (expenses.Count == 0)
+            return null;
+
+        foreach (var expense in expenses)
+        {
+            if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
+                return null;
+        }
+
+        var firstExpense = expenses[0];
+        var statuses = expenses.Select(expense => expense.Status).Distinct().ToList();
+        return new EmployeeExpenseGroupDto
+        {
+            EmployeeId = firstExpense.EmployeeId,
+            BatchId = firstExpense.BatchId,
+            Title = firstExpense.Title,
+            FromDate = firstExpense.FromDate,
+            ToDate = firstExpense.ToDate,
+            Categories = expenses.Select(expense => expense.Category).Distinct().Order().ToList(),
+            BillAmount = expenses.Sum(expense => expense.BillAmount),
+            ApprovalNotes = expenses
+                .OrderByDescending(expense => expense.UpdatedTime ?? expense.CreatedTime)
+                .First().ApprovalNotes,
+            Status = statuses.Count == 1 ? statuses[0].ToString() : "Mixed",
+            Expenses = expenses.OrderBy(expense => expense.Id).Select(Map).ToList()
+        };
+    }
+
+    public async Task<(bool Succeeded, string? Error)> UpdateGroupAsync(
+        EditEmployeeExpenseGroupDto model,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(model.Title))
+            return (false, "Title is required.");
+        if (model.Title.Length > 200)
+            return (false, "Title cannot exceed 200 characters.");
+        if (model.ToDate.Date < model.FromDate.Date)
+            return (false, "To date cannot be earlier than From date.");
+        if (model.Bills is null || model.Bills.Count == 0)
+            return (false, "The expense group must contain at least one bill.");
+
+        var expenses = await expenseRepository.GetByGroupAsync(
+            model.EmployeeId,
+            model.BatchId,
+            string.IsNullOrWhiteSpace(model.LookupTitle) ? model.Title : model.LookupTitle,
+            model.LookupFromDate == default ? model.FromDate : model.LookupFromDate,
+            model.LookupToDate == default ? model.ToDate : model.LookupToDate,
+            cancellationToken);
+        if (expenses.Count == 0)
+            return (false, "Expense group was not found.");
+        if (expenses.Any(expense => expense.Status == ExpenseStatus.Approved))
+            return (false, "Approved expense records cannot be edited.");
+        foreach (var expense in expenses)
+        {
+            if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
+                return (false, "You are not allowed to manage this expense group.");
+        }
+
+        if (model.Bills.Count != expenses.Count || model.Bills.Select(bill => bill.Id).Distinct().Count() != expenses.Count
+            || expenses.Any(expense => model.Bills.All(bill => bill.Id != expense.Id)))
+            return (false, "The bill list changed. Refresh the page and try again.");
+
+        foreach (var expense in expenses)
+        {
+            var bill = model.Bills.Single(item => item.Id == expense.Id);
+            if (string.IsNullOrWhiteSpace(bill.Category) || bill.Category.Length > 100)
+                return (false, "Each bill needs a category of 100 characters or fewer.");
+            if (bill.Amount <= 0)
+                return (false, "Each bill amount must be greater than zero.");
+            if (string.IsNullOrWhiteSpace(bill.BillNumber) || bill.BillNumber.Length > 100)
+                return (false, "Each bill needs a bill number of 100 characters or fewer.");
+            if (bill.Description?.Length > 2000)
+                return (false, "A bill description cannot exceed 2,000 characters.");
+
+            expense.Title = model.Title.Trim();
+            expense.FromDate = model.FromDate.Date;
+            expense.ToDate = model.ToDate.Date;
+            expense.Category = bill.Category.Trim();
+            expense.Amount = bill.Amount;
+            expense.BillAmount = bill.Amount;
+            expense.BillNumber = bill.BillNumber.Trim();
+            expense.Description = bill.Description?.Trim();
+            expense.UpdatedTime = DateTime.UtcNow;
+            expenseRepository.Update(expense);
+        }
+
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+        return (true, null);
+    }
+
+    public async Task<(bool Succeeded, string? Error)> DeleteGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        bool canManageAll,
+        string identityUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var expenses = await expenseRepository.GetByGroupAsync(
+            employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        if (expenses.Count == 0)
+            return (false, "Expense group was not found.");
+        foreach (var expense in expenses)
+        {
+            if (!await CanAccessAsync(expense, canManageAll, identityUserId, cancellationToken))
+                return (false, "You are not allowed to delete this expense group.");
+        }
+
+        foreach (var expense in expenses)
+            expenseRepository.Remove(expense);
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+        return (true, null);
     }
 
     public async Task<(bool Succeeded, string? Error)> CreateAsync(
@@ -101,6 +234,7 @@ public sealed class EmployeeExpenseService(
         var expense = new EmployeeExpense
         {
             EmployeeId = employee.Id,
+            BatchId = Guid.NewGuid(),
             FirstName = employee.FirstName,
             Title = model.Title.Trim(),
             FromDate = model.FromDate.Date,
@@ -132,6 +266,7 @@ public sealed class EmployeeExpenseService(
             return (false, "Add at least one expense and upload its document.", 0);
 
         var expenses = new List<EmployeeExpense>(models.Count);
+        var batchId = Guid.NewGuid();
         for (var index = 0; index < models.Count; index++)
         {
             var model = models[index];
@@ -153,6 +288,7 @@ public sealed class EmployeeExpenseService(
             expenses.Add(new EmployeeExpense
             {
                 EmployeeId = employee.Id,
+                BatchId = batchId,
                 FirstName = employee.FirstName,
                 Title = model.Title.Trim(),
                 FromDate = model.FromDate.Date,
@@ -194,6 +330,9 @@ public sealed class EmployeeExpenseService(
         if (!await CanAccessAsync(expense, canApprove, identityUserId, cancellationToken))
             return (false, "You are not allowed to manage this expense record.");
 
+        if (expense.Status == ExpenseStatus.Approved)
+            return (false, "Approved expense records cannot be edited.");
+
         expense.Title = model.Title.Trim();
         expense.FromDate = model.FromDate.Date;
         expense.ToDate = model.ToDate.Date;
@@ -210,6 +349,42 @@ public sealed class EmployeeExpenseService(
         expense.UpdatedTime = DateTime.UtcNow;
 
         expenseRepository.Update(expense);
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+        return (true, null);
+    }
+
+    public async Task<(bool Succeeded, string? Error)> ReviewGroupAsync(
+        int employeeId,
+        Guid? batchId,
+        string title,
+        DateTime fromDate,
+        DateTime toDate,
+        string approvalNotes,
+        ExpenseStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        if (status is not ExpenseStatus.Approved and not ExpenseStatus.Rejected)
+            return (false, "Choose approve or reject for this expense.");
+        if (string.IsNullOrWhiteSpace(approvalNotes))
+            return (false, "Approval notes are required.");
+        if (approvalNotes.Trim().Length > 1000)
+            return (false, "Approval notes cannot exceed 1,000 characters.");
+
+        var expenses = await expenseRepository.GetByGroupAsync(
+            employeeId, batchId, title, fromDate, toDate, cancellationToken);
+        if (expenses.Count == 0)
+            return (false, "Expense record was not found.");
+        var pendingExpenses = expenses.Where(expense => expense.Status == ExpenseStatus.Pending).ToList();
+        if (pendingExpenses.Count == 0)
+            return (false, "This expense has already been reviewed.");
+
+        foreach (var expense in pendingExpenses)
+        {
+            expense.Status = status;
+            expense.ApprovalNotes = approvalNotes.Trim();
+            expense.UpdatedTime = DateTime.UtcNow;
+            expenseRepository.Update(expense);
+        }
         await expenseRepository.SaveChangesAsync(cancellationToken);
         return (true, null);
     }
