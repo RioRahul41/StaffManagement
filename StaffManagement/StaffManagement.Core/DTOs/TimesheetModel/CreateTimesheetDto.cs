@@ -25,52 +25,41 @@ public class CreateTimesheetDto : IValidatableObject
     [DataType(DataType.Date)]
     public DateTime StartDate { get; set; } = DateTime.Today;
 
-    public TimeSpan StartTime { get; set; }
+    [DataType(DataType.Time)]
+    public TimeSpan StartTime { get; set; } = new(9, 0, 0);
 
-    public TimeSpan EndTime { get; set; }
-
-    [Range(1, 12)]
-    public int StartHour { get; set; } = 9;
-
-    [Range(0, 59)]
-    public int StartMinute { get; set; }
-
-    [Required, RegularExpression("^(AM|PM)$")]
-    public string StartPeriod { get; set; } = "AM";
-
-    [Range(1, 12)]
-    public int EndHour { get; set; } = 10;
-
-    [Range(0, 59)]
-    public int EndMinute { get; set; }
-
-    [Required, RegularExpression("^(AM|PM)$")]
-    public string EndPeriod { get; set; } = "AM";
+    [DataType(DataType.Time)]
+    public TimeSpan EndTime { get; set; } = new(10, 0, 0);
 
     [EnumDataType(typeof(TimesheetStatus))]
     public TimesheetStatus Status { get; set; } = TimesheetStatus.InProgress;
 
-    public void ApplyTimeParts()
-    {
-        StartTime = ToTimeSpan(StartHour, StartMinute, StartPeriod);
-        EndTime = ToTimeSpan(EndHour, EndMinute, EndPeriod);
-    }
-
-    private static TimeSpan ToTimeSpan(int hour, int minute, string period)
-    {
-        var hour24 = hour % 12 + (period == "PM" ? 12 : 0);
-        return new TimeSpan(hour24, minute, 0);
-    }
-
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        var start = ToTimeSpan(StartHour, StartMinute, StartPeriod);
-        var end = ToTimeSpan(EndHour, EndMinute, EndPeriod);
-        if (end <= start)
+        if (!IsAllowedTime(StartTime))
+        {
+            yield return new ValidationResult(
+                "Start time must be between 12:00 AM and 11:30 PM in 30-minute intervals.",
+                [nameof(StartTime)]);
+        }
+
+        if (!IsAllowedTime(EndTime))
+        {
+            yield return new ValidationResult(
+                "End time must be between 12:00 AM and 11:30 PM in 30-minute intervals.",
+                [nameof(EndTime)]);
+        }
+
+        if (EndTime <= StartTime)
         {
             yield return new ValidationResult(
                 "End time must be later than start time.",
-                [nameof(EndHour), nameof(EndMinute), nameof(EndPeriod)]);
+                [nameof(EndTime)]);
         }
     }
+
+    private static bool IsAllowedTime(TimeSpan time) =>
+        time >= TimeSpan.Zero &&
+        time <= new TimeSpan(23, 30, 0) &&
+        time.Ticks % TimeSpan.FromMinutes(30).Ticks == 0;
 }

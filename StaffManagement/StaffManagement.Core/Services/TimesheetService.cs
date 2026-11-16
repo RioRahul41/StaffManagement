@@ -197,7 +197,6 @@ public sealed class TimesheetService(
             Status = timesheet.Status,
             DocumentPath = timesheet.DocumentPath
         };
-        model.SetTimeParts();
         return model;
     }
 
@@ -206,9 +205,17 @@ public sealed class TimesheetService(
         if (startDate.Date > DateTime.Today)
             return "Start date cannot be in the future.";
 
+        if (!IsAllowedTime(startTime) || !IsAllowedTime(endTime))
+            return "Start and end times must be between 12:00 AM and 11:30 PM in 30-minute intervals.";
+
         if (endTime <= startTime)
             return "End time must be later than start time.";
 
         return null;
     }
+
+    private static bool IsAllowedTime(TimeSpan time) =>
+        time >= TimeSpan.Zero &&
+        time <= new TimeSpan(23, 30, 0) &&
+        time.Ticks % TimeSpan.FromMinutes(30).Ticks == 0;
 }

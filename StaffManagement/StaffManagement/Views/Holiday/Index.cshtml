@@ -68,7 +68,6 @@
                             <td class="text-center">@holiday.Index</td>
                             <td><time datetime="@(holiday.Item.HolidayDate.ToString("yyyy-MM-dd"))">@holiday.Item.HolidayDate.ToString("ddd, dd MMM yyyy")</time></td>
                             <td class="fw-semibold">@holiday.Item.HolidayName</td>
-                            <td>@(string.IsNullOrWhiteSpace(holiday.Item.Description) ? "—" : holiday.Item.Description)</td>
                             @if (canManageHolidays)
                             {
                                 <td>

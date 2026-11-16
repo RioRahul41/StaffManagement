@@ -43,90 +43,34 @@
     <div class="col-12"><label asp-for="Description" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><textarea asp-for="Description" class="form-control" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
     <div class="col-md-4"><label asp-for="StartDate" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="StartDate" class="form-control" /><span asp-validation-for="StartDate" class="text-danger"></span></div>
     <div class="col-md-6">
-        <label class="form-label" for="StartHour">Start time</label>
+        <label asp-for="StartTime" class="form-label">Start time</label>
         <span class="text-danger" aria-hidden="true">*</span>
-
-        <div class="time-input @(!ViewData.ModelState.IsValid ? "" : "")">
-            <div class="input-group input-group-sm">
-                <input asp-for="StartHour"
-                       id="StartHour"
-                       type="number"
-                       min="1"
-                       max="12"
-                       step="1"
-                       class="form-control"
-                       placeholder="HH"
-                       aria-label="Start hour" />
-
-                <span class="input-group-text">:</span>
-
-                <input asp-for="StartMinute"
-                       id="StartMinute"
-                       type="number"
-                       min="0"
-                       max="59"
-                       step="1"
-                       class="form-control"
-                       placeholder="MM"
-                       aria-label="Start minute" />
-
-                <select asp-for="StartPeriod"
-                        id="StartPeriod"
-                        class="form-select"
-                        aria-label="Start AM or PM">
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mt-1">
-            <span asp-validation-for="StartHour" class="text-danger small"></span>
-            <span asp-validation-for="StartMinute" class="text-danger small"></span>
-        </div>
+        <select asp-for="StartTime" class="form-select time-input" required>
+            @for (var minutes = 0; minutes < 24 * 60; minutes += 30)
+            {
+                var time = TimeSpan.FromMinutes(minutes);
+                var hour = time.Hours % 12;
+                if (hour == 0) hour = 12;
+                var period = time.Hours < 12 ? "AM" : "PM";
+                <option value="@time">@($"{hour}:{time.Minutes:00} {period}")</option>
+            }
+        </select>
+        <span asp-validation-for="StartTime" class="text-danger small"></span>
     </div>
     <div class="col-md-6">
-        <label class="form-label" for="EndHour">End time</label>
+        <label asp-for="EndTime" class="form-label">End time</label>
         <span class="text-danger" aria-hidden="true">*</span>
-
-        <div class="time-input">
-            <div class="input-group input-group-sm flex-nowrap">
-                <input asp-for="EndHour"
-                       id="EndHour"
-                       type="number"
-                       min="1"
-                       max="12"
-                       step="1"
-                       class="form-control text-center"
-                       placeholder="HH"
-                       aria-label="End hour" />
-
-                <span class="input-group-text time-separator">:</span>
-
-                <input asp-for="EndMinute"
-                       id="EndMinute"
-                       type="number"
-                       min="0"
-                       max="59"
-                       step="1"
-                       class="form-control text-center"
-                       placeholder="MM"
-                       aria-label="End minute" />
-
-                <select asp-for="EndPeriod"
-                        id="EndPeriod"
-                        class="form-select time-period"
-                        aria-label="End AM or PM">
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mt-1">
-            <span asp-validation-for="EndHour" class="text-danger small"></span>
-            <span asp-validation-for="EndMinute" class="text-danger small"></span>
-        </div>
+        <select asp-for="EndTime" class="form-select time-input" required>
+            @for (var minutes = 0; minutes < 24 * 60; minutes += 30)
+            {
+                var time = TimeSpan.FromMinutes(minutes);
+                var hour = time.Hours % 12;
+                if (hour == 0) hour = 12;
+                var period = time.Hours < 12 ? "AM" : "PM";
+                <option value="@time">@($"{hour}:{time.Minutes:00} {period}")</option>
+            }
+        </select>
+        <span asp-validation-for="EndTime" class="text-danger small"></span>
     </div>
     <div class="col-md-6"><label asp-for="Status" class="form-label">Work status</label><select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<TimesheetStatus>()"></select><span asp-validation-for="Status" class="text-danger"></span></div>
     <div class="col-md-6"><label class="form-label" for="document">Document</label><input class="form-control" type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" /><div class="form-text">Optional. Maximum size: 10 MB.</div></div>

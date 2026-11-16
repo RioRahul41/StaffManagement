@@ -59,8 +59,6 @@ public sealed class TimesheetController(
             return View(model);
         }
 
-        model.ApplyTimeParts();
-
         var (documentPath, uploadError) = await SaveDocumentAsync(document, cancellationToken);
         if (uploadError is not null)
         {
@@ -117,8 +115,6 @@ public sealed class TimesheetController(
             await LoadProjectsAsync(cancellationToken);
             return View(model);
         }
-
-        model.ApplyTimeParts();
 
         var existingTimesheet = await timesheetService.GetByIdAsync(
             model.Id,
