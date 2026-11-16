@@ -163,12 +163,12 @@ public sealed class LeaveRequestService(
             return (false, "Your employee profile could not be found.");
 
         var totals = await leaveRepository.GetLeaveTotalsAsync(employee.Id, cancellationToken);
-        var allowance = model.LeaveType == LeaveType.Sick ? employee.SickLeaveAllowance :
-            model.LeaveType == LeaveType.Casual ? employee.CasualLeaveAllowance : int.MaxValue;
-        var used = model.LeaveType == LeaveType.Sick ? totals.SickUsed :
-            model.LeaveType == LeaveType.Casual ? totals.CasualUsed : 0;
-        var pending = model.LeaveType == LeaveType.Sick ? totals.SickPending :
-            model.LeaveType == LeaveType.Casual ? totals.CasualPending : 0;
+        var allowance = model.LeaveType == Convert.ToString(LeaveType.Sick) ? employee.SickLeaveAllowance :
+            model.LeaveType == Convert.ToString(LeaveType.Casual) ? employee.CasualLeaveAllowance : int.MaxValue;
+        var used = model.LeaveType == Convert.ToString(LeaveType.Sick) ? totals.SickUsed :
+            model.LeaveType == Convert.ToString(LeaveType.Casual) ? totals.CasualUsed : 0;
+        var pending = model.LeaveType == Convert.ToString(LeaveType.Sick)            ? totals.SickPending :
+            model.LeaveType == Convert.ToString(LeaveType.Casual) ? totals.CasualPending : 0;
         if (appliedDays > allowance - used - pending)
             return (false, $"This request exceeds your available {model.LeaveType.ToString().ToLowerInvariant()} leave balance.");
 

@@ -128,9 +128,9 @@
                                 <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                             </form>
                         }
-                        else if (request.CanCancel)
+                        else if (request.Item.CanCancel)
                         {
-                            <form asp-action="Cancel" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Cancel this leave?" data-confirm-text="The pending days will be released back to your available balance.">
+                            <form asp-action="Cancel" asp-route-id="@request.Item.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Cancel this leave?" data-confirm-text="The pending days will be released back to your available balance.">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
                             </form>
                         }
