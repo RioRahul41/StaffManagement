@@ -29,9 +29,18 @@
                         @* Employee ID is assigned from the signed-in employee profile. *@
                         <input asp-for="Expenses[i].EmployeeId" type="hidden" />
                     }
-                    <div class="col-md-6"><label asp-for="Expenses[i].Title" class="form-label">Title <span class="text-danger">*</span></label><input asp-for="Expenses[i].Title" class="form-control" /><span asp-validation-for="Expenses[i].Title" class="text-danger"></span></div>
-                    <div class="col-md-3"><label asp-for="Expenses[i].FromDate" class="form-label">From date <span class="text-danger">*</span></label><input asp-for="Expenses[i].FromDate" class="form-control" type="date" /><span asp-validation-for="Expenses[i].FromDate" class="text-danger"></span></div>
-                    <div class="col-md-3"><label asp-for="Expenses[i].ToDate" class="form-label">To date <span class="text-danger">*</span></label><input asp-for="Expenses[i].ToDate" class="form-control" type="date" /><span asp-validation-for="Expenses[i].ToDate" class="text-danger"></span></div>
+                    @if (i == 0)
+                    {
+                        <div class="col-md-6"><label asp-for="Expenses[i].Title" class="form-label">Title <span class="text-danger">*</span></label><input asp-for="Expenses[i].Title" class="form-control shared-expense-field" /><span asp-validation-for="Expenses[i].Title" class="text-danger"></span></div>
+                        <div class="col-md-3"><label asp-for="Expenses[i].FromDate" class="form-label">From date <span class="text-danger">*</span></label><input asp-for="Expenses[i].FromDate" class="form-control shared-expense-field" type="date" /><span asp-validation-for="Expenses[i].FromDate" class="text-danger"></span></div>
+                        <div class="col-md-3"><label asp-for="Expenses[i].ToDate" class="form-label">To date <span class="text-danger">*</span></label><input asp-for="Expenses[i].ToDate" class="form-control shared-expense-field" type="date" /><span asp-validation-for="Expenses[i].ToDate" class="text-danger"></span></div>
+                    }
+                    else
+                    {
+                        <input asp-for="Expenses[i].Title" type="hidden" data-shared-field="Title" />
+                        <input asp-for="Expenses[i].FromDate" type="hidden" data-shared-field="FromDate" />
+                        <input asp-for="Expenses[i].ToDate" type="hidden" data-shared-field="ToDate" />
+                    }
                     <div class="col-md-4"><label asp-for="Expenses[i].Category" class="form-label">Category <span class="text-danger">*</span></label><input asp-for="Expenses[i].Category" class="form-control" /><span asp-validation-for="Expenses[i].Category" class="text-danger"></span></div>
                     <div class="col-md-4"><label asp-for="Expenses[i].Amount" class="form-label">Amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].Amount" class="form-control expense-amount" type="number" min="0.01" step="0.01" /><span asp-validation-for="Expenses[i].Amount" class="text-danger"></span></div>
                     <div class="col-md-4"><label asp-for="Expenses[i].BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillNumber" class="form-control" /><span asp-validation-for="Expenses[i].BillNumber" class="text-danger"></span></div>
@@ -88,9 +97,9 @@
                 @* Employee ID is assigned from the signed-in employee profile. *@
                 <input type="hidden" name="Expenses[__index__].EmployeeId" value="@(Model.Expenses[0].EmployeeId)" />
             }
-            <div class="col-md-6"><label for="Expenses___index____Title" class="form-label">Title <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].Title" id="Expenses___index____Title" class="form-control" required maxlength="200" /><span class="text-danger" data-valmsg-for="Expenses[__index__].Title" data-valmsg-replace="true"></span></div>
-            <div class="col-md-3"><label for="Expenses___index____FromDate" class="form-label">From date <span class="text-danger">*</span></label><input type="date" name="Expenses[__index__].FromDate" id="Expenses___index____FromDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].FromDate" data-valmsg-replace="true"></span></div>
-            <div class="col-md-3"><label for="Expenses___index____ToDate" class="form-label">To date <span class="text-danger">*</span></label><input type="date" name="Expenses[__index__].ToDate" id="Expenses___index____ToDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].ToDate" data-valmsg-replace="true"></span></div>
+            <input type="hidden" name="Expenses[__index__].Title" data-shared-field="Title" />
+            <input type="hidden" name="Expenses[__index__].FromDate" data-shared-field="FromDate" />
+            <input type="hidden" name="Expenses[__index__].ToDate" data-shared-field="ToDate" />
             <div class="col-md-4"><label for="Expenses___index____Category" class="form-label">Category <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].Category" id="Expenses___index____Category" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].Category" data-valmsg-replace="true"></span></div>
             <div class="col-md-4"><label for="Expenses___index____Amount" class="form-label">Amount <span class="text-danger">*</span></label><input type="number" name="Expenses[__index__].Amount" id="Expenses___index____Amount" class="form-control expense-amount" min="0.01" step="0.01" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].Amount" data-valmsg-replace="true"></span></div>
             <div class="col-md-4"><label for="Expenses___index____BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].BillNumber" id="Expenses___index____BillNumber" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].BillNumber" data-valmsg-replace="true"></span></div>
@@ -145,6 +154,11 @@
             document.getElementById('add-expense').addEventListener('click', function () {
                 const index = entries.querySelectorAll('.expense-entry').length;
                 entries.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__index__', index));
+                const newEntry = entries.querySelector('.expense-entry:last-child');
+                newEntry.querySelectorAll('[data-shared-field]').forEach(function (field) {
+                    const source = entries.querySelector('.expense-entry:first-child [name$=".' + field.dataset.sharedField + '"]');
+                    field.value = source ? source.value : '';
+                });
                 reindexEntries();
             });
             entries.addEventListener('click', function (event) {
@@ -159,6 +173,15 @@
             entries.addEventListener('change', function (event) {
                 if (event.target.matches('.expense-amount')) syncTotal(event.target);
             });
+            const syncSharedFields = function (field) {
+                if (!field.matches('.shared-expense-field')) return;
+                const fieldName = field.name.split('.').pop();
+                entries.querySelectorAll('[data-shared-field="' + fieldName + '"]').forEach(function (hiddenField) {
+                    hiddenField.value = field.value;
+                });
+            };
+            entries.addEventListener('input', function (event) { syncSharedFields(event.target); });
+            entries.addEventListener('change', function (event) { syncSharedFields(event.target); });
             entries.querySelectorAll('.expense-amount').forEach(syncTotal);
             reindexEntries();
         })();

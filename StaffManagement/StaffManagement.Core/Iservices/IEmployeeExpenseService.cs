@@ -5,7 +5,7 @@ namespace StaffManagement.Core.Iservices;
 
 public interface IEmployeeExpenseService
 {
-    Task<PagedResultDto<EmployeeExpenseDto>> GetPagedAsync(
+    Task<PagedResultDto<EmployeeExpenseGroupDto>> GetPagedGroupsAsync(
         bool canManageAll,
         string identityUserId,
         int pageNumber,

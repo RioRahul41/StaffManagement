@@ -18,7 +18,7 @@ public sealed class ExpenseController(
 
     public async Task<IActionResult> Index(int page = 1, CancellationToken cancellationToken = default)
     {
-        var result = await expenseService.GetPagedAsync(
+        var result = await expenseService.GetPagedGroupsAsync(
             CanApproveExpenses(),
             CurrentIdentityUserId(),
             page,

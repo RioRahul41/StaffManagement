@@ -1,5 +1,5 @@
 @using StaffManagement.Core.DTOs
-@model PagedResultDto<StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseDto>
+@model PagedResultDto<StaffManagement.Core.DTOs.ExpenseModel.EmployeeExpenseGroupDto>
 @{
     ViewData["Title"] = "Employee Expenses";
 }
@@ -17,20 +17,42 @@
 }
 else
 {
-    <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>Employee ID</th><th>Title</th><th>From date</th><th>To date</th><th>Bill amount</th><th>Approval notes</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+    <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
+        <colgroup><col style="width: 8%" /><col style="width: 13%" /><col style="width: 14%" /><col style="width: 10%" /><col style="width: 10%" /><col style="width: 12%" /><col style="width: 13%" /><col style="width: 8%" /><col style="width: 12%" /></colgroup>
+        <thead class="table-light"><tr><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead>
         <tbody>
         @foreach (var expense in Model.Items)
         {
             <tr>
-                <td>@expense.EmployeeId</td>
-                <td>@expense.Title</td>
-                <td>@expense.FromDate.ToString("yyyy-MM-dd")</td>
-                <td>@expense.ToDate.ToString("yyyy-MM-dd")</td>
-                <td data-order="@expense.BillAmount">@expense.BillAmount.ToString("N2")</td>
-                <td>@(string.IsNullOrWhiteSpace(expense.ApprovalNotes) ? "-" : expense.ApprovalNotes)</td>
-                <td><span class="badge @(expense.Status.ToString() == "Approved" ? "text-bg-success" : expense.Status.ToString() == "Rejected" ? "text-bg-danger" : "text-bg-warning")">@expense.Status</span></td>
-                <td class="text-end text-nowrap"><a asp-action="Details" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-secondary">Details</a><a asp-action="Edit" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a><a asp-action="Delete" asp-route-id="@expense.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a></td>
+                <td class="text-nowrap">@expense.EmployeeId</td>
+                <td class="expense-wrap-cell">@expense.Title</td>
+                <td class="expense-wrap-cell">@string.Join(", ", expense.Categories)</td>
+                <td class="text-center text-nowrap">@expense.FromDate.ToString("yyyy-MM-dd")</td>
+                <td class="text-center text-nowrap">@expense.ToDate.ToString("yyyy-MM-dd")</td>
+                <td class="text-end text-nowrap" data-order="@expense.BillAmount">@expense.BillAmount.ToString("N2")</td>
+                <td class="expense-wrap-cell">@(string.IsNullOrWhiteSpace(expense.ApprovalNotes) ? "-" : expense.ApprovalNotes)</td>
+                <td class="text-center text-nowrap"><span class="badge @(expense.Status == "Approved" ? "text-bg-success" : expense.Status == "Rejected" ? "text-bg-danger" : expense.Status == "Mixed" ? "text-bg-info" : "text-bg-warning")">@expense.Status</span></td>
+                <td class="text-center text-nowrap">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            @foreach (var bill in expense.Expenses)
+                            {
+                                @if (expense.Expenses.Count > 1)
+                                {
+                                    <li><h6 class="dropdown-header">@bill.Category - @bill.BillNumber</h6></li>
+                                }
+                                <li><a class="dropdown-item" asp-action="Details" asp-route-id="@bill.Id">Details</a></li>
+                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@bill.Id">Edit</a></li>
+                                <li><a class="dropdown-item" asp-action="Delete" asp-route-id="@bill.Id">Delete</a></li>
+                                @if (expense.Expenses.Count > 1 && bill != expense.Expenses[^1])
+                                {
+                                    <li><hr class="dropdown-divider" /></li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </td>
             </tr>
         }
         </tbody>
@@ -50,6 +72,11 @@ else
 
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+    <style>
+        .expense-table { min-width: 1250px; table-layout: fixed; }
+        .expense-table th, .expense-table td { vertical-align: middle; }
+        .expense-wrap-cell { overflow-wrap: anywhere; white-space: normal; }
+    </style>
 }
 
 @section Scripts {
@@ -60,7 +87,12 @@ else
                 paging: false,
                 info: false,
                 lengthChange: false,
-                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+                autoWidth: false,
+                columnDefs: [
+                    { targets: [0, 3, 4, 7, 8], className: 'text-center text-nowrap' },
+                    { targets: 5, className: 'text-end text-nowrap' },
+                    { targets: -1, orderable: false, searchable: false }
+                ]
             });
         }
     </script>

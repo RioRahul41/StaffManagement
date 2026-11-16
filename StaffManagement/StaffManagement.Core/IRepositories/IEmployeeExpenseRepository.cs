@@ -4,7 +4,7 @@ namespace StaffManagement.Core.IRepositories;
 
 public interface IEmployeeExpenseRepository
 {
-    Task<(IReadOnlyList<EmployeeExpense> Items, int TotalCount)> GetPagedAsync(
+    Task<(IReadOnlyList<EmployeeExpenseGroup> Groups, int TotalCount)> GetPagedGroupsAsync(
         int? employeeId,
         int pageNumber,
         int pageSize,

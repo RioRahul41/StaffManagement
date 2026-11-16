@@ -11,7 +11,7 @@ public sealed class EmployeeExpenseService(
     IEmployeeExpenseRepository expenseRepository,
     IEmployeeRepository employeeRepository) : IEmployeeExpenseService
 {
-    public async Task<PagedResultDto<EmployeeExpenseDto>> GetPagedAsync(
+    public async Task<PagedResultDto<EmployeeExpenseGroupDto>> GetPagedGroupsAsync(
         bool canManageAll,
         string identityUserId,
         int pageNumber,
@@ -26,7 +26,7 @@ public sealed class EmployeeExpenseService(
         {
             var employee = await employeeRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
             if (employee is null)
-                return new PagedResultDto<EmployeeExpenseDto>
+                return new PagedResultDto<EmployeeExpenseGroupDto>
                 {
                     PageNumber = pageNumber,
                     PageSize = pageSize
@@ -35,15 +35,28 @@ public sealed class EmployeeExpenseService(
             employeeId = employee.Id;
         }
 
-        var result = await expenseRepository.GetPagedAsync(
+        var result = await expenseRepository.GetPagedGroupsAsync(
             employeeId,
             pageNumber,
             pageSize,
             cancellationToken);
 
-        return new PagedResultDto<EmployeeExpenseDto>
+        return new PagedResultDto<EmployeeExpenseGroupDto>
         {
-            Items = result.Items.Select(Map).ToList(),
+            Items = result.Groups.Select(group => new EmployeeExpenseGroupDto
+            {
+                EmployeeId = group.EmployeeId,
+                Title = group.Title,
+                FromDate = group.FromDate,
+                ToDate = group.ToDate,
+                Categories = group.Expenses.Select(expense => expense.Category).Distinct().Order().ToList(),
+                BillAmount = group.BillAmount,
+                ApprovalNotes = group.ApprovalNotes,
+                Status = group.Expenses.Select(expense => expense.Status).Distinct().Count() == 1
+                    ? group.Status.ToString()
+                    : "Mixed",
+                Expenses = group.Expenses.Select(Map).ToList()
+            }).ToList(),
             PageNumber = pageNumber,
             PageSize = pageSize,
             TotalCount = result.TotalCount
