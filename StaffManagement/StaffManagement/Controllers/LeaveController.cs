@@ -11,6 +11,7 @@ namespace StaffManagement.Controllers;
 [Authorize]
 public sealed class LeaveController(
     ILeaveRequestService leaveService,
+    ILeaveTypeService leaveTypeService,
     IWebHostEnvironment environment) : Controller
 {
     private const int PageSize = 10;
@@ -19,7 +20,7 @@ public sealed class LeaveController(
         int page = 1,
         string? search = null,
         LeaveStatus? status = null,
-        LeaveType? leaveType = null,
+        string? leaveType = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
         CancellationToken cancellationToken = default)
@@ -52,7 +53,11 @@ public sealed class LeaveController(
         return View(result);
     }
 
-    public IActionResult Create() => View(new CreateLeaveRequestDto());
+    public async Task<IActionResult> Create(CancellationToken cancellationToken)
+    {
+        await LoadLeaveTypesAsync(cancellationToken);
+        return View(new CreateLeaveRequestDto());
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -64,15 +69,18 @@ public sealed class LeaveController(
         if (ModelState.IsValid)
         {
             var requestedDays = (model.ToDate.Date - model.FromDate.Date).Days + 1;
-            if (model.LeaveType == LeaveType.Sick && requestedDays >= 2 && (document is null || document.Length == 0))
+            if (model.IsSickLeave && requestedDays >= 2 && (document is null || document.Length == 0))
                 ModelState.AddModelError(nameof(document), "A supporting document is required for sick leave applications of 2 or more days.");
         }
 
         if (!ModelState.IsValid)
+        {
+            await LoadLeaveTypesAsync(cancellationToken);
             return View(model);
+        }
 
         var requestedLeaveDays = (model.ToDate.Date - model.FromDate.Date).Days + 1;
-        var requiresDocument = model.LeaveType == LeaveType.Sick && requestedLeaveDays >= 2;
+        var requiresDocument = model.IsSickLeave && requestedLeaveDays >= 2;
         string? documentPath = null;
         string? uploadError = null;
         if (requiresDocument)
@@ -80,6 +88,7 @@ public sealed class LeaveController(
         if (uploadError is not null)
         {
             ModelState.AddModelError(nameof(document), uploadError);
+            await LoadLeaveTypesAsync(cancellationToken);
             return View(model);
         }
 
@@ -93,6 +102,7 @@ public sealed class LeaveController(
         {
             DeleteDocument(documentPath);
             ModelState.AddModelError(string.Empty, result.Error!);
+            await LoadLeaveTypesAsync(cancellationToken);
             return View(model);
         }
 
@@ -176,6 +186,9 @@ public sealed class LeaveController(
 
     private string CurrentIdentityUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+    private async Task LoadLeaveTypesAsync(CancellationToken cancellationToken) =>
+        ViewBag.LeaveTypes = await leaveTypeService.GetAllAsync(cancellationToken: cancellationToken);
 
     private async Task<(string? Path, string? Error)> SaveDocumentAsync(
         IFormFile? document,

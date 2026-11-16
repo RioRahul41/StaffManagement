@@ -1,7 +1,8 @@
-@using StaffManagement.Model.Enums
+@using StaffManagement.Model.Entities
 @model StaffManagement.Core.DTOs.LeaveModel.CreateLeaveRequestDto
 @{
     ViewData["Title"] = "Apply for leave";
+    var leaveTypes = ViewBag.LeaveTypes as IReadOnlyList<LeaveTypeMaster> ?? [];
 }
 <h1>Apply for leave</h1>
 <p class="text-muted">Sick leave can be requested for today or a past date. Other leave can be requested for today or a future date. Sick leave lasting 2 or more days requires a supporting document.</p>
@@ -9,7 +10,13 @@
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="col-md-6">
         <label asp-for="LeaveType" class="form-label"></label>
-        <select asp-for="LeaveType" class="form-select" asp-items="@(Html.GetEnumSelectList<LeaveType>())" data-sick-value="@((int)LeaveType.Sick)"></select>
+        <select asp-for="LeaveType" class="form-select" data-sick-value="Sick">
+            <option value="">Select leave type</option>
+            @foreach (var leaveType in leaveTypes)
+            {
+                <option value="@leaveType.Name">@leaveType.Name</option>
+            }
+        </select>
         <span asp-validation-for="LeaveType" class="text-danger"></span>
     </div>
     <div class="col-md-3">

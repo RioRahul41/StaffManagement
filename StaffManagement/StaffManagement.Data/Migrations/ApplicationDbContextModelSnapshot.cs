@@ -590,6 +590,10 @@ namespace StaffManagement.Data.Migrations
                     b.Property<int>("LeaveType")
                         .HasColumnType("int");
 
+                    b.Property<string>("LeaveTypeName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -609,6 +613,33 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("LeaveRequests");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.LeaveTypeMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveTypes");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.PolicyDocument", b =>

@@ -10,7 +10,7 @@ public class LeaveRequestDto
 
     public string EmployeeName { get; set; } = string.Empty;
 
-    public LeaveType LeaveType { get; set; }
+    public string LeaveType { get; set; } = string.Empty;
 
     public DateTime FromDate { get; set; }
 

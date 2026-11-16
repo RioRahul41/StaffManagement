@@ -14,17 +14,18 @@
     </dl>
 </div></div>
 <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-    <thead class="table-light"><tr><th>Category</th><th>Bill number</th><th>Amount</th><th>Description</th><th>Document</th><th>Status</th></tr></thead>
+    <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Category</th><th>Bill number</th><th>Amount</th><th>Description</th><th>Document</th><th>Status</th></tr></thead>
     <tbody>
-    @foreach (var bill in Model.Expenses)
+    @foreach (var bill in Model.Expenses.Select((item, index) => new { Item = item, Index = index + 1 }))
     {
         <tr>
-            <td>@bill.Category</td>
-            <td>@bill.BillNumber</td>
-            <td class="text-end">@bill.BillAmount.ToString("N2")</td>
-            <td>@(string.IsNullOrWhiteSpace(bill.Description) ? "-" : bill.Description)</td>
-            <td>@if (!string.IsNullOrWhiteSpace(bill.DocumentPath)) { <a asp-action="Document" asp-route-id="@bill.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
-            <td>@bill.Status</td>
+            <td class="text-center">@bill.Index</td>
+            <td>@bill.Item.Category</td>
+            <td>@bill.Item.BillNumber</td>
+            <td class="text-end">@bill.Item.BillAmount.ToString("N2")</td>
+            <td>@(string.IsNullOrWhiteSpace(bill.Item.Description) ? "-" : bill.Item.Description)</td>
+            <td>@if (!string.IsNullOrWhiteSpace(bill.Item.DocumentPath)) { <a asp-action="Document" asp-route-id="@bill.Item.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
+            <td>@bill.Item.Status</td>
         </tr>
     }
     </tbody>

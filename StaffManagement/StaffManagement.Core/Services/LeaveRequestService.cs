@@ -9,7 +9,8 @@ namespace StaffManagement.Core.Services;
 
 public sealed class LeaveRequestService(
     ILeaveRequestRepository leaveRepository,
-    IEmployeeRepository employeeRepository) : ILeaveRequestService
+    IEmployeeRepository employeeRepository,
+    ILeaveTypeRepository leaveTypeRepository) : ILeaveRequestService
 {
     public async Task<LeaveBalanceDto?> GetOwnBalanceAsync(string identityUserId, CancellationToken cancellationToken = default)
     {
@@ -78,7 +79,7 @@ public sealed class LeaveRequestService(
         int pageSize,
         string? search = null,
         LeaveStatus? status = null,
-        LeaveType? leaveType = null,
+        string? leaveType = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
         CancellationToken cancellationToken = default)
@@ -137,22 +138,23 @@ public sealed class LeaveRequestService(
         string? documentPath,
         CancellationToken cancellationToken = default)
     {
-        if (!Enum.IsDefined(model.LeaveType))
-            return (false, "Select a valid leave type.");
+        if (string.IsNullOrWhiteSpace(model.LeaveType) || !await leaveTypeRepository.ExistsByNameAsync(model.LeaveType, cancellationToken: cancellationToken))
+            return (false, "Select an active leave type.");
 
         var fromDate = model.FromDate.Date;
         var toDate = model.ToDate.Date;
-        if (model.LeaveType == LeaveType.Sick && (fromDate > DateTime.Today || toDate > DateTime.Today))
+        var isSickLeave = model.IsSickLeave;
+        if (isSickLeave && (fromDate > DateTime.Today || toDate > DateTime.Today))
             return (false, "Sick leave can only be requested for today or a past date.");
 
-        if (model.LeaveType != LeaveType.Sick && (fromDate < DateTime.Today || toDate < DateTime.Today))
+        if (!isSickLeave && (fromDate < DateTime.Today || toDate < DateTime.Today))
             return (false, "Leave can only be applied for today or a future date.");
 
         if (toDate < fromDate)
             return (false, "To date must be on or after from date.");
 
         var appliedDays = checked((toDate - fromDate).Days + 1);
-        var requiresDocument = model.LeaveType == LeaveType.Sick && appliedDays >= 2;
+        var requiresDocument = isSickLeave && appliedDays >= 2;
         if (requiresDocument && string.IsNullOrWhiteSpace(documentPath))
             return (false, "A supporting document is required for sick leave applications of 2 or more days.");
 
@@ -176,7 +178,8 @@ public sealed class LeaveRequestService(
         var request = new LeaveRequest
         {
             EmployeeId = employee.Id,
-            LeaveType = model.LeaveType,
+            LeaveType = Enum.TryParse<LeaveType>(model.LeaveType, true, out var knownLeaveType) ? knownLeaveType : LeaveType.Other,
+            LeaveTypeName = model.LeaveType.Trim(),
             FromDate = fromDate,
             ToDate = toDate,
             AppliedDays = appliedDays,
@@ -268,7 +271,7 @@ public sealed class LeaveRequestService(
         Id = request.Id,
         EmployeeId = request.EmployeeId,
         EmployeeName = $"{request.Employee.FirstName} {request.Employee.LastName}",
-        LeaveType = request.LeaveType,
+        LeaveType = string.IsNullOrWhiteSpace(request.LeaveTypeName) ? request.LeaveType.ToString() : request.LeaveTypeName,
         FromDate = request.FromDate,
         ToDate = request.ToDate,
         AppliedDays = request.AppliedDays,

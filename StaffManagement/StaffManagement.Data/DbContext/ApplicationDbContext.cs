@@ -27,6 +27,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<LeaveRequest> LeaveRequests { get; set; } = null!;
 
+        public DbSet<LeaveTypeMaster> LeaveTypes { get; set; } = null!;
+
         public DbSet<PolicyDocument> PolicyDocuments { get; set; } = null!;
 
         public DbSet<Holiday> Holidays { get; set; } = null!;

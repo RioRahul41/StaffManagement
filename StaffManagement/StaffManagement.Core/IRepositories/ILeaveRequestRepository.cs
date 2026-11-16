@@ -13,7 +13,7 @@ public interface ILeaveRequestRepository
         int pageSize,
         string? search = null,
         LeaveStatus? status = null,
-        LeaveType? leaveType = null,
+        string? leaveType = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
         CancellationToken cancellationToken = default);

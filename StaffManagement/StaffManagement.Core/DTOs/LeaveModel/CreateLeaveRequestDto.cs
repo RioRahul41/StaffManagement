@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using StaffManagement.Model.Enums;
-
 namespace StaffManagement.Core.DTOs.LeaveModel;
 
 public class CreateLeaveRequestDto : IValidatableObject
 {
-    [EnumDataType(typeof(LeaveType))]
-    public LeaveType LeaveType { get; set; }
+    [Required, StringLength(100)]
+    public string LeaveType { get; set; } = string.Empty;
+
+    public bool IsSickLeave => string.Equals(LeaveType, "Sick", StringComparison.OrdinalIgnoreCase);
 
     [Required, DataType(DataType.Date)]
     public DateTime FromDate { get; set; } = DateTime.Today;
@@ -19,7 +19,7 @@ public class CreateLeaveRequestDto : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (LeaveType == LeaveType.Sick)
+        if (IsSickLeave)
         {
             if (FromDate.Date > DateTime.Today || ToDate.Date > DateTime.Today)
                 yield return new ValidationResult("Sick leave can only be requested for today or a past date.", [nameof(FromDate), nameof(ToDate)]);

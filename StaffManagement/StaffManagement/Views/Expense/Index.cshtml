@@ -20,12 +20,14 @@
 else
 {
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
-        <colgroup><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 22%" /></colgroup>
-        <thead class="table-light"><tr><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead>
+        <colgroup><col style="width: 4%" /><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 18%" /></colgroup>
+        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Status</th><th class="text-center">Actions</th></tr></thead>
         <tbody>
+        @{ var rowNumber = (Model.PageNumber - 1) * Model.PageSize; }
         @foreach (var expense in Model.Items)
         {
             <tr>
+                <td class="text-center">@(++rowNumber)</td>
                 <td class="text-nowrap">@expense.EmployeeId</td>
                 <td class="expense-wrap-cell">@expense.Title</td>
                 <td class="expense-wrap-cell">@string.Join(", ", expense.Categories)</td>
@@ -135,10 +137,17 @@ else
                 lengthChange: false,
                 autoWidth: false,
                 columnDefs: [
-                    { targets: [0, 3, 4, 7, 8], className: 'text-center text-nowrap' },
-                    { targets: 5, className: 'text-end text-nowrap' },
-                    { targets: -1, orderable: false, searchable: false }
-                ]
+                    { targets: [0, 1, 4, 5, 8, 9], className: 'text-center text-nowrap' },
+                    { targets: 6, className: 'text-end text-nowrap' },
+                    { targets: [0, -1], orderable: false, searchable: false }
+                ],
+                drawCallback: function () {
+                    const api = this.api();
+                    const offset = (@Model.PageNumber - 1) * @Model.PageSize;
+                    api.column(0, { order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
+                        cell.textContent = offset + index + 1;
+                    });
+                }
             });
         }
     </script>

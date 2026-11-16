@@ -29,7 +29,7 @@
                     </a>
                     @if (User.IsInRole("Admin") || User.IsInRole("HR"))
                     {
-                        <details class="sidebar-group" open="@(currentController is "Employee" or "Department" or "Designation" or "Account" or "Holiday" ? "open" : null)">
+                        <details class="sidebar-group" open="@(currentController is "Employee" or "Department" or "Designation" or "Account" or "Holiday" or "LeaveType" ? "open" : null)">
                             <summary class="sidebar-group-toggle">
                                 <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg><span>People</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
                             </summary>
@@ -39,6 +39,7 @@
                                 <a class="sidebar-link @(currentController == "Designation" ? "active" : "")" asp-controller="Designation" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5ZM5 10v6l7 4 7-4v-6M21 8v8" /></svg><span>Designations</span></a>
                                 <a class="sidebar-link @(currentController == "Account" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Account" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>Create account</span></a>
                                 <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
+                                <a class="sidebar-link @(currentController == "LeaveType" ? "active" : "")" asp-controller="LeaveType" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5" /></svg><span>Leave types</span></a>
                             </div>
                         </details>
                     }

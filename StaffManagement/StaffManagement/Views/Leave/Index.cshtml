@@ -1,5 +1,6 @@
 @using StaffManagement.Core.DTOs
 @using StaffManagement.Model.Enums
+@using StaffManagement.Model.Entities
 @model PagedResultDto<StaffManagement.Core.DTOs.LeaveModel.LeaveRequestDto>
 @{
     ViewData["Title"] = "Leave management";
@@ -75,9 +76,9 @@
                 <label for="leaveType" class="form-label">Leave type</label>
                 <select id="leaveType" name="leaveType" class="form-select">
                     <option value="">All types</option>
-                    @foreach (var value in Enum.GetValues<LeaveType>())
+                    @foreach (var value in (ViewBag.LeaveTypes as IReadOnlyList<LeaveTypeMaster> ?? []))
                     {
-                        <option value="@value" selected="@(ViewBag.LeaveType?.ToString() == value.ToString())">@value</option>
+                        <option value="@value.Name" selected="@(ViewBag.LeaveType?.ToString() == value.Name)">@value.Name</option>
                     }
                 </select>
             </div>
@@ -97,7 +98,7 @@
     </div>
 </form>
 <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Applied count</th><th>Deducted</th><th>Reason</th><th>Document</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Applied count</th><th>Reason</th><th>Document</th><th>Status</th><th class="text-end">Action</th></tr></thead>
         <tbody>
         @if (Model.Items.Count == 0)
         {
@@ -105,25 +106,25 @@
         }
         else
         {
-            @foreach (var request in Model.Items)
+            @foreach (var request in Model.Items.Select((item, index) => new { Item = item, Index = (Model.PageNumber - 1) * Model.PageSize + index + 1 }))
             {
                 <tr>
-                    <td>@request.EmployeeName</td>
-                    <td>@request.LeaveType</td>
-                    <td>@request.FromDate.ToString("yyyy-MM-dd")</td>
-                    <td>@request.ToDate.ToString("yyyy-MM-dd")</td>
-                    <td>@request.AppliedDays @(request.AppliedDays == 1 ? "day" : "days")</td>
-                    <td>@(request.Status == LeaveStatus.Approved && (request.LeaveType == LeaveType.Sick || request.LeaveType == LeaveType.Casual) ? $"{request.AppliedDays} days" : "0 days")</td>
-                    <td>@request.Reason</td>
-                    <td>@if (!string.IsNullOrWhiteSpace(request.DocumentPath)) { <a asp-action="Document" asp-route-id="@request.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
-                    <td><span class="badge @(request.Status == LeaveStatus.Approved ? "text-bg-success" : request.Status == LeaveStatus.Rejected ? "text-bg-danger" : request.Status == LeaveStatus.Cancelled ? "text-bg-secondary" : "text-bg-warning")">@request.Status</span></td>
+                    <td class="text-center">@request.Index</td>
+                    <td>@request.Item.EmployeeName</td>
+                    <td>@request.Item.LeaveType</td>
+                    <td>@request.Item.FromDate.ToString("yyyy-MM-dd")</td>
+                    <td>@request.Item.ToDate.ToString("yyyy-MM-dd")</td>
+                    <td>@request.Item.AppliedDays @(request.Item.AppliedDays == 1 ? "day" : "days")</td>
+                    <td>@request.Item.Reason</td>
+                    <td>@if (!string.IsNullOrWhiteSpace(request.Item.DocumentPath)) { <a asp-action="Document" asp-route-id="@request.Item.Id">Download</a> } else { <span class="text-muted">-</span> }</td>
+                    <td><span class="badge @(request.Item.Status == LeaveStatus.Approved ? "text-bg-success" : request.Item.Status == LeaveStatus.Rejected ? "text-bg-danger" : "text-bg-warning")">@request.Item.Status</span></td>
                     <td class="text-end text-nowrap">
-                        @if (request.CanReview)
+                        @if (request.Item.CanReview)
                         {
-                            <form asp-action="Approve" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Approve this leave?" data-confirm-text="This request will be marked as approved.">
+                            <form asp-action="Approve" asp-route-id="@request.Item.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Approve this leave?" data-confirm-text="This request will be marked as approved.">
                                 <button type="submit" class="btn btn-sm btn-success">Approve</button>
                             </form>
-                            <form asp-action="Reject" asp-route-id="@request.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Reject this leave?" data-confirm-text="This request will be marked as rejected.">
+                            <form asp-action="Reject" asp-route-id="@request.Item.Id" method="post" class="d-inline leave-review-form" data-confirm-title="Reject this leave?" data-confirm-text="This request will be marked as rejected.">
                                 <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                             </form>
                         }

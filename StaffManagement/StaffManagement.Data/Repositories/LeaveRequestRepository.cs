@@ -16,7 +16,7 @@ public sealed class LeaveRequestRepository(ApplicationDbContext dbContext) : ILe
         int pageSize,
         string? search = null,
         LeaveStatus? status = null,
-        LeaveType? leaveType = null,
+        string? leaveType = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
         CancellationToken cancellationToken = default)
@@ -50,8 +50,15 @@ public sealed class LeaveRequestRepository(ApplicationDbContext dbContext) : ILe
         if (status.HasValue)
             query = query.Where(request => request.Status == status.Value);
 
-        if (leaveType.HasValue)
-            query = query.Where(request => request.LeaveType == leaveType.Value);
+        if (!string.IsNullOrWhiteSpace(leaveType))
+        {
+            var legacyLeaveType = Enum.TryParse<LeaveType>(leaveType, true, out var parsedLeaveType)
+                ? parsedLeaveType
+                : (LeaveType?)null;
+            query = legacyLeaveType.HasValue
+                ? query.Where(request => request.LeaveTypeName == leaveType || (request.LeaveTypeName == null && request.LeaveType == legacyLeaveType.Value))
+                : query.Where(request => request.LeaveTypeName == leaveType);
+        }
 
         if (fromDate.HasValue)
             query = query.Where(request => request.ToDate >= fromDate.Value.Date);

@@ -52,6 +52,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
+                        <th scope="col" class="text-center">S.No.</th>
                         <th scope="col">Date</th>
                         <th scope="col">Holiday</th>
                         @if (canManageHolidays)
@@ -61,15 +62,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var holiday in Model.Holidays)
+                    @foreach (var holiday in Model.Holidays.Select((item, index) => new { Item = item, Index = index + 1 }))
                     {
                         <tr>
-                            <td><time datetime="@(holiday.HolidayDate.ToString("yyyy-MM-dd"))">@holiday.HolidayDate.ToString("ddd, dd MMM yyyy")</time></td>
-                            <td class="fw-semibold">@holiday.HolidayName</td>
+                            <td class="text-center">@holiday.Index</td>
+                            <td><time datetime="@(holiday.Item.HolidayDate.ToString("yyyy-MM-dd"))">@holiday.Item.HolidayDate.ToString("ddd, dd MMM yyyy")</time></td>
+                            <td class="fw-semibold">@holiday.Item.HolidayName</td>
+                            <td>@(string.IsNullOrWhiteSpace(holiday.Item.Description) ? "—" : holiday.Item.Description)</td>
                             @if (canManageHolidays)
                             {
                                 <td>
-                                    <form asp-action="Delete" asp-route-id="@holiday.Id" method="post" onsubmit="return confirm('Remove this holiday from the calendar?');">
+                                    <form asp-action="Delete" asp-route-id="@holiday.Item.Id" method="post" onsubmit="return confirm('Remove this holiday from the calendar?');">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                                     </form>
                                 </td>

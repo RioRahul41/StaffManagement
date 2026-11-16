@@ -28,6 +28,7 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th class="text-center">S.No.</th>
                             <th>Designation Name</th>
                             <th>Description</th>
                             <th>Created Date</th>
@@ -36,21 +37,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach (var designation in Model)
+                    @foreach (var designation in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
                     {
                         <tr>
-                            <td class="fw-semibold">@designation.DesignationName</td>
-                            <td>@(string.IsNullOrWhiteSpace(designation.Description) ? "—" : designation.Description)</td>
-                            <td>@designation.CreatedDate.ToString("MMM dd, yyyy")</td>
+                            <td class="text-center">@designation.Index</td>
+                            <td class="fw-semibold">@designation.Item.DesignationName</td>
+                            <td>@(string.IsNullOrWhiteSpace(designation.Item.Description) ? "—" : designation.Item.Description)</td>
+                            <td>@designation.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
                             <td>
-                                <span class="badge @(designation.IsActive ? "text-bg-success" : "text-bg-secondary")">
-                                    @(designation.IsActive ? "Active" : "Inactive")
+                                <span class="badge @(designation.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                                    @(designation.Item.IsActive ? "Active" : "Inactive")
                                 </span>
                             </td>
                             <td class="text-end text-nowrap">
-                                <a asp-action="Detail" asp-route-id="@designation.DesignationId" class="btn btn-sm btn-outline-info me-1">Details</a>
-                                <a asp-action="Edit" asp-route-id="@designation.DesignationId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                <form asp-action="Delete" asp-route-id="@designation.DesignationId" method="post" class="d-inline delete-form">
+                                <a asp-action="Detail" asp-route-id="@designation.Item.DesignationId" class="btn btn-sm btn-outline-info me-1">Details</a>
+                                <a asp-action="Edit" asp-route-id="@designation.Item.DesignationId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@designation.Item.DesignationId" method="post" class="d-inline delete-form">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

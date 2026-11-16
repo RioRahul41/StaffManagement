@@ -15,27 +15,28 @@
 </div>
 <div class="card border-0 shadow-sm"><div class="table-responsive">
     <table id="helpDeskTable" class="table table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>First name</th><th>Ticket type</th><th>Date</th><th>Update date</th><th>Status</th><th>Description</th><th class="text-center">Action</th></tr></thead>
+        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>First name</th><th>Ticket type</th><th>Date</th><th>Update date</th><th>Status</th><th>Description</th><th class="text-center">Action</th></tr></thead>
         <tbody>
         @if (Model.Items.Count == 0)
         {
-            <tr><td colspan="7" class="text-center text-muted py-4">No Help Desk tickets found.</td></tr>
+            <tr><td colspan="8" class="text-center text-muted py-4">No Help Desk tickets found.</td></tr>
         }
         else
         {
-            @foreach (var ticket in Model.Items)
+            @foreach (var ticket in Model.Items.Select((item, index) => new { Item = item, Index = (Model.PageNumber - 1) * Model.PageSize + index + 1 }))
             {
                 <tr>
-                    <td>@ticket.FirstName</td>
-                    <td>@ticket.TicketType</td>
-                    <td data-order="@ticket.Date.ToString("O")">@ticket.Date.ToLocalTime().ToString("yyyy-MM-dd")</td>
-                    <td data-order="@(ticket.UpdateDate?.ToString("O") ?? string.Empty)">@(ticket.UpdateDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-")</td>
-                    <td><span class="badge @(ticket.Status == HelpDeskStatus.Resolved || ticket.Status == HelpDeskStatus.Closed ? "text-bg-success" : ticket.Status == HelpDeskStatus.InProgress ? "text-bg-info" : "text-bg-warning")">@ticket.Status</span></td>
-                    <td class="text-break">@ticket.Description</td>
+                    <td class="text-center">@ticket.Index</td>
+                    <td>@ticket.Item.FirstName</td>
+                    <td>@ticket.Item.TicketType</td>
+                    <td data-order="@ticket.Item.Date.ToString("O")">@ticket.Item.Date.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                    <td data-order="@(ticket.Item.UpdateDate?.ToString("O") ?? string.Empty)">@(ticket.Item.UpdateDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-")</td>
+                    <td><span class="badge @(ticket.Item.Status == HelpDeskStatus.Resolved || ticket.Item.Status == HelpDeskStatus.Closed ? "text-bg-success" : ticket.Item.Status == HelpDeskStatus.InProgress ? "text-bg-info" : "text-bg-warning")">@ticket.Item.Status</span></td>
+                    <td class="text-break">@ticket.Item.Description</td>
                     <td class="text-center text-nowrap">
-                        @if (!string.IsNullOrWhiteSpace(ticket.DocumentPath))
+                        @if (!string.IsNullOrWhiteSpace(ticket.Item.DocumentPath))
                         {
-                            <a asp-action="Document" asp-route-id="@ticket.Id" class="btn btn-sm btn-outline-secondary">Download</a>
+                            <a asp-action="Document" asp-route-id="@ticket.Item.Id" class="btn btn-sm btn-outline-secondary">Download</a>
                         }
                         else
                         {
@@ -43,11 +44,11 @@
                         }
                         @if (canManageTickets)
                         {
-                            <form asp-action="UpdateStatus" asp-route-id="@ticket.Id" method="post" class="d-inline-flex align-items-center gap-1 ms-1">
+                            <form asp-action="UpdateStatus" asp-route-id="@ticket.Item.Id" method="post" class="d-inline-flex align-items-center gap-1 ms-1">
                                 <select name="status" class="form-select form-select-sm" aria-label="Update ticket status">
                                     @foreach (var status in Enum.GetValues<HelpDeskStatus>())
                                     {
-                                        <option value="@status" selected="@(status == ticket.Status)">@status</option>
+                                        <option value="@status" selected="@(status == ticket.Item.Status)">@status</option>
                                     }
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-primary">Update</button>
@@ -82,7 +83,14 @@
                 paging: false,
                 info: false,
                 lengthChange: false,
-                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+                columnDefs: [{ targets: [0, -1], orderable: false, searchable: false }],
+                drawCallback: function () {
+                    const api = this.api();
+                    const offset = (@Model.PageNumber - 1) * @Model.PageSize;
+                    api.column(0, { order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
+                        cell.textContent = offset + index + 1;
+                    });
+                }
             });
         }
     </script>

@@ -12,6 +12,9 @@ public class LeaveRequest
 
     public LeaveType LeaveType { get; set; }
 
+    [StringLength(100)]
+    public string? LeaveTypeName { get; set; }
+
     [Required, DataType(DataType.Date)]
     public DateTime FromDate { get; set; }
 

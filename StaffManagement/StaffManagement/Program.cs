@@ -44,6 +44,8 @@ builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository
 builder.Services.AddScoped<IEmployeeExpenseService, EmployeeExpenseService>();
 builder.Services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddScoped<ILeaveTypeRepository, LeaveTypeRepository>();
+builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
 builder.Services.AddScoped<IPolicyDocumentRepository, PolicyDocumentRepository>();
 builder.Services.AddScoped<IPolicyDocumentService, PolicyDocumentService>();
 builder.Services.AddScoped<IHolidayRepository, HolidayRepository>();

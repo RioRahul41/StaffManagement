@@ -6,14 +6,14 @@
 <div class="alert alert-warning">This deletes all @Model.Expenses.Count bill(s) in this expense group.</div>
 <p>Delete <strong>@Model.Title</strong> for employee <strong>@Model.EmployeeId</strong>?</p>
 <div class="card border-0 shadow-sm mb-3"><div class="table-responsive"><table class="table mb-0">
-    <thead class="table-light"><tr><th>Category</th><th>Bill number</th><th>Amount</th></tr></thead>
+    <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Category</th><th>Bill number</th><th>Amount</th></tr></thead>
     <tbody>
-    @foreach (var bill in Model.Expenses)
+    @foreach (var bill in Model.Expenses.Select((item, index) => new { Item = item, Index = index + 1 }))
     {
-        <tr><td>@bill.Category</td><td>@bill.BillNumber</td><td class="text-end">@bill.BillAmount.ToString("N2")</td></tr>
+        <tr><td class="text-center">@bill.Index</td><td>@bill.Item.Category</td><td>@bill.Item.BillNumber</td><td class="text-end">@bill.Item.BillAmount.ToString("N2")</td></tr>
     }
     </tbody>
-    <tfoot class="table-light"><tr><th colspan="2" class="text-end">Group total</th><th class="text-end">@Model.BillAmount.ToString("N2")</th></tr></tfoot>
+    <tfoot class="table-light"><tr><th colspan="3" class="text-end">Group total</th><th class="text-end">@Model.BillAmount.ToString("N2")</th></tr></tfoot>
 </table></div></div>
 <form asp-action="DeleteGroup" method="post" id="delete-expense-group-form">
     <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
