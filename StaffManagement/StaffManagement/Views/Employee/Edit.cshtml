@@ -12,7 +12,12 @@
     <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
     <div class="col-md-6"><label asp-for="Email" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
-    <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /></div>
+    <div class="col-md-6">
+        <label asp-for="Phone" class="form-label"></label>
+        <input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number placeholder="10-digit number" aria-describedby="Phone-hint" class="form-control" />
+        <div id="Phone-hint" class="form-text">Optional. If entered, use exactly 10 digits.</div>
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
     <div class="col-md-6">
         <label asp-for="DepartmentId" class="form-label">Department</label>
         <span class="text-danger" aria-hidden="true">*</span>

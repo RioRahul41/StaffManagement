@@ -4,6 +4,19 @@
 // Write your JavaScript code.
 
 (function () {
+    document.addEventListener('input', function (event) {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement) || !input.hasAttribute('data-phone-number')) return;
+
+        const caret = input.selectionStart ?? input.value.length;
+        const digitsOnly = input.value.replace(/[^0-9]/g, '').slice(0, 10);
+        if (input.value !== digitsOnly) {
+            input.value = digitsOnly;
+            const nextCaret = Math.min(caret, digitsOnly.length);
+            input.setSelectionRange(nextCaret, nextCaret);
+        }
+    });
+
     const body = document.body;
     const toggle = document.getElementById('darkModeToggle');
     const label = document.getElementById('darkModeLabel');

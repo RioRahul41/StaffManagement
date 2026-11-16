@@ -12,7 +12,12 @@
         <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="Email" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone" class="text-danger"></span></div>
+        <div class="col-md-6">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number placeholder="10-digit number" aria-describedby="Phone-hint" class="form-control" />
+            <div id="Phone-hint" class="form-text">Optional. If entered, use exactly 10 digits.</div>
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
         <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="DOB" class="form-label"></label><input asp-for="DOB" type="date" class="form-control" /><span asp-validation-for="DOB" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="Gender" class="form-label"></label><select asp-for="Gender" class="form-select"><option value="">Prefer not to say</option>@foreach (var gender in Enum.GetValues<StaffManagement.Model.Enums.Gender>()) { <option value="@gender">@gender</option> }</select></div>
