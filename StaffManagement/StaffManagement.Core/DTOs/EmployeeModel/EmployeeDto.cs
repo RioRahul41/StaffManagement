@@ -21,6 +21,14 @@ public class EmployeeDto
     [Required, EmailAddress, StringLength(256)]
     public string Email { get; set; } = string.Empty;
 
+    [EmailAddress, StringLength(256)]
+    public string? PersonalEmail { get; set; }
+
+    [StringLength(1000)]
+    public string? Skills { get; set; }
+
+    public string? ProfilePhotoPath { get; set; }
+
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
     public string? Phone { get; set; }
 
@@ -47,6 +55,16 @@ public class EmployeeDto
     public string? Designation { get; set; }
 
     public Gender? Gender { get; set; }
+    [StringLength(30)]
+    public string? MaritalStatus { get; set; }
+    [StringLength(5)]
+    public string? BloodGroup { get; set; }
+    [StringLength(100)]
+    public string? EmergencyContactName { get; set; }
+    [StringLength(50)]
+    public string? EmergencyContactRelationship { get; set; }
+    [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Emergency contact phone number must contain exactly 10 digits.")]
+    public string? EmergencyContactPhone { get; set; }
     public bool EmpIsActive { get; set; } = true;
 
     [Range(0, 365, ErrorMessage = "Sick leave allowance must be between 0 and 365 days.")]
@@ -55,3 +73,4 @@ public class EmployeeDto
     [Range(0, 365, ErrorMessage = "Casual leave allowance must be between 0 and 365 days.")]
     public int CasualLeaveAllowance { get; set; } = 10;
 }
+

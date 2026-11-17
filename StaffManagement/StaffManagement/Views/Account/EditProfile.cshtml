@@ -6,12 +6,28 @@
     <p class="text-muted mb-0">Update the personal information shown on your profile.</p>
 </div>
 
-<form asp-action="EditProfile" method="post" class="card profile-card">
+<form asp-action="EditProfile" method="post" enctype="multipart/form-data" class="card profile-card">
     <div class="card-body row g-3">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="Email" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="Email" class="form-label">Office email</label><input asp-for="Email" class="form-control" readonly /><div class="form-text">Your office email is managed by your organization.</div></div>
+        <div class="col-md-6"><label asp-for="PersonalEmail" class="form-label">Personal email</label><input asp-for="PersonalEmail" type="email" class="form-control" /><span asp-validation-for="PersonalEmail" class="text-danger"></span></div>
+        <div class="col-md-6">
+            <label asp-for="Skills" class="form-label">Skills</label>
+            <textarea asp-for="Skills" class="form-control" rows="3" maxlength="1000" placeholder="Enter your skills"></textarea>
+            <span asp-validation-for="Skills" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label for="profilePhoto" class="form-label">Profile photo</label>
+            @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath))
+            {
+                <div class="mb-2"><img src="@Url.Action("ProfilePhoto")" alt="Current profile photo" class="profile-avatar" style="width: 72px; height: 72px; object-fit: cover;" /></div>
+            }
+            <input id="profilePhoto" name="profilePhoto" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" />
+            <div class="form-text">JPG, PNG, or WebP; maximum 5 MB. Leave empty to keep the current photo.</div>
+            <span class="text-danger">@Html.ValidationMessage("profilePhoto")</span>
+        </div>
         <div class="col-md-6">
             <label asp-for="Phone" class="form-label"></label>
             <input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number placeholder="10-digit number" aria-describedby="Phone-hint" class="form-control" />
@@ -19,8 +35,6 @@
             <span asp-validation-for="Phone" class="text-danger"></span>
         </div>
         <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="DOB" class="form-label"></label><input asp-for="DOB" type="date" class="form-control" /><span asp-validation-for="DOB" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="Gender" class="form-label"></label><select asp-for="Gender" class="form-select"><option value="">Prefer not to say</option>@foreach (var gender in Enum.GetValues<StaffManagement.Model.Enums.Gender>()) { <option value="@gender">@gender</option> }</select></div>
         <div class="col-12 mt-4"><button type="submit" class="btn btn-primary">Save changes</button> <a asp-action="Profile" class="btn btn-secondary">Cancel</a></div>
     </div>
 </form>

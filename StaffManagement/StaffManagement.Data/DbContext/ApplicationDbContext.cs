@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using StaffManagement.Model.Entities;
 
@@ -18,6 +18,8 @@ namespace StaffManagement.Data.DbContext
         public DbSet<Project> Projects { get; set; } = null!;
 
         public DbSet<Employee> Employees { get; set; } = null!;
+        public DbSet<EmployeeProfile> EmployeeProfiles { get; set; } = null!;
+        public DbSet<EmployeeOtherDetail> EmployeeOtherDetails { get; set; } = null!;
 
         public DbSet<EmployeeProject> EmployeeProjects { get; set; } = null!;
 
@@ -54,6 +56,22 @@ namespace StaffManagement.Data.DbContext
 
             modelBuilder.Entity<Holiday>()
                 .HasIndex(holiday => holiday.HolidayDate);
+
+            modelBuilder.Entity<EmployeeOtherDetail>()
+                .HasOne(detail => detail.Employee)
+                .WithMany()
+                .HasForeignKey(detail => detail.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeProfile>()
+                .HasOne(profile => profile.Employee)
+                .WithOne()
+                .HasForeignKey<EmployeeProfile>(profile => profile.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeProfile>()
+                .HasIndex(profile => profile.EmployeeId)
+                .IsUnique();
 
             modelBuilder.Entity<Employee>()
                 .HasOne<Department>()
@@ -126,3 +144,5 @@ namespace StaffManagement.Data.DbContext
         }
     }
 }
+
+

@@ -1,0 +1,53 @@
+@model StaffManagement.Model.Entities.EmployeeProfile
+@using StaffManagement.Model.Enums
+@{
+    var editSection = ViewBag.EditSection as string ?? "profile";
+    var isEmergency = editSection == "emergency";
+    var isAddress = editSection == "address";
+}
+<h1>@ViewData["Title"]</h1>
+<p class="text-muted">@Model.Employee?.FirstName @Model.Employee?.LastName</p>
+<form asp-action="Edit" asp-route-employeeId="@Model.EmployeeId" asp-route-section="@editSection" method="post" class="card profile-card">
+    <input asp-for="EmployeeId" type="hidden" />
+    <input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" />
+    <div class="card-body row g-3">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (isEmergency)
+        {
+            <div class="col-12"><h2 class="h5">Emergency Contact Person</h2></div>
+            <div class="col-md-4"><label asp-for="EmergencyContactName" class="form-label"></label><input asp-for="EmergencyContactName" class="form-control" /><span asp-validation-for="EmergencyContactName" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="EmergencyContactRelationship" class="form-label"></label><input asp-for="EmergencyContactRelationship" class="form-control" /><span asp-validation-for="EmergencyContactRelationship" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="EmergencyContactPhone" class="form-label"></label><input asp-for="EmergencyContactPhone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" class="form-control" /><span asp-validation-for="EmergencyContactPhone" class="text-danger"></span></div>
+        }
+        else if (isAddress)
+        {
+            <div class="col-12"><h2 class="h5">Address Information</h2></div>
+            <div class="col-12"><h3 class="h6">Permanent Address</h3></div>
+            <div class="col-md-6"><label asp-for="PermanentAddressLine1" class="form-label">Address Line 1</label><input asp-for="PermanentAddressLine1" class="form-control" /><span asp-validation-for="PermanentAddressLine1" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="PermanentAddressLine2" class="form-label">Address Line 2</label><input asp-for="PermanentAddressLine2" class="form-control" /><span asp-validation-for="PermanentAddressLine2" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="PermanentCountry" class="form-label">Country</label><input asp-for="PermanentCountry" class="form-control" /><span asp-validation-for="PermanentCountry" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="PermanentState" class="form-label">State</label><input asp-for="PermanentState" class="form-control" /><span asp-validation-for="PermanentState" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="PermanentCity" class="form-label">City</label><input asp-for="PermanentCity" class="form-control" /><span asp-validation-for="PermanentCity" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="PermanentPincode" class="form-label">Pin Code</label><input asp-for="PermanentPincode" class="form-control" /><span asp-validation-for="PermanentPincode" class="text-danger"></span></div>
+            <div class="col-12 mt-3"><h3 class="h6">Current Address</h3></div>
+            <div class="col-md-6"><label asp-for="CurrentAddressLine1" class="form-label">Address Line 1</label><input asp-for="CurrentAddressLine1" class="form-control" /><span asp-validation-for="CurrentAddressLine1" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="CurrentAddressLine2" class="form-label">Address Line 2</label><input asp-for="CurrentAddressLine2" class="form-control" /><span asp-validation-for="CurrentAddressLine2" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="CurrentCountry" class="form-label">Country</label><input asp-for="CurrentCountry" class="form-control" /><span asp-validation-for="CurrentCountry" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="CurrentState" class="form-label">State</label><input asp-for="CurrentState" class="form-control" /><span asp-validation-for="CurrentState" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="CurrentCity" class="form-label">City</label><input asp-for="CurrentCity" class="form-control" /><span asp-validation-for="CurrentCity" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="CurrentPincode" class="form-label">Pin Code</label><input asp-for="CurrentPincode" class="form-control" /><span asp-validation-for="CurrentPincode" class="text-danger"></span></div>
+        }
+        else
+        {
+            <div class="col-12"><h2 class="h5">Profile Information</h2></div>
+            <div class="col-md-6"><label asp-for="Gender" class="form-label"></label><select asp-for="Gender" class="form-select"><option value="">Select gender</option>@foreach (var gender in Enum.GetValues<Gender>()) { <option value="@gender">@gender</option> }</select><span asp-validation-for="Gender" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="MaritalStatus" class="form-label"></label><select asp-for="MaritalStatus" class="form-select"><option value="">Select marital status</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select><span asp-validation-for="MaritalStatus" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="DOB" class="form-label"></label><input asp-for="DOB" type="date" class="form-control" /><span asp-validation-for="DOB" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="BloodGroup" class="form-label"></label><select asp-for="BloodGroup" class="form-select"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select><span asp-validation-for="BloodGroup" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="PhoneNumber" class="form-label">Phone number</label><input asp-for="PhoneNumber" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" class="form-control" /><span asp-validation-for="PhoneNumber" class="text-danger"></span></div>
+        }
+        <div class="col-12 mt-3"><button type="submit" class="btn btn-primary">Save changes</button> @if (ViewBag.ReturnToProfile is true) { <a asp-controller="Account" asp-action="Profile" class="btn btn-secondary">Cancel</a> } else { <a asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-secondary">Cancel</a> }</div>
+    </div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+

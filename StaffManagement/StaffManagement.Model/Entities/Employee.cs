@@ -1,4 +1,4 @@
-﻿using StaffManagement.Model.Enums;
+using StaffManagement.Model.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -24,6 +24,15 @@ namespace StaffManagement.Model.Entities
         [EmailAddress(ErrorMessage = "Enter a valid email address.")]
         [StringLength(256)]
         public string Email { get; set; } = string.Empty;
+
+        [EmailAddress, StringLength(256)]
+        public string? PersonalEmail { get; set; }
+
+        [StringLength(1000)]
+        public string? Skills { get; set; }
+
+        [StringLength(260)]
+        public string? ProfilePhotoPath { get; set; }
 
         [RegularExpression(
     @"^[0-9]{10}$",
@@ -65,6 +74,16 @@ namespace StaffManagement.Model.Entities
         public int CasualLeaveRemaining { get; set; } = 10;
         [EnumDataType(typeof(Gender))]
         public Gender? Gender { get; set; }
+        [StringLength(30)]
+        public string? MaritalStatus { get; set; }
+        [StringLength(5)]
+        public string? BloodGroup { get; set; }
+        [StringLength(100)]
+        public string? EmergencyContactName { get; set; }
+        [StringLength(50)]
+        public string? EmergencyContactRelationship { get; set; }
+        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Emergency contact phone number must contain exactly 10 digits.")]
+        public string? EmergencyContactPhone { get; set; }
 
         // Identity User relationship
         public string? IdentityUserId { get; set; }
@@ -93,3 +112,4 @@ namespace StaffManagement.Model.Entities
         }
     }
 }
+

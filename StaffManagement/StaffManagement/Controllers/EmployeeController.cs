@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Security;
+using StaffManagement.Data.DbContext;
+using Microsoft.EntityFrameworkCore;
 using StaffManagement.Model.Entities;
 using StaffManagement.Models;
 
@@ -17,7 +20,9 @@ public sealed class EmployeeController(
     IDesignationService designationService,
     IDepartmentService departmentService,
     IProjectService projectService,
-    UserManager<ApplicationIdentity> userManager) : Controller
+    UserManager<ApplicationIdentity> userManager,
+    IWebHostEnvironment environment,
+    ApplicationDbContext dbContext) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -97,9 +102,38 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
-        return employee is null ? NotFound() : View(employee);
+        if (employee is null)
+            return NotFound();
+        ViewBag.HasProfileInformation = await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == id, cancellationToken);
+        return View(employee);
     }
 
+    public async Task<IActionResult> ProfilePhoto(int id, CancellationToken cancellationToken)
+    {
+        var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+        if (employee is null || string.IsNullOrWhiteSpace(employee.ProfilePhotoPath))
+            return NotFound();
+
+        var fileName = Path.GetFileName(employee.ProfilePhotoPath);
+        var directory = Path.Combine(environment.ContentRootPath, "App_Data", "ProfilePhotos");
+        var fullPath = Path.GetFullPath(Path.Combine(directory, fileName));
+        var rootPath = Path.GetFullPath(directory) + Path.DirectorySeparatorChar;
+        if (!fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+            return NotFound();
+
+        var contentType = Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => null
+        };
+        if (contentType is null)
+            return NotFound();
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        return PhysicalFile(fullPath, contentType);
+    }
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     public async Task<IActionResult> Create()
     {
@@ -182,8 +216,28 @@ public sealed class EmployeeController(
         if (existingEmployee is null)
             return NotFound();
 
+        model.PersonalEmail = existingEmployee.PersonalEmail;
+        model.Skills = existingEmployee.Skills;
+        model.ProfilePhotoPath = existingEmployee.ProfilePhotoPath;
+        model.Gender = existingEmployee.Gender;
+        model.DOB = existingEmployee.DOB;
+        model.MaritalStatus = existingEmployee.MaritalStatus;
+        model.BloodGroup = existingEmployee.BloodGroup;
+        model.EmergencyContactName = existingEmployee.EmergencyContactName;
+        model.EmergencyContactRelationship = existingEmployee.EmergencyContactRelationship;
+        model.EmergencyContactPhone = existingEmployee.EmergencyContactPhone;
         model.SickLeaveAllowance = existingEmployee.SickLeaveAllowance;
         model.CasualLeaveAllowance = existingEmployee.CasualLeaveAllowance;
+        ModelState.Remove(nameof(EmployeeDto.PersonalEmail));
+        ModelState.Remove(nameof(EmployeeDto.Skills));
+        ModelState.Remove(nameof(EmployeeDto.ProfilePhotoPath));
+        ModelState.Remove(nameof(EmployeeDto.Gender));
+        ModelState.Remove(nameof(EmployeeDto.DOB));
+        ModelState.Remove(nameof(EmployeeDto.MaritalStatus));
+        ModelState.Remove(nameof(EmployeeDto.BloodGroup));
+        ModelState.Remove(nameof(EmployeeDto.EmergencyContactName));
+        ModelState.Remove(nameof(EmployeeDto.EmergencyContactRelationship));
+        ModelState.Remove(nameof(EmployeeDto.EmergencyContactPhone));
         ModelState.Remove(nameof(EmployeeDto.SickLeaveAllowance));
         ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
 
@@ -303,7 +357,10 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
-        return employee is null ? NotFound() : View(employee);
+        if (employee is null)
+            return NotFound();
+        ViewBag.HasProfileInformation = await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == id, cancellationToken);
+        return View(employee);
     }
 
     [HttpPost, ActionName("Delete")]
@@ -401,3 +458,7 @@ public sealed class EmployeeController(
         return roles.FirstOrDefault(role => RoleNames.All.Contains(role, StringComparer.OrdinalIgnoreCase));
     }
 }
+
+
+
+

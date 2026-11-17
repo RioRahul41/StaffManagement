@@ -1,0 +1,4 @@
+@model StaffManagement.Model.Entities.EmployeeProfile
+@{ ViewData["Title"] = "Delete profile information"; }
+<h1>Delete profile information</h1><p>Delete profile information for <strong>@Model.Employee.FirstName @Model.Employee.LastName</strong>?</p><p class="text-muted">This removes the profile and emergency contact details.</p>
+<form asp-action="Delete" method="post"><input type="hidden" name="employeeId" value="@Model.EmployeeId" /><button type="submit" class="btn btn-danger">Delete</button> <a asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-secondary">Cancel</a></form>

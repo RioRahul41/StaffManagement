@@ -1,4 +1,4 @@
-﻿using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IRepositories;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Model.Entities;
@@ -95,6 +95,9 @@ namespace StaffManagement.Core.Services
             employee.FirstName = model.FirstName;
             employee.LastName = model.LastName;
             employee.Email = model.Email;
+            employee.PersonalEmail = model.PersonalEmail;
+            employee.Skills = model.Skills;
+            employee.ProfilePhotoPath = model.ProfilePhotoPath;
             employee.Phone = model.Phone;
             employee.DepartmentId = model.DepartmentId;
             employee.ReportingPersonId = model.ReportingPersonId;
@@ -113,6 +116,11 @@ namespace StaffManagement.Core.Services
             employee.Salary = model.Salary;
             employee.Designation = model.Designation;
             employee.Gender = model.Gender;
+            employee.MaritalStatus = model.MaritalStatus;
+            employee.BloodGroup = model.BloodGroup;
+            employee.EmergencyContactName = model.EmergencyContactName;
+            employee.EmergencyContactRelationship = model.EmergencyContactRelationship;
+            employee.EmergencyContactPhone = model.EmergencyContactPhone;
             employee.EmpIsActive = model.EmpIsActive;
             employee.SickLeaveAllowance = model.SickLeaveAllowance;
             employee.SickLeaveRemaining = Math.Max(0, model.SickLeaveAllowance - leaveTotals.SickUsed - leaveTotals.SickPending);
@@ -147,6 +155,9 @@ namespace StaffManagement.Core.Services
             FirstName = employee.FirstName,
             LastName = employee.LastName,
             Email = employee.Email,
+            PersonalEmail = employee.PersonalEmail,
+            Skills = employee.Skills,
+            ProfilePhotoPath = employee.ProfilePhotoPath,
             Phone = employee.Phone,
             DepartmentId = employee.DepartmentId,
             ProjectIds = employee.ProjectAssignments.Select(assignment => assignment.ProjectId).ToList(),
@@ -165,6 +176,11 @@ namespace StaffManagement.Core.Services
             Salary = employee.Salary,
             Designation = employee.Designation,
             Gender = employee.Gender,
+            MaritalStatus = employee.MaritalStatus,
+            BloodGroup = employee.BloodGroup,
+            EmergencyContactName = employee.EmergencyContactName,
+            EmergencyContactRelationship = employee.EmergencyContactRelationship,
+            EmergencyContactPhone = employee.EmergencyContactPhone,
             EmpIsActive = employee.EmpIsActive,
             SickLeaveAllowance = employee.SickLeaveAllowance,
             CasualLeaveAllowance = employee.CasualLeaveAllowance
@@ -177,6 +193,9 @@ namespace StaffManagement.Core.Services
             FirstName = model.FirstName,
             LastName = model.LastName,
             Email = model.Email,
+            PersonalEmail = model.PersonalEmail,
+            Skills = model.Skills,
+            ProfilePhotoPath = model.ProfilePhotoPath,
             Phone = model.Phone,
             DepartmentId = model.DepartmentId,
             Department = model.Department,
@@ -185,6 +204,11 @@ namespace StaffManagement.Core.Services
             Salary = model.Salary,
             Designation = model.Designation,
             Gender = model.Gender,
+            MaritalStatus = model.MaritalStatus,
+            BloodGroup = model.BloodGroup,
+            EmergencyContactName = model.EmergencyContactName,
+            EmergencyContactRelationship = model.EmergencyContactRelationship,
+            EmergencyContactPhone = model.EmergencyContactPhone,
             EmpIsActive = model.EmpIsActive,
             SickLeaveAllowance = model.SickLeaveAllowance,
             SickLeaveRemaining = model.SickLeaveAllowance,
@@ -193,3 +217,4 @@ namespace StaffManagement.Core.Services
         };
     }
 }
+
