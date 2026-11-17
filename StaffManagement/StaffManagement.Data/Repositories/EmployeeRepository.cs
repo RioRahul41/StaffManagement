@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IRepositories;
 using StaffManagement.Data.DbContext;
 using StaffManagement.Model.Entities;
@@ -66,6 +67,71 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
             .ToListAsync(cancellationToken);
 
         return (items, totalCount);
+    }
+
+    public async Task<(IReadOnlyList<Employee> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+        EmployeeDataTableQueryDto query,
+        CancellationToken cancellationToken = default)
+    {
+        var employees = dbContext.Employees
+            .AsNoTracking()
+            .Include(employee => employee.ProjectAssignments)
+                .ThenInclude(assignment => assignment.Project)
+            .Include(employee => employee.ReportingPerson)
+            .Where(employee => !employee.EmpIsDeleted);
+
+        var totalCount = await employees.CountAsync(cancellationToken);
+
+        if (query.DepartmentId.HasValue)
+            employees = employees.Where(employee => employee.DepartmentId == query.DepartmentId.Value);
+
+        if (!string.IsNullOrWhiteSpace(query.Designation))
+            employees = employees.Where(employee => employee.Designation == query.Designation);
+
+        if (query.IsActive.HasValue)
+            employees = employees.Where(employee => employee.EmpIsActive == query.IsActive.Value);
+
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+        {
+            var term = query.SearchTerm.Trim();
+            employees = employees.Where(employee =>
+                employee.FirstName.Contains(term) ||
+                employee.LastName.Contains(term) ||
+                (employee.FirstName + " " + employee.LastName).Contains(term) ||
+                employee.Email.Contains(term) ||
+                (employee.Phone != null && employee.Phone.Contains(term)) ||
+                employee.Location.Contains(term) ||
+                (employee.Department != null && employee.Department.Contains(term)) ||
+                (employee.Designation != null && employee.Designation.Contains(term)) ||
+                (employee.ReportingPerson != null &&
+                    (employee.ReportingPerson.FirstName + " " + employee.ReportingPerson.LastName).Contains(term)));
+        }
+
+        var filteredCount = await employees.CountAsync(cancellationToken);
+        IOrderedQueryable<Employee> ordered = (query.SortColumn, query.SortAscending) switch
+        {
+            ("name", true) => employees.OrderBy(employee => employee.LastName).ThenBy(employee => employee.FirstName),
+            ("name", false) => employees.OrderByDescending(employee => employee.LastName).ThenByDescending(employee => employee.FirstName),
+            ("email", true) => employees.OrderBy(employee => employee.Email),
+            ("email", false) => employees.OrderByDescending(employee => employee.Email),
+            ("department", true) => employees.OrderBy(employee => employee.Department),
+            ("department", false) => employees.OrderByDescending(employee => employee.Department),
+            ("reportingPerson", true) => employees.OrderBy(employee => employee.ReportingPerson!.LastName)
+                .ThenBy(employee => employee.ReportingPerson!.FirstName),
+            ("reportingPerson", false) => employees.OrderByDescending(employee => employee.ReportingPerson!.LastName)
+                .ThenByDescending(employee => employee.ReportingPerson!.FirstName),
+            ("status", true) => employees.OrderBy(employee => employee.EmpIsActive),
+            ("status", false) => employees.OrderByDescending(employee => employee.EmpIsActive),
+            _ => employees.OrderBy(employee => employee.LastName).ThenBy(employee => employee.FirstName)
+        };
+
+        var items = await ordered
+            .ThenBy(employee => employee.Id)
+            .Skip(query.Start)
+            .Take(query.Length)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount, filteredCount);
     }
 
     public Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>

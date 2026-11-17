@@ -13,6 +13,9 @@ namespace StaffManagement.Core.Iservices
             int page,
             int pageSize,
             CancellationToken cancellationToken = default);
+        Task<(IReadOnlyList<EmployeeDto> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+            EmployeeDataTableQueryDto query,
+            CancellationToken cancellationToken = default);
         Task<EmployeeDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<EmployeeDto?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default);
         Task<(bool Succeeded, string? Error)> CreateAsync(EmployeeDto model, string identityUserId, CancellationToken cancellationToken = default);

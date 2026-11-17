@@ -1,4 +1,6 @@
-﻿using StaffManagement.Model.Entities;
+using StaffManagement.Model.Entities;
+using StaffManagement.Core.DTOs.EmployeeModel; using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.IRepositories;
 
 namespace StaffManagement.Core.IRepositories
 {
@@ -12,6 +14,9 @@ namespace StaffManagement.Core.IRepositories
             bool? isActive,
             int page,
             int pageSize,
+            CancellationToken cancellationToken = default);
+        Task<(IReadOnlyList<Employee> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+            EmployeeDataTableQueryDto query,
             CancellationToken cancellationToken = default);
         Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<Employee?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default);

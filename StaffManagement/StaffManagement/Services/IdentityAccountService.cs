@@ -20,6 +20,9 @@ public sealed class IdentityAccountService(
         if (creatorRoles.Contains(RoleNames.Hr, StringComparer.OrdinalIgnoreCase))
             return [RoleNames.User];
 
+        if (creatorRoles.Contains(RoleNames.Manager, StringComparer.OrdinalIgnoreCase))
+            return [RoleNames.User];
+
         return [];
     }
 
