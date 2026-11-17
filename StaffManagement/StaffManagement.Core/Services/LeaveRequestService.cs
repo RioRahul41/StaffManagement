@@ -24,9 +24,11 @@ public sealed class LeaveRequestService(
             EmployeeName = $"{employee.FirstName} {employee.LastName}",
             Email = employee.Email,
             SickAllowance = employee.SickLeaveAllowance,
+            SickAvailable = employee.SickLeaveRemaining,
             SickUsed = totals.SickUsed,
             SickPending = totals.SickPending,
             CasualAllowance = employee.CasualLeaveAllowance,
+            CasualAvailable = employee.CasualLeaveRemaining,
             CasualUsed = totals.CasualUsed,
             CasualPending = totals.CasualPending
         };
@@ -45,9 +47,11 @@ public sealed class LeaveRequestService(
                 EmployeeName = $"{employee.FirstName} {employee.LastName}",
                 Email = employee.Email,
                 SickAllowance = employee.SickLeaveAllowance,
+                SickAvailable = employee.SickLeaveRemaining,
                 SickUsed = totals.SickUsed,
                 SickPending = totals.SickPending,
                 CasualAllowance = employee.CasualLeaveAllowance,
+                CasualAvailable = employee.CasualLeaveRemaining,
                 CasualUsed = totals.CasualUsed,
                 CasualPending = totals.CasualPending
             });
@@ -63,8 +67,11 @@ public sealed class LeaveRequestService(
         var employee = await employeeRepository.GetByIdAsync(employeeId, cancellationToken);
         if (employee is null)
             return (false, "Employee was not found.");
+        var totals = await leaveRepository.GetLeaveTotalsAsync(employeeId, cancellationToken);
         employee.SickLeaveAllowance = sickAllowance;
+        employee.SickLeaveRemaining = Math.Max(0, sickAllowance - totals.SickUsed - totals.SickPending);
         employee.CasualLeaveAllowance = casualAllowance;
+        employee.CasualLeaveRemaining = Math.Max(0, casualAllowance - totals.CasualUsed - totals.CasualPending);
         employee.UpdatedTime = DateTime.UtcNow;
         employeeRepository.UpdateLeaveAllowances(employee);
         await employeeRepository.SaveChangesAsync(cancellationToken);
@@ -124,6 +131,7 @@ public sealed class LeaveRequestService(
             return (false, "Leave request was not found.");
         if (request.Status != LeaveStatus.Pending)
             return (false, "Only pending leave requests can be cancelled.");
+        await RestoreReservedBalanceAsync(request, cancellationToken);
         request.Status = LeaveStatus.Cancelled;
         request.UpdatedTime = DateTime.UtcNow;
         leaveRepository.Update(request);
@@ -143,6 +151,7 @@ public sealed class LeaveRequestService(
         var fromDate = model.FromDate!.Value.Date;
         var toDate = model.ToDate!.Value.Date;
         var isSickLeave = model.IsSickLeave;
+        var isCasualLeave = string.Equals(model.LeaveType, "Casual", StringComparison.OrdinalIgnoreCase);
         if (isSickLeave && (fromDate > DateTime.Today || toDate > DateTime.Today))
             return (false, "Sick leave can only be requested for today or a past date.");
 
@@ -161,14 +170,8 @@ public sealed class LeaveRequestService(
         if (employee is null)
             return (false, "Your employee profile could not be found.");
 
-        var totals = await leaveRepository.GetLeaveTotalsAsync(employee.Id, cancellationToken);
-        var allowance = model.LeaveType == Convert.ToString(LeaveType.Sick) ? employee.SickLeaveAllowance :
-            model.LeaveType == Convert.ToString(LeaveType.Casual) ? employee.CasualLeaveAllowance : int.MaxValue;
-        var used = model.LeaveType == Convert.ToString(LeaveType.Sick) ? totals.SickUsed :
-            model.LeaveType == Convert.ToString(LeaveType.Casual) ? totals.CasualUsed : 0;
-        var pending = model.LeaveType == Convert.ToString(LeaveType.Sick)            ? totals.SickPending :
-            model.LeaveType == Convert.ToString(LeaveType.Casual) ? totals.CasualPending : 0;
-        if (appliedDays > allowance - used - pending)
+        if ((isSickLeave && appliedDays > employee.SickLeaveRemaining) ||
+            (isCasualLeave && appliedDays > employee.CasualLeaveRemaining))
             return (false, $"This request exceeds your available {model.LeaveType.ToString().ToLowerInvariant()} leave balance.");
 
         if (!employee.ReportingPersonId.HasValue)
@@ -187,6 +190,9 @@ public sealed class LeaveRequestService(
             DocumentPath = requiresDocument ? documentPath : null,
             CreatedTime = DateTime.UtcNow
         };
+
+        if (isSickLeave) employee.SickLeaveRemaining -= appliedDays;
+        else if (isCasualLeave) employee.CasualLeaveRemaining -= appliedDays;
 
         await leaveRepository.AddAsync(request, cancellationToken);
         await leaveRepository.SaveChangesAsync(cancellationToken);
@@ -230,6 +236,9 @@ public sealed class LeaveRequestService(
                 return (false, "This employee no longer has enough leave balance to approve this request.");
         }
 
+        if (status == LeaveStatus.Rejected)
+            await RestoreReservedBalanceAsync(request, cancellationToken);
+
         request.Status = status;
         request.UpdatedTime = DateTime.UtcNow;
         leaveRepository.Update(request);
@@ -254,6 +263,21 @@ public sealed class LeaveRequestService(
             await IsCurrentEmployeeAsync(request.Employee.ReportingPersonId.Value, identityUserId, cancellationToken);
 
         return isOwner || isAssignedReviewer || canViewAllRequests ? request.DocumentPath : null;
+    }
+
+    private async Task RestoreReservedBalanceAsync(LeaveRequest request, CancellationToken cancellationToken)
+    {
+        var totals = await leaveRepository.GetLeaveTotalsAsync(request.EmployeeId, cancellationToken);
+        if (request.LeaveType == LeaveType.Sick)
+        {
+            var pendingExcludingRequest = Math.Max(0, totals.SickPending - request.AppliedDays);
+            request.Employee.SickLeaveRemaining = Math.Max(0, request.Employee.SickLeaveAllowance - totals.SickUsed - pendingExcludingRequest);
+        }
+        else if (request.LeaveType == LeaveType.Casual)
+        {
+            var pendingExcludingRequest = Math.Max(0, totals.CasualPending - request.AppliedDays);
+            request.Employee.CasualLeaveRemaining = Math.Max(0, request.Employee.CasualLeaveAllowance - totals.CasualUsed - pendingExcludingRequest);
+        }
     }
 
     private async Task<bool> IsCurrentEmployeeAsync(

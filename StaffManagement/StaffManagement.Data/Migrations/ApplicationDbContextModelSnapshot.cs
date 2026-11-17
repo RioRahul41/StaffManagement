@@ -325,6 +325,11 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(10);
 
+                    b.Property<int>("CasualLeaveRemaining")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(10);
+
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime2");
 
@@ -385,6 +390,11 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SickLeaveAllowance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(10);
+
+                    b.Property<int>("SickLeaveRemaining")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(10);

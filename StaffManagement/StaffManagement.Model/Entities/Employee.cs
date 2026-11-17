@@ -58,7 +58,11 @@ namespace StaffManagement.Model.Entities
         [Range(0, 365)]
         public int SickLeaveAllowance { get; set; } = 10;
         [Range(0, 365)]
+        public int SickLeaveRemaining { get; set; } = 10;
+        [Range(0, 365)]
         public int CasualLeaveAllowance { get; set; } = 10;
+        [Range(0, 365)]
+        public int CasualLeaveRemaining { get; set; } = 10;
         [EnumDataType(typeof(Gender))]
         public Gender? Gender { get; set; }
 

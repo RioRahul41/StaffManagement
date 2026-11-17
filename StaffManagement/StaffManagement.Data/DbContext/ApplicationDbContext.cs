@@ -44,7 +44,9 @@ namespace StaffManagement.Data.DbContext
                 .HasPrecision(18, 2);
 
             modelBuilder.Entity<Employee>().Property(employee => employee.SickLeaveAllowance).HasDefaultValue(10);
+            modelBuilder.Entity<Employee>().Property(employee => employee.SickLeaveRemaining).HasDefaultValue(10);
             modelBuilder.Entity<Employee>().Property(employee => employee.CasualLeaveAllowance).HasDefaultValue(10);
+            modelBuilder.Entity<Employee>().Property(employee => employee.CasualLeaveRemaining).HasDefaultValue(10);
 
             modelBuilder.Entity<Holiday>()
                 .Property(holiday => holiday.HolidayDate)

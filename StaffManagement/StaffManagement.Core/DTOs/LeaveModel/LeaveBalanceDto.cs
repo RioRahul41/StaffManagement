@@ -11,6 +11,6 @@ public sealed class LeaveBalanceDto
     public int CasualAllowance { get; set; }
     public int CasualUsed { get; set; }
     public int CasualPending { get; set; }
-    public int SickAvailable => Math.Max(0, SickAllowance - SickUsed - SickPending);
-    public int CasualAvailable => Math.Max(0, CasualAllowance - CasualUsed - CasualPending);
+    public int SickAvailable { get; set; }
+    public int CasualAvailable { get; set; }
 }

@@ -7,7 +7,8 @@ namespace StaffManagement.Core.Services
 {
     public sealed class EmployeeService(
         IEmployeeRepository repository,
-        IProjectRepository projectRepository) : IEmployeeService
+        IProjectRepository projectRepository,
+        ILeaveRequestRepository leaveRequestRepository) : IEmployeeService
     {
         public async Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             (await repository.GetAllAsync(cancellationToken)).Select(Map).ToList();
@@ -90,6 +91,7 @@ namespace StaffManagement.Core.Services
             if (projects.Count != projectIds.Length)
                 return (false, "One or more selected projects are no longer active.");
 
+            var leaveTotals = await leaveRequestRepository.GetLeaveTotalsAsync(employee.Id, cancellationToken);
             employee.FirstName = model.FirstName;
             employee.LastName = model.LastName;
             employee.Email = model.Email;
@@ -113,7 +115,9 @@ namespace StaffManagement.Core.Services
             employee.Gender = model.Gender;
             employee.EmpIsActive = model.EmpIsActive;
             employee.SickLeaveAllowance = model.SickLeaveAllowance;
+            employee.SickLeaveRemaining = Math.Max(0, model.SickLeaveAllowance - leaveTotals.SickUsed - leaveTotals.SickPending);
             employee.CasualLeaveAllowance = model.CasualLeaveAllowance;
+            employee.CasualLeaveRemaining = Math.Max(0, model.CasualLeaveAllowance - leaveTotals.CasualUsed - leaveTotals.CasualPending);
             employee.UpdatedTime = DateTime.UtcNow;
 
             repository.Update(employee);
@@ -183,7 +187,9 @@ namespace StaffManagement.Core.Services
             Gender = model.Gender,
             EmpIsActive = model.EmpIsActive,
             SickLeaveAllowance = model.SickLeaveAllowance,
-            CasualLeaveAllowance = model.CasualLeaveAllowance
+            SickLeaveRemaining = model.SickLeaveAllowance,
+            CasualLeaveAllowance = model.CasualLeaveAllowance,
+            CasualLeaveRemaining = model.CasualLeaveAllowance,
         };
     }
 }
