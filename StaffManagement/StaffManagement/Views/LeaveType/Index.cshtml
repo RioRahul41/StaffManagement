@@ -27,8 +27,15 @@
                     <td class="text-end text-nowrap">
                         @if (leaveType.Item.IsActive)
                         {
-                            <a asp-action="Edit" asp-route-id="@leaveType.Item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <form asp-action="Delete" asp-route-id="@leaveType.Item.Id" method="post" class="d-inline leave-type-delete-form"><button type="submit" class="btn btn-sm btn-outline-danger">Delete</button></form>
+                            <div class="dropdown d-inline-block">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Leave type actions">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false" style="display:block"><circle cx="8" cy="3" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="8" cy="13" r="1.3"/></svg>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a asp-action="Edit" asp-route-id="@leaveType.Item.Id" class="dropdown-item">Edit</a></li>
+                                    <li><form asp-action="Delete" asp-route-id="@leaveType.Item.Id" method="post" class="leave-type-delete-form"><button type="submit" class="dropdown-item text-danger">Delete</button></form></li>
+                                </ul>
+                            </div>
                         }
                         else { <span class="text-muted">Inactive</span> }
                     </td>

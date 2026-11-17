@@ -28,7 +28,7 @@ public sealed class LeaveTypeService(ILeaveTypeRepository leaveTypeRepository) :
     public async Task<(bool Succeeded, string? Error)> UpdateAsync(LeaveTypeMaster leaveType, CancellationToken cancellationToken = default)
     {
         var existing = await leaveTypeRepository.GetByIdAsync(leaveType.Id, cancellationToken);
-        if (existing is null) return (false, "Leave type was not found.");
+        if (existing is null || !existing.IsActive) return (false, "Leave type was not found or is inactive.");
         var name = leaveType.Name.Trim();
         if (string.IsNullOrWhiteSpace(name)) return (false, "Leave type name is required.");
         if (IsBuiltInAllowanceType(existing.Name) &&

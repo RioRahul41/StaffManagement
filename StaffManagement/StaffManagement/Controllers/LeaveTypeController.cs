@@ -32,7 +32,7 @@ public sealed class LeaveTypeController(ILeaveTypeService leaveTypeService) : Co
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
         var leaveType = await leaveTypeService.GetByIdAsync(id, cancellationToken);
-        return leaveType is null ? NotFound() : View(leaveType);
+        return leaveType is null || !leaveType.IsActive ? NotFound() : View(leaveType);
     }
 
     [HttpPost, ValidateAntiForgeryToken]

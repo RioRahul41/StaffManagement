@@ -132,7 +132,9 @@
                     orderable: false,
                     className: 'text-center',
                     render: function (_data, type, _row, meta) {
-                        return type === 'display' ? meta.row + meta.settings._iDisplayStart + 1 : '';
+                        if (type !== 'display') return '';
+                        const pageStart = new DataTable.Api(meta.settings).page.info().start;
+                        return pageStart + meta.row + 1;
                     }
                 },
                 { data: 'employeeName', name: 'employeeName', render: DataTable.render.text() },
