@@ -23,6 +23,12 @@ public sealed class HolidayRepository(ApplicationDbContext context) : IHolidayRe
     public Task<Holiday?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         context.Holidays.FirstOrDefaultAsync(holiday => holiday.Id == id, cancellationToken);
 
+    public async Task UpdateAsync(Holiday holiday, CancellationToken cancellationToken = default)
+    {
+        context.Holidays.Update(holiday);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task DeleteAsync(Holiday holiday, CancellationToken cancellationToken = default)
     {
         context.Holidays.Remove(holiday);
