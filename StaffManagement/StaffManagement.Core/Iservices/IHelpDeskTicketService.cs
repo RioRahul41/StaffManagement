@@ -12,6 +12,12 @@ public interface IHelpDeskTicketService
         int pageSize,
         CancellationToken cancellationToken = default);
 
+    Task<HelpDeskTicketDto?> GetByIdAsync(
+        int id,
+        string identityUserId,
+        bool canViewAll,
+        CancellationToken cancellationToken = default);
+
     Task<(bool Succeeded, string? Error)> CreateAsync(
         CreateHelpDeskTicketDto model,
         string identityUserId,

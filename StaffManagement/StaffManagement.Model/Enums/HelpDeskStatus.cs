@@ -5,5 +5,6 @@ public enum HelpDeskStatus
     Open,
     InProgress,
     Resolved,
-    Closed
+    Closed,
+    NotFixed
 }

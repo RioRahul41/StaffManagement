@@ -40,6 +40,19 @@ public sealed class HelpDeskTicketService(
         };
     }
 
+    public async Task<HelpDeskTicketDto?> GetByIdAsync(
+        int id,
+        string identityUserId,
+        bool canViewAll,
+        CancellationToken cancellationToken = default)
+    {
+        var ticket = await ticketRepository.GetByIdAsync(id, cancellationToken);
+        if (ticket is null || (!canViewAll && ticket.Employee.IdentityUserId != identityUserId))
+            return null;
+
+        return Map(ticket);
+    }
+
     public async Task<(bool Succeeded, string? Error)> CreateAsync(
         CreateHelpDeskTicketDto model,
         string identityUserId,
@@ -78,6 +91,8 @@ public sealed class HelpDeskTicketService(
         var ticket = await ticketRepository.GetByIdAsync(id, cancellationToken);
         if (ticket is null)
             return (false, "Help Desk ticket was not found.");
+        if (ticket.Status == HelpDeskStatus.Closed)
+            return (false, "Closed tickets can only be viewed.");
 
         ticket.Status = status;
         ticket.UpdateDate = DateTime.UtcNow;

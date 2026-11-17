@@ -22,6 +22,13 @@ public sealed class HelpDeskController(
         return View(tickets);
     }
 
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        var ticket = await ticketService.GetByIdAsync(
+            id, CurrentIdentityUserId(), CanViewAllTickets(), cancellationToken);
+        return ticket is null ? NotFound() : View(ticket);
+    }
+
     public IActionResult Create() => View(new CreateHelpDeskTicketDto());
 
     [HttpPost]

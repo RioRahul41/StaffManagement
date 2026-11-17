@@ -269,8 +269,8 @@ public sealed class EmployeeExpenseService(
             BatchId = Guid.NewGuid(),
             FirstName = employee.FirstName,
             Title = model.Title.Trim(),
-            FromDate = model.FromDate.Date,
-            ToDate = model.ToDate.Date,
+            FromDate = model.FromDate.GetValueOrDefault().Date,
+            ToDate = model.ToDate.GetValueOrDefault().Date,
             Category = model.Category.Trim(),
             Amount = model.Amount.GetValueOrDefault(),
             BillNumber = model.BillNumber.Trim(),
@@ -323,8 +323,8 @@ public sealed class EmployeeExpenseService(
                 BatchId = batchId,
                 FirstName = employee.FirstName,
                 Title = model.Title.Trim(),
-                FromDate = model.FromDate.Date,
-                ToDate = model.ToDate.Date,
+                FromDate = model.FromDate.GetValueOrDefault().Date,
+                ToDate = model.ToDate.GetValueOrDefault().Date,
                 Category = model.Category.Trim(),
                 Amount = model.Amount.GetValueOrDefault(),
                 BillNumber = model.BillNumber.Trim(),
@@ -467,15 +467,18 @@ public sealed class EmployeeExpenseService(
     }
 
     private static string? Validate(
-        DateTime fromDate,
-        DateTime toDate,
+        DateTime? fromDate,
+        DateTime? toDate,
         decimal? amount,
         decimal? billAmount,
         string category,
         string billNumber,
         ExpenseStatus status)
     {
-        if (toDate.Date < fromDate.Date)
+        if (!fromDate.HasValue || !toDate.HasValue)
+            return "From date and To date are required.";
+
+        if (toDate.Value.Date < fromDate.Value.Date)
             return "To date cannot be earlier than From date.";
 
         if (!amount.HasValue || amount.Value <= 0)

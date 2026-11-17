@@ -81,6 +81,9 @@ public sealed class TimesheetService(
         string? documentPath,
         CancellationToken cancellationToken = default)
     {
+        if (!model.Status.HasValue || !Enum.IsDefined(model.Status.Value))
+            return (false, "Select a valid work status.");
+
         var validationError = ValidateSchedule(model.StartDate, model.StartTime, model.EndTime);
         if (validationError is not null)
             return (false, validationError);
@@ -109,10 +112,10 @@ public sealed class TimesheetService(
             ProjectName = project.ProjectName,
             TaskName = model.TaskName.Trim(),
             Description = model.Description.Trim(),
-            StartDate = model.StartDate.Date,
-            StartTime = model.StartTime,
-            EndTime = model.EndTime,
-            Status = model.Status,
+            StartDate = model.StartDate!.Value.Date,
+            StartTime = model.StartTime!.Value,
+            EndTime = model.EndTime!.Value,
+            Status = model.Status.Value,
             DocumentPath = documentPath,
             CreatedTime = DateTime.UtcNow
         };
@@ -262,15 +265,24 @@ public sealed class TimesheetService(
         return model;
     }
 
-    private static string? ValidateSchedule(DateTime startDate, TimeSpan startTime, TimeSpan endTime)
+    private static string? ValidateSchedule(DateTime? startDate, TimeSpan? startTime, TimeSpan? endTime)
     {
-        if (startDate.Date > DateTime.Today)
+        if (!startDate.HasValue)
+            return "Start date is required.";
+
+        if (!startTime.HasValue)
+            return "Start time is required.";
+
+        if (!endTime.HasValue)
+            return "End time is required.";
+
+        if (startDate.Value.Date > DateTime.Today)
             return "Start date cannot be in the future.";
 
-        if (!IsAllowedTime(startTime) || !IsAllowedTime(endTime))
+        if (!IsAllowedTime(startTime.Value) || !IsAllowedTime(endTime.Value))
             return "Start and end times must be between 12:00 AM and 11:30 PM in 30-minute intervals.";
 
-        if (endTime <= startTime)
+        if (endTime.Value <= startTime.Value)
             return "End time must be later than start time.";
 
         return null;

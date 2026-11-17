@@ -7,13 +7,13 @@
     var projects = ViewBag.Projects as IReadOnlyList<StaffManagement.Model.Entities.Project> ?? [];
 }
 <h1>Add timesheet</h1>
-<p class="text-muted">Add one update per task. Start it as In Progress, then edit it later and mark it Completed.</p>
+<p class="text-muted">Add one update per task and choose its work status.</p>
 <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3">
     @if (canManage)
     {
         <div class="col-md-6">
             <label asp-for="EmployeeId" class="form-label">Employee</label>
-            <select asp-for="EmployeeId" class="form-select">
+            <select asp-for="EmployeeId" class="form-select" required>
                 <option value="">-- Select employee --</option>
                 @foreach (var employee in employees)
                 {
@@ -46,6 +46,7 @@
         <label asp-for="StartTime" class="form-label">Start time</label>
         <span class="text-danger" aria-hidden="true">*</span>
         <select asp-for="StartTime" class="form-select time-input" required>
+            <option value="">-- Select start time --</option>
             @for (var minutes = 0; minutes < 24 * 60; minutes += 30)
             {
                 var time = TimeSpan.FromMinutes(minutes);
@@ -61,6 +62,7 @@
         <label asp-for="EndTime" class="form-label">End time</label>
         <span class="text-danger" aria-hidden="true">*</span>
         <select asp-for="EndTime" class="form-select time-input" required>
+            <option value="">-- Select end time --</option>
             @for (var minutes = 0; minutes < 24 * 60; minutes += 30)
             {
                 var time = TimeSpan.FromMinutes(minutes);
@@ -72,7 +74,7 @@
         </select>
         <span asp-validation-for="EndTime" class="text-danger small"></span>
     </div>
-    <div class="col-md-6"><label asp-for="Status" class="form-label">Work status</label><select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<TimesheetStatus>()"></select><span asp-validation-for="Status" class="text-danger"></span></div>
+    <div class="col-md-6"><label asp-for="Status" class="form-label">Work status</label><select asp-for="Status" class="form-select" required><option value="">-- Select status --</option>@foreach (var status in Enum.GetValues<TimesheetStatus>()) { <option value="@status">@status</option> }</select><span asp-validation-for="Status" class="text-danger"></span></div>
     <div class="col-md-6"><label class="form-label" for="document">Document</label><input class="form-control" type="file" id="document" name="document" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" /><div class="form-text">Optional. Maximum size: 10 MB.</div></div>
     <div class="col-12"><button class="btn btn-primary" type="submit">Save</button> <a asp-action="Index" class="btn btn-secondary">Cancel</a></div>
 </form>

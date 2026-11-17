@@ -1,5 +1,5 @@
 using StaffManagement.Model.Entities;
-using StaffManagement.Core.DTOs.EmployeeModel; using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IRepositories;
 
 namespace StaffManagement.Core.IRepositories
