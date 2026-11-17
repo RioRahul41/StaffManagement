@@ -23,34 +23,37 @@ public class CreateTimesheetDto : IValidatableObject
 
     [Required(ErrorMessage = "Start date is required.")]
     [DataType(DataType.Date)]
-    public DateTime StartDate { get; set; } = DateTime.Today;
+    public DateTime? StartDate { get; set; }
 
+    [Required(ErrorMessage = "Start time is required.")]
     [DataType(DataType.Time)]
-    public TimeSpan StartTime { get; set; } = new(9, 0, 0);
+    public TimeSpan? StartTime { get; set; }
 
+    [Required(ErrorMessage = "End time is required.")]
     [DataType(DataType.Time)]
-    public TimeSpan EndTime { get; set; } = new(10, 0, 0);
+    public TimeSpan? EndTime { get; set; }
 
+    [Required(ErrorMessage = "Select a work status.")]
     [EnumDataType(typeof(TimesheetStatus))]
-    public TimesheetStatus Status { get; set; } = TimesheetStatus.InProgress;
+    public TimesheetStatus? Status { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (!IsAllowedTime(StartTime))
+        if (StartTime.HasValue && !IsAllowedTime(StartTime.Value))
         {
             yield return new ValidationResult(
                 "Start time must be between 12:00 AM and 11:30 PM in 30-minute intervals.",
                 [nameof(StartTime)]);
         }
 
-        if (!IsAllowedTime(EndTime))
+        if (EndTime.HasValue && !IsAllowedTime(EndTime.Value))
         {
             yield return new ValidationResult(
                 "End time must be between 12:00 AM and 11:30 PM in 30-minute intervals.",
                 [nameof(EndTime)]);
         }
 
-        if (EndTime <= StartTime)
+        if (StartTime.HasValue && EndTime.HasValue && EndTime.Value <= StartTime.Value)
         {
             yield return new ValidationResult(
                 "End time must be later than start time.",

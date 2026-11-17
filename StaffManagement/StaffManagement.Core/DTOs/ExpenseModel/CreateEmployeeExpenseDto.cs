@@ -12,10 +12,10 @@ public class CreateEmployeeExpenseDto
     public string Title { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "From date is required."), DataType(DataType.Date)]
-    public DateTime FromDate { get; set; } = DateTime.Today;
+    public DateTime? FromDate { get; set; }
 
     [Required(ErrorMessage = "To date is required."), DataType(DataType.Date)]
-    public DateTime ToDate { get; set; } = DateTime.Today;
+    public DateTime? ToDate { get; set; }
 
     [Required(ErrorMessage = "Category is required."), StringLength(100)]
     public string Category { get; set; } = string.Empty;
