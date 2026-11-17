@@ -3,9 +3,13 @@
     ViewData["Title"] = "Employees";
     var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
     var canDelete = User.IsInRole("Admin");
-    var canCreate = User.IsInRole("Admin") || User.IsInRole("HR");
-    var showEmployeeId = User.IsInRole("Admin") || User.IsInRole("HR");
+    var canCreate = User.IsInRole("Admin") || User.IsInRole("HR") || User.IsInRole("Manager");
 }
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/3.1.5/css/dataTables.dataTables.min.css" />
+}
+
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
         <p class="text-primary fw-semibold mb-1">STAFF DIRECTORY</p>
@@ -17,63 +21,62 @@
         <a asp-action="Create" class="btn btn-primary">Create employee account</a>
     }
 </div>
-@if (TempData["Success"] is string success)
-{
-    <script>window.employeeSuccessMessage = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success));</script>
-}
-@if (TempData["Error"] is string error)
-{
-    <div class="alert alert-danger">@error</div>
-}
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        if (window.employeeSuccessMessage) {
-            Swal.fire({ icon: 'success', title: 'Saved', text: window.employeeSuccessMessage, timer: 2200, showConfirmButton: false });
-        }
-    </script>
-}
-<div class="card border-0 shadow-sm mb-3">
+<div class="card border-0 shadow-sm">
     <div class="card-body">
-        <form asp-action="Index" method="get" class="row g-3 align-items-end">
-            <div class="col-12 col-lg-4">
-                <label for="searchTerm" class="form-label">Search employees</label>
-                <input id="searchTerm" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Name, email, location..." />
-            </div>
-            <div class="col-6 col-lg-2">
-                <label for="departmentId" class="form-label">Department</label>
-                <select id="departmentId" name="departmentId" class="form-select">
+        <div class="row g-3 align-items-end mb-3" aria-label="Employee filters">
+            <div class="col-sm-6 col-lg-4">
+                <label class="form-label" for="departmentFilter">Department</label>
+                <select id="departmentFilter" class="form-select">
                     <option value="">All departments</option>
                     @foreach (var department in Model.Departments)
                     {
-                        <option value="@department.DepartmentId" selected="@(Model.DepartmentId == department.DepartmentId ? "selected" : null)">@department.DepartmentName</option>
+                        <option value="@department.DepartmentId">@department.DepartmentName</option>
                     }
                 </select>
             </div>
-            <div class="col-6 col-lg-2">
-                <label for="designation" class="form-label">Designation</label>
-                <select id="designation" name="designation" class="form-select">
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="designationFilter">Designation</label>
+                <select id="designationFilter" class="form-select">
                     <option value="">All designations</option>
                     @foreach (var designation in Model.Designations)
                     {
-                        <option value="@designation.DesignationName" selected="@(Model.Designation == designation.DesignationName ? "selected" : null)">@designation.DesignationName</option>
+                        <option value="@designation.DesignationName">@designation.DesignationName</option>
                     }
                 </select>
             </div>
-            <div class="col-6 col-lg-2">
-                <label for="isActive" class="form-label">Status</label>
-                <select id="isActive" name="isActive" class="form-select">
+            <div class="col-sm-6 col-lg-3">
+                <label class="form-label" for="statusFilter">Status</label>
+                <select id="statusFilter" class="form-select">
                     <option value="">All statuses</option>
-                    <option value="true" selected="@(Model.IsActive == true ? "selected" : null)">Active</option>
-                    <option value="false" selected="@(Model.IsActive == false ? "selected" : null)">Inactive</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
                 </select>
             </div>
-            <div class="col-6 col-lg-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            <div class="col-sm-6 col-lg-2">
+                <button type="button" id="resetEmployeeFilters" class="btn btn-outline-secondary w-100">Reset</button>
             </div>
-        </form>
+        </div>
+
+        <div class="table-responsive">
+            <table id="employeeTable" class="table table-hover align-middle w-100">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">S.No.</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Assigned projects</th>
+                        <th>Reporting person</th>
+                        <th>Account</th>
+                        <th>Status</th>
+                        <th>Project assignment</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -113,52 +116,95 @@ else
                     {
                         <a asp-action="AssignProjects" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-success">Assign projects</a>
                     }
-                    else
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                </td>
-                <td class="text-end text-nowrap">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @employee.Item.FirstName @employee.Item.LastName" title="Actions">
-                            <span aria-hidden="true">&#8942;</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a asp-action="Details" asp-route-id="@employee.Item.Id" class="dropdown-item">View</a></li>
-                            @if (canEdit)
-                            {
-                                <li><a asp-action="Edit" asp-route-id="@employee.Item.Id" class="dropdown-item">Edit</a></li>
-                            }
-                            @if (canDelete)
-                            {
-                                <li><a asp-action="Delete" asp-route-id="@employee.Item.Id" class="dropdown-item text-danger">Delete</a></li>
-                            }
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table></div></div>
-    @if (Model.TotalPages > 1)
-    {
-        var startPage = Math.Max(1, Model.PageNumber - 2);
-        var endPage = Math.Min(Model.TotalPages, Model.PageNumber + 2);
-        <nav class="mt-3" aria-label="Employee list pages">
-            <ul class="pagination justify-content-end">
-                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-departmentId="@Model.DepartmentId" asp-route-designation="@Model.Designation" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.PageNumber - 1)">Previous</a>
-                </li>
-                @for (var pageNumber = startPage; pageNumber <= endPage; pageNumber++)
+                },
                 {
-                    <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-departmentId="@Model.DepartmentId" asp-route-designation="@Model.Designation" asp-route-isActive="@Model.IsActive" asp-route-page="@pageNumber">@pageNumber</a>
-                    </li>
+                    data: 'isActive',
+                    name: 'status',
+                    render: function (active, type) {
+                        const text = active ? 'Active' : 'Inactive';
+                        if (type !== 'display') return text;
+                        const badge = document.createElement('span');
+                        badge.className = 'badge ' + (active ? 'text-bg-success' : 'text-bg-secondary');
+                        badge.textContent = text;
+                        return badge.outerHTML;
+                    }
+                },
+                {
+                    data: null,
+                    name: 'projectAssignment',
+                    searchable: false,
+                    orderable: false,
+                    render: function (_data, type, row) {
+                        if (type !== 'display') return '';
+                        if (!row.canAssignProjects) return '<span class="text-muted">-</span>';
+                        const link = document.createElement('a');
+                        link.className = 'btn btn-sm btn-outline-success text-nowrap';
+                        link.href = row.assignProjectsUrl;
+                        link.textContent = 'Assign projects';
+                        return link.outerHTML;
+                    }
+                },
+                {
+                    data: null,
+                    name: 'actions',
+                    searchable: false,
+                    orderable: false,
+                    className: 'text-end text-nowrap',
+                    render: function (_data, type, row) {
+                        if (type !== 'display') return '';
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'dropdown';
+                        const trigger = document.createElement('button');
+                        trigger.type = 'button';
+                        trigger.className = 'btn btn-sm btn-outline-secondary';
+                        trigger.setAttribute('data-bs-toggle', 'dropdown');
+                        trigger.setAttribute('aria-expanded', 'false');
+                        trigger.setAttribute('aria-label', 'Actions for ' + row.firstName + ' ' + row.lastName);
+                        trigger.title = 'Actions';
+                        trigger.innerHTML = '<span aria-hidden="true">&#8942;</span>';
+                        const menu = document.createElement('ul');
+                        menu.className = 'dropdown-menu dropdown-menu-end';
+                        const addLink = (label, url, danger) => {
+                            const item = document.createElement('li');
+                            const link = document.createElement('a');
+                            link.className = 'dropdown-item' + (danger ? ' text-danger' : '');
+                            link.href = url;
+                            link.textContent = label;
+                            item.appendChild(link);
+                            menu.appendChild(item);
+                        };
+                        addLink('View', row.viewUrl, false);
+                        if (row.canEdit) addLink('Edit', row.editUrl, false);
+                        if (row.canDelete) addLink('Delete', row.deleteUrl, true);
+                        wrapper.append(trigger, menu);
+                        return wrapper.outerHTML;
+                    }
                 }
-                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-departmentId="@Model.DepartmentId" asp-route-designation="@Model.Designation" asp-route-isActive="@Model.IsActive" asp-route-page="@(Model.PageNumber + 1)">Next</a>
-                </li>
-            </ul>
-        </nav>
+            ],
+            language: {
+                emptyTable: 'No employees found.',
+                processing: 'Loading employees…',
+                search: 'Search employees:'
+            }
+        });
+
+        document.querySelectorAll('#departmentFilter, #designationFilter, #statusFilter').forEach(filter => {
+            filter.addEventListener('change', () => employeeTable.ajax.reload(null, true));
+        });
+
+        document.getElementById('resetEmployeeFilters').addEventListener('click', () => {
+            document.getElementById('departmentFilter').value = '';
+            document.getElementById('designationFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            employeeTable.search('').order([[1, 'asc']]).page('first').draw();
+        });
+    </script>
+    @if (TempData["Success"] is string success)
+    {
+        <script>Swal.fire({ icon: 'success', title: 'Saved', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
     }
 }

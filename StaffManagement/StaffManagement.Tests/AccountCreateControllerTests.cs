@@ -86,6 +86,10 @@ public sealed class AccountCreateControllerTests
             int pageSize,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
+        public Task<(IReadOnlyList<EmployeeDto> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+            EmployeeDataTableQueryDto query,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         public Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<EmployeeDto>>(
             [

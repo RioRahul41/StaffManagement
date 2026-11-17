@@ -53,6 +53,12 @@ public sealed class HrLeaveVisibilityTests
             Task.FromResult<Employee?>(identityUserId == currentEmployee.IdentityUserId ? currentEmployee : null);
 
         public Task<IReadOnlyList<Employee>> GetAllAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetPageAsync(
+            string? searchTerm, int? departmentId, string? designation, bool? isActive, int page, int pageSize,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<(IReadOnlyList<Employee> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+            StaffManagement.Core.DTOs.EmployeeModel.EmployeeDataTableQueryDto query,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task AddAsync(Employee employee, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public void Update(Employee employee) => throw new NotSupportedException();

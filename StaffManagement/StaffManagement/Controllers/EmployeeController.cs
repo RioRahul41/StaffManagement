@@ -19,42 +19,78 @@ public sealed class EmployeeController(
     IProjectService projectService,
     UserManager<ApplicationIdentity> userManager) : Controller
 {
-    public async Task<IActionResult> Index(
-        string? searchTerm,
-        int? departmentId,
-        string? designation,
-        bool? isActive,
-        int page = 1,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index()
     {
-        const int pageSize = 10;
-        page = Math.Max(1, page);
-
-        var result = await employeeService.GetPageAsync(
-            searchTerm, departmentId, designation, isActive, page, pageSize, cancellationToken);
-        var totalPages = Math.Max(1, (int)Math.Ceiling(result.TotalCount / (double)pageSize));
-        if (page > totalPages)
-        {
-            page = totalPages;
-            result = await employeeService.GetPageAsync(
-                searchTerm, departmentId, designation, isActive, page, pageSize, cancellationToken);
-        }
-
         return View(new EmployeeListViewModel
         {
-            Employees = result.Items,
             Departments = await departmentService.GetAllAsync(),
             Designations = (await designationService.GetAllAsync())
                 .Where(item => item.IsActive)
                 .OrderBy(item => item.DesignationName)
-                .ToList(),
-            SearchTerm = searchTerm?.Trim(),
-            DepartmentId = departmentId,
-            Designation = designation,
-            IsActive = isActive,
-            PageNumber = page,
-            PageSize = pageSize,
-            TotalCount = result.TotalCount
+                .ToList()
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Data(
+        int draw = 1,
+        int start = 0,
+        int length = 10,
+        string? searchTerm = null,
+        string? sortColumn = null,
+        string? sortDirection = null,
+        int? departmentId = null,
+        string? designation = null,
+        bool? isActive = null,
+        CancellationToken cancellationToken = default)
+    {
+        var pageStart = Math.Max(start, 0);
+        var page = await employeeService.GetDataTablePageAsync(
+            new EmployeeDataTableQueryDto
+            {
+                Start = pageStart,
+                Length = length,
+                SearchTerm = searchTerm,
+                SortColumn = sortColumn,
+                SortAscending = string.Equals(sortDirection, "asc", StringComparison.OrdinalIgnoreCase),
+                DepartmentId = departmentId,
+                Designation = designation,
+                IsActive = isActive
+            },
+            cancellationToken);
+
+        var canEdit = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Manager);
+        var canDelete = User.IsInRole(RoleNames.Admin);
+        var canAssignProjects = canEdit;
+
+        return Json(new
+        {
+            draw = Math.Max(draw, 0),
+            recordsTotal = page.TotalCount,
+            recordsFiltered = page.FilteredCount,
+            data = page.Items.Select((employee, index) => new
+            {
+                serialNumber = pageStart + index + 1,
+                id = employee.Id,
+                firstName = employee.FirstName,
+                lastName = employee.LastName,
+                designation = employee.Designation,
+                email = employee.Email,
+                department = employee.Department,
+                assignedProjects = employee.AssignedProjects.Count == 0
+                    ? "None"
+                    : string.Join(", ", employee.AssignedProjects.Select(project => project.ProjectName)),
+                reportingPersonName = employee.ReportingPersonName,
+                isLinked = employee.IdentityUserId is not null,
+                isActive = employee.EmpIsActive,
+                canEdit,
+                canDelete,
+                canAssignProjects,
+                viewUrl = Url.Action(nameof(Details), new { id = employee.Id }),
+                editUrl = Url.Action(nameof(Edit), new { id = employee.Id }),
+                deleteUrl = Url.Action(nameof(Delete), new { id = employee.Id }),
+                assignProjectsUrl = Url.Action(nameof(AssignProjects), new { id = employee.Id })
+            })
         });
     }
 
@@ -64,18 +100,21 @@ public sealed class EmployeeController(
         return employee is null ? NotFound() : View(employee);
     }
 
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     public async Task<IActionResult> Create()
     {
         ViewBag.Roles = accountService.GetCreatableRoles(GetCreatorRoles());
         ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
         await LoadDepartmentsAsync();
-        await LoadReportingPersonsAsync();
-        return View("~/Views/Account/Create.cshtml", new CreateAccountDto());
+        var model = new CreateAccountDto();
+        var reportingPersons = await LoadReportingPersonsAsync();
+        if (IsManagerOnly() && reportingPersons.Count > 0)
+            model.ReportingPersonId = reportingPersons[0].Id;
+        return View("~/Views/Account/Create.cshtml", model);
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateAccountDto model, CancellationToken cancellationToken)
     {
@@ -83,6 +122,16 @@ public sealed class EmployeeController(
         var allowedRoles = accountService.GetCreatableRoles(creatorRoles);
         if (!allowedRoles.Contains(model.Role, StringComparer.OrdinalIgnoreCase))
             ModelState.AddModelError(nameof(model.Role), "You cannot create an account with this role.");
+
+        // Managers can create Users only for their own team. Do not trust a posted reporting person.
+        if (IsManagerOnly() && string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase))
+        {
+            var creator = await employeeService.GetByIdentityUserIdAsync(userManager.GetUserId(User)!, cancellationToken);
+            if (creator is null || !creator.EmpIsActive)
+                ModelState.AddModelError(string.Empty, "Your active employee profile could not be found, so an employee cannot be created.");
+            else
+                model.ReportingPersonId = creator.Id;
+        }
 
         var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
         if (string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase) && !model.ReportingPersonId.HasValue)
@@ -95,6 +144,7 @@ public sealed class EmployeeController(
             ViewBag.Roles = allowedRoles;
             ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
             await LoadDepartmentsAsync(model.DepartmentId);
+            await LoadReportingPersonsAsync(model.ReportingPersonId);
             return View("~/Views/Account/Create.cshtml", model);
         }
 
@@ -271,6 +321,11 @@ public sealed class EmployeeController(
     private IReadOnlyCollection<string> GetCreatorRoles() =>
         RoleNames.All.Where(role => User.IsInRole(role)).ToArray();
 
+    private bool IsManagerOnly() =>
+        User.IsInRole(RoleNames.Manager) &&
+        !User.IsInRole(RoleNames.Admin) &&
+        !User.IsInRole(RoleNames.Hr);
+
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
     {
         ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
@@ -318,6 +373,14 @@ public sealed class EmployeeController(
                 employee.IdentityUserId is not null &&
                 reportingUserIds.Contains(employee.IdentityUserId))
             .ToList();
+
+        if (IsManagerOnly())
+        {
+            var currentUserId = userManager.GetUserId(User);
+            reportingPersons = reportingPersons
+                .Where(employee => employee.IdentityUserId == currentUserId)
+                .ToList();
+        }
 
         ViewBag.Managers = reportingPersons;
         ViewBag.ReportingPersonRoles = reportingPersons.ToDictionary(

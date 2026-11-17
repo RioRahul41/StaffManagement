@@ -26,6 +26,26 @@ namespace StaffManagement.Core.Services
             return (result.Items.Select(Map).ToList(), result.TotalCount);
         }
 
+        public async Task<(IReadOnlyList<EmployeeDto> Items, int TotalCount, int FilteredCount)> GetDataTablePageAsync(
+            EmployeeDataTableQueryDto query,
+            CancellationToken cancellationToken = default)
+        {
+            var normalizedQuery = new EmployeeDataTableQueryDto
+            {
+                Start = Math.Max(query.Start, 0),
+                Length = Math.Clamp(query.Length, 1, 100),
+                SearchTerm = query.SearchTerm?.Trim(),
+                SortColumn = query.SortColumn,
+                SortAscending = query.SortAscending,
+                DepartmentId = query.DepartmentId,
+                Designation = query.Designation,
+                IsActive = query.IsActive
+            };
+
+            var result = await repository.GetDataTablePageAsync(normalizedQuery, cancellationToken);
+            return (result.Items.Select(Map).ToList(), result.TotalCount, result.FilteredCount);
+        }
+
         public async Task<EmployeeDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var employee = await repository.GetByIdAsync(id, cancellationToken);
