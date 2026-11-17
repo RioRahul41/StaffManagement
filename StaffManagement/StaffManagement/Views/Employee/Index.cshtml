@@ -80,34 +80,74 @@
     </div>
 </div>
 
-@if (Model.TotalCount == 0)
-{
-    <div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h4>No employees found</h4><p class="text-muted">Try changing or clearing your search and filters.</p>@if (canCreate) { <a asp-action="Create" class="btn btn-primary">Create employee account</a> }</div></div>
-}
-else
-{
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="text-muted">Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)–@(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)) of @Model.TotalCount employees</span>
-        <span class="text-muted">Page @Model.PageNumber of @Model.TotalPages</span>
-    </div>
-    <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-                <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Name</th><th>Email</th><th>Department</th><th>Assigned projects</th><th>Reporting-Person</th><th>Account</th><th>Status</th><th>Project assignment</th><th class="text-end">Actions</th></tr></thead>
-        <tbody>
-        @foreach (var employee in Model.Employees.Select((item, index) => new { Item = item, Index = (Model.PageNumber - 1) * Model.PageSize + index + 1 }))
-        {
-            <tr>
-                <td class="text-center">@employee.Index</td>
-                <td><strong>@employee.Item.FirstName @employee.Item.LastName</strong><br /><small class="text-muted">@employee.Item.Designation</small></td>
-                <td>@employee.Item.Email</td>
-                <td>@(employee.Item.Department ?? "-")</td>
-                <td>@(employee.Item.AssignedProjects.Count == 0 ? "None" : string.Join(", ", employee.Item.AssignedProjects.Select(project => project.ProjectName)))</td>
-                <td>@(employee.Item.ReportingPersonName ?? "-")</td>
-                <td>@if (employee.Item.IdentityUserId is null) { <span class="badge text-bg-warning">Not linked</span> } else { <span class="badge text-bg-success">Linked</span> }</td>
-                <td>@if (employee.Item.EmpIsActive) { <span class="badge text-bg-success">Active</span> } else { <span class="badge text-bg-secondary">Inactive</span> }</td>
-                <td class="text-nowrap">
-                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                    {
-                        <a asp-action="AssignProjects" asp-route-id="@employee.Item.Id" class="btn btn-sm btn-outline-success">Assign projects</a>
+@section Scripts {
+    <script src="https://cdn.datatables.net/3.1.5/js/dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const employeeTable = new DataTable('#employeeTable', {
+            processing: true,
+            serverSide: true,
+            searching: true,
+            searchDelay: 350,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[1, 'asc']],
+            ajax: {
+                url: '@Url.Action("Data", "Employee")',
+                type: 'GET',
+                data: function (request) {
+                    const sort = request.order.length ? request.order[0] : { column: 1, dir: 'asc' };
+                    return {
+                        draw: request.draw,
+                        start: request.start,
+                        length: request.length,
+                        searchTerm: request.search.value,
+                        sortColumn: request.columns[sort.column].name,
+                        sortDirection: sort.dir,
+                        departmentId: document.getElementById('departmentFilter').value,
+                        designation: document.getElementById('designationFilter').value,
+                        isActive: document.getElementById('statusFilter').value
+                    };
+                }
+            },
+            columns: [
+                {
+                    data: 'serialNumber',
+                    name: 'rowNumber',
+                    searchable: false,
+                    orderable: false,
+                    className: 'text-center'
+                },
+                {
+                    data: null,
+                    name: 'name',
+                    render: function (_data, type, row) {
+                        if (type !== 'display') return DataTable.render.text().display(row.firstName + ' ' + row.lastName);
+                        const name = document.createElement('strong');
+                        name.textContent = row.firstName + ' ' + row.lastName;
+                        const designation = document.createElement('small');
+                        designation.className = 'd-block text-muted';
+                        designation.textContent = row.designation || '';
+                        const wrapper = document.createElement('div');
+                        wrapper.append(name, designation);
+                        return wrapper.innerHTML;
+                    }
+                },
+                { data: 'email', name: 'email', render: DataTable.render.text() },
+                { data: 'department', name: 'department', defaultContent: '-', render: function (data) { return DataTable.render.text().display(data || '-'); } },
+                { data: 'assignedProjects', name: 'assignedProjects', searchable: false, orderable: false, render: DataTable.render.text() },
+                { data: 'reportingPersonName', name: 'reportingPerson', defaultContent: '-', render: function (data) { return DataTable.render.text().display(data || '-'); } },
+                {
+                    data: 'isLinked',
+                    name: 'account',
+                    searchable: false,
+                    orderable: false,
+                    render: function (linked, type) {
+                        if (type !== 'display') return linked ? 'Linked' : 'Not linked';
+                        const badge = document.createElement('span');
+                        badge.className = 'badge ' + (linked ? 'text-bg-success' : 'text-bg-warning');
+                        badge.textContent = linked ? 'Linked' : 'Not linked';
+                        return badge.outerHTML;
                     }
                 },
                 {
