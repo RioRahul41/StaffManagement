@@ -35,4 +35,15 @@ public sealed class HolidayService(IHolidayRepository repository) : IHolidayServ
         await repository.DeleteAsync(holiday, cancellationToken);
         return true;
     }
+
+    public async Task<bool> UpdateDateAsync(int id, DateTime holidayDate, CancellationToken cancellationToken = default)
+    {
+        var holiday = await repository.GetByIdAsync(id, cancellationToken);
+        if (holiday is null)
+            return false;
+
+        holiday.HolidayDate = holidayDate.Date;
+        await repository.UpdateAsync(holiday, cancellationToken);
+        return true;
+    }
 }

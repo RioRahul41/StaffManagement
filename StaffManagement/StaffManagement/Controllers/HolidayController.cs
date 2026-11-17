@@ -47,6 +47,24 @@ public sealed class HolidayController(IHolidayService holidayService) : Controll
     [HttpPost]
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditDate(int id, DateTime? holidayDate, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid || !holidayDate.HasValue || holidayDate.Value == default)
+        {
+            TempData["Error"] = "Select a valid holiday date.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!await holidayService.UpdateDateAsync(id, holidayDate.Value, cancellationToken))
+            return NotFound();
+
+        TempData["Success"] = "Holiday date updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         if (!await holidayService.DeleteAsync(id, cancellationToken))
