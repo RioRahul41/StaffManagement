@@ -173,7 +173,7 @@ public sealed class AccountController(
         return RedirectToAction(nameof(Login));
     }
 
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     public async Task<IActionResult> Create()
     {
         var roles = GetCreatorRoles();
@@ -185,7 +185,7 @@ public sealed class AccountController(
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateAccountDto model, CancellationToken cancellationToken)
     {
