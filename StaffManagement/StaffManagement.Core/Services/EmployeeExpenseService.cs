@@ -46,6 +46,7 @@ public sealed class EmployeeExpenseService(
             Items = result.Groups.Select(group => new EmployeeExpenseGroupDto
             {
                 EmployeeId = group.EmployeeId,
+                FirstName = group.Expenses.FirstOrDefault()?.FirstName ?? string.Empty,
                 BatchId = group.BatchId,
                 Title = group.Title,
                 FromDate = group.FromDate,
@@ -105,6 +106,7 @@ public sealed class EmployeeExpenseService(
         return new EmployeeExpenseGroupDto
         {
             EmployeeId = firstExpense.EmployeeId,
+            FirstName = firstExpense.FirstName,
             BatchId = firstExpense.BatchId,
             Title = firstExpense.Title,
             FromDate = firstExpense.FromDate,
@@ -151,13 +153,13 @@ public sealed class EmployeeExpenseService(
                 return (false, "You are not allowed to manage this expense group.");
         }
 
-        if (model.Bills.Count != expenses.Count || model.Bills.Select(bill => bill.Id).Distinct().Count() != expenses.Count
-            || expenses.Any(expense => model.Bills.All(bill => bill.Id != expense.Id)))
+        var existingBillIds = model.Bills.Where(bill => bill.Id > 0).Select(bill => bill.Id).ToList();
+        if (model.Bills.Any(bill => bill.Id < 0) || existingBillIds.Distinct().Count() != existingBillIds.Count
+            || existingBillIds.Count != expenses.Count || expenses.Any(expense => !existingBillIds.Contains(expense.Id)))
             return (false, "The bill list changed. Refresh the page and try again.");
 
-        foreach (var expense in expenses)
+        foreach (var bill in model.Bills)
         {
-            var bill = model.Bills.Single(item => item.Id == expense.Id);
             if (string.IsNullOrWhiteSpace(bill.Category) || bill.Category.Length > 100)
                 return (false, "Each bill needs a category of 100 characters or fewer.");
             if (bill.Amount <= 0)
@@ -167,6 +169,32 @@ public sealed class EmployeeExpenseService(
             if (bill.Description?.Length > 2000)
                 return (false, "A bill description cannot exceed 2,000 characters.");
 
+            if (bill.Id == 0)
+            {
+                if (string.IsNullOrWhiteSpace(bill.DocumentPath))
+                    return (false, "A document is required for each new bill.");
+
+                await expenseRepository.AddAsync(new EmployeeExpense
+                {
+                    EmployeeId = model.EmployeeId,
+                    BatchId = model.BatchId,
+                    FirstName = expenses[0].FirstName,
+                    Title = model.Title.Trim(),
+                    FromDate = model.FromDate.Date,
+                    ToDate = model.ToDate.Date,
+                    Category = bill.Category.Trim(),
+                    BillNumber = bill.BillNumber.Trim(),
+                    Description = bill.Description?.Trim(),
+                    Amount = bill.Amount,
+                    BillAmount = bill.Amount,
+                    DocumentPath = bill.DocumentPath,
+                    Status = ExpenseStatus.Pending,
+                    CreatedTime = DateTime.UtcNow
+                }, cancellationToken);
+                continue;
+            }
+
+            var expense = expenses.Single(item => item.Id == bill.Id);
             expense.Title = model.Title.Trim();
             expense.FromDate = model.FromDate.Date;
             expense.ToDate = model.ToDate.Date;
@@ -175,6 +203,8 @@ public sealed class EmployeeExpenseService(
             expense.BillAmount = bill.Amount;
             expense.BillNumber = bill.BillNumber.Trim();
             expense.Description = bill.Description?.Trim();
+            if (!string.IsNullOrWhiteSpace(bill.DocumentPath))
+                expense.DocumentPath = bill.DocumentPath;
             expense.UpdatedTime = DateTime.UtcNow;
             expenseRepository.Update(expense);
         }

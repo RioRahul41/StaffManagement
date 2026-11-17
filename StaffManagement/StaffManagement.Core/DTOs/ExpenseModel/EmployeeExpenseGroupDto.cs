@@ -5,6 +5,7 @@ namespace StaffManagement.Core.DTOs.ExpenseModel;
 public sealed class EmployeeExpenseGroupDto
 {
     public int EmployeeId { get; init; }
+    public string FirstName { get; init; } = string.Empty;
     public Guid? BatchId { get; init; }
     public string Title { get; init; } = string.Empty;
     public DateTime FromDate { get; init; }

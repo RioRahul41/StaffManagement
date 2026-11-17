@@ -19,16 +19,34 @@
 }
 else
 {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-6 col-md-4">
+                    <label for="expenseStatusFilter" class="form-label">Expense status</label>
+                    <select id="expenseStatusFilter" class="form-select">
+                        <option value="">All statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Mixed">Mixed</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <button id="expenseResetFilters" type="button" class="btn btn-outline-secondary">Reset search</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
-        <colgroup><col style="width: 4%" /><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 18%" /></colgroup>
-        <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Expense status</th><th class="text-center">Actions</th></tr></thead>
+        <colgroup><col style="width: 12%" /><col style="width: 13%" /><col style="width: 13%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 10%" /><col style="width: 10%" /></colgroup>
+        <thead class="table-light"><tr><th>First Name</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Expense status</th><th class="text-center">Actions</th></tr></thead>
         <tbody>
-        @{ var rowNumber = (Model.PageNumber - 1) * Model.PageSize; }
         @foreach (var expense in Model.Items)
         {
+            var hasPendingBills = expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Pending);
             <tr>
-                <td class="text-center">@(++rowNumber)</td>
-                <td class="text-nowrap">@expense.EmployeeId</td>
+                <td class="text-nowrap">@expense.FirstName</td>
                 <td class="expense-wrap-cell">@expense.Title</td>
                 <td class="expense-wrap-cell">@string.Join(", ", expense.Categories)</td>
                 <td class="text-center text-nowrap">@expense.FromDate.ToString("yyyy-MM-dd")</td>
@@ -46,9 +64,8 @@ else
                 </td>
                 <td class="text-center text-nowrap"><span class="badge @(expense.Status == "Approved" ? "text-bg-success" : expense.Status == "Rejected" ? "text-bg-danger" : expense.Status == "Mixed" ? "text-bg-info" : "text-bg-warning")">@expense.Status</span></td>
                 <td class="text-center text-nowrap">
-                    @if (canApproveExpenses)
+                    @if (canApproveExpenses && hasPendingBills)
                     {
-                        var hasPendingBills = expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Pending);
                         @if (!hasPendingBills)
                         {
                             <span class="text-muted">-</span>
@@ -85,7 +102,12 @@ else
                                 <li><a class="dropdown-item" asp-action="DetailsGroup"
                                        asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
                                        asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
-                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Details</a></li>
+                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">
+                                        <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>View
+                                    </a></li>
                                 @if (expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
                                 {
                                     <li><a class="dropdown-item" asp-action="EditGroup"
@@ -124,7 +146,7 @@ else
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
     <style>
-        .expense-table { min-width: 1450px; table-layout: fixed; }
+        .expense-table { min-width: 1300px; table-layout: fixed; }
         .expense-table th, .expense-table td { vertical-align: middle; }
         .expense-wrap-cell { overflow-wrap: anywhere; white-space: normal; }
     </style>
@@ -134,23 +156,23 @@ else
     <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script>
         if (document.querySelector('#expenseTable')) {
-            new DataTable('#expenseTable', {
+            const table = new DataTable('#expenseTable', {
                 paging: false,
                 info: false,
                 lengthChange: false,
                 autoWidth: false,
                 columnDefs: [
-                    { targets: [0, 1, 4, 5, 8, 9], className: 'text-center text-nowrap' },
-                    { targets: 6, className: 'text-end text-nowrap' },
-                    { targets: [0, -1], orderable: false, searchable: false }
-                ],
-                drawCallback: function () {
-                    const api = this.api();
-                    const offset = (@Model.PageNumber - 1) * @Model.PageSize;
-                    api.column(0, { order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
-                        cell.textContent = offset + index + 1;
-                    });
-                }
+                    { targets: [3, 4, 7, 8], className: 'text-center text-nowrap' },
+                    { targets: 5, className: 'text-end text-nowrap' },
+                    { targets: -1, orderable: false, searchable: false }
+                ]
+            });
+
+            document.getElementById('expenseStatusFilter').addEventListener('change', function () {
+                table.column(7).search(this.value, { exact: true }).draw();
+            });
+            document.getElementById('expenseResetFilters').addEventListener('click', function () {
+                window.location.href = window.location.pathname;
             });
         }
     </script>

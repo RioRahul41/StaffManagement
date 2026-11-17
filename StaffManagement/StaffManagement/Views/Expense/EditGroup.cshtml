@@ -3,8 +3,8 @@
     ViewData["Title"] = "Edit expense group";
 }
 <h1>Edit expense group</h1>
-<p class="text-muted">Update the shared title and dates, or edit each bill in this group. The total recalculates from all bill amounts.</p>
-<form asp-action="EditGroup" method="post" class="row g-3">
+<p class="text-muted">Update the shared title and dates, or edit the bills in this group. Add another expense to include an additional bill.</p>
+<form asp-action="EditGroup" method="post" enctype="multipart/form-data" class="row g-3" id="edit-expense-form">
     <input asp-for="EmployeeId" type="hidden" />
     <input asp-for="BatchId" type="hidden" />
     <input asp-for="LookupTitle" type="hidden" />
@@ -26,11 +26,20 @@
         <input asp-for="ToDate" class="form-control" type="date" required />
         <span asp-validation-for="ToDate" class="text-danger"></span>
     </div>
-    @for (var i = 0; i < Model.Bills.Count; i++)
-    {
-        <section class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header"><strong>Bill @(i + 1)</strong></div>
+    <div class="col-12 d-flex justify-content-end">
+        <button type="button" id="add-edit-bill" class="btn btn-primary">Add Another Expense</button>
+    </div>
+    <div id="edit-bill-entries" class="col-12">
+        @for (var i = 0; i < Model.Bills.Count; i++)
+        {
+            <section class="card border-0 shadow-sm mb-3 edit-bill-entry" data-bill-index="@i">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong class="edit-bill-title">Expense @(i + 1)</strong>
+                    @if (Model.Bills[i].Id == 0)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-remove-bill>Remove</button>
+                    }
+                </div>
                 <div class="card-body row g-3">
                     <input asp-for="Bills[i].Id" type="hidden" />
                     <div class="col-md-4">
@@ -40,7 +49,7 @@
                     </div>
                     <div class="col-md-4">
                         <label asp-for="Bills[i].Amount" class="form-label">Amount <span class="text-danger">*</span></label>
-                        <input asp-for="Bills[i].Amount" class="form-control" type="number" min="0.01" step="0.01" required />
+                        <input asp-for="Bills[i].Amount" class="form-control edit-bill-amount" type="number" min="0.01" step="0.01" required />
                         <span asp-validation-for="Bills[i].Amount" class="text-danger"></span>
                     </div>
                     <div class="col-md-4">
@@ -48,18 +57,137 @@
                         <input asp-for="Bills[i].BillNumber" class="form-control" maxlength="100" required />
                         <span asp-validation-for="Bills[i].BillNumber" class="text-danger"></span>
                     </div>
+                    @if (Model.Bills[i].Id == 0)
+                    {
+                        <div class="col-md-6">
+                            <label for="Bills_@(i)__Document" class="form-label">Document <span class="text-danger">*</span></label>
+                            <input type="file" id="Bills_@(i)__Document" name="Bills[@i].Document" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required />
+                            @Html.ValidationMessage($"Bills[{i}].Document", "", new { @class = "text-danger" })
+                            <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
+                        </div>
+                    }
                     <div class="col-12">
                         <label asp-for="Bills[i].Description" class="form-label">Description</label>
                         <textarea asp-for="Bills[i].Description" class="form-control" rows="2" maxlength="2000"></textarea>
                         <span asp-validation-for="Bills[i].Description" class="text-danger"></span>
                     </div>
                 </div>
-            </div>
-        </section>
-    }
+            </section>
+        }
+    </div>
+    <div class="col-12 d-flex justify-content-end align-items-center gap-2">
+        <span class="fw-semibold">Total amount for all entries:</span>
+        <strong id="edit-grand-total" aria-live="polite">0.00</strong>
+    </div>
     <div class="col-12 d-flex gap-2">
         <button type="submit" class="btn btn-primary">Save group</button>
         <a asp-action="Index" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+<template id="edit-bill-template">
+    <section class="card border-0 shadow-sm mb-3 edit-bill-entry" data-bill-index="__index__">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong class="edit-bill-title">Expense</strong>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-remove-bill>Remove</button>
+        </div>
+        <div class="card-body row g-3">
+            <input type="hidden" name="Bills[__index__].Id" value="0" />
+            <div class="col-md-4">
+                <label for="Bills___index____Category" class="form-label">Category <span class="text-danger">*</span></label>
+                <input type="text" name="Bills[__index__].Category" id="Bills___index____Category" class="form-control" maxlength="100" required />
+                <span class="text-danger" data-valmsg-for="Bills[__index__].Category" data-valmsg-replace="true"></span>
+            </div>
+            <div class="col-md-4">
+                <label for="Bills___index____Amount" class="form-label">Amount <span class="text-danger">*</span></label>
+                <input type="number" name="Bills[__index__].Amount" id="Bills___index____Amount" class="form-control edit-bill-amount" min="0.01" step="0.01" required />
+                <span class="text-danger" data-valmsg-for="Bills[__index__].Amount" data-valmsg-replace="true"></span>
+            </div>
+            <div class="col-md-4">
+                <label for="Bills___index____BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label>
+                <input type="text" name="Bills[__index__].BillNumber" id="Bills___index____BillNumber" class="form-control" maxlength="100" required />
+                <span class="text-danger" data-valmsg-for="Bills[__index__].BillNumber" data-valmsg-replace="true"></span>
+            </div>
+            <div class="col-md-6">
+                <label for="Bills___index____Document" class="form-label">Document <span class="text-danger">*</span></label>
+                <input type="file" id="Bills___index____Document" name="Bills[__index__].Document" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required />
+                <span class="text-danger" data-valmsg-for="Bills[__index__].Document" data-valmsg-replace="true"></span>
+                <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
+            </div>
+            <div class="col-12">
+                <label for="Bills___index____Description" class="form-label">Description</label>
+                <textarea name="Bills[__index__].Description" id="Bills___index____Description" class="form-control" rows="2" maxlength="2000"></textarea>
+                <span class="text-danger" data-valmsg-for="Bills[__index__].Description" data-valmsg-replace="true"></span>
+            </div>
+        </div>
+    </section>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (function () {
+            const entries = document.getElementById('edit-bill-entries');
+            const template = document.getElementById('edit-bill-template');
+            const updateTotal = function () {
+                const total = Array.from(entries.querySelectorAll('.edit-bill-amount')).reduce(function (sum, input) {
+                    return sum + (Number.parseFloat(input.value) || 0);
+                }, 0);
+                document.getElementById('edit-grand-total').textContent = total.toFixed(2);
+            };
+            const reindexEntries = function () {
+                entries.querySelectorAll('.edit-bill-entry').forEach(function (card, index) {
+                    card.dataset.billIndex = index;
+                    card.querySelector('.edit-bill-title').textContent = 'Expense ' + (index + 1);
+                    card.querySelectorAll('[name], [id], [for], [data-valmsg-for]').forEach(function (element) {
+                        ['name', 'id', 'for', 'data-valmsg-for'].forEach(function (attribute) {
+                            const value = element.getAttribute(attribute);
+                            if (!value) return;
+                            element.setAttribute(attribute, value
+                                .replace(/\[\d+\]/g, '[' + index + ']')
+                                .replace(/Bills_\d+__/g, 'Bills_' + index + '__'));
+                        });
+                    });
+                });
+                updateTotal();
+            };
+
+            document.getElementById('add-edit-bill').addEventListener('click', function () {
+                const invalidField = Array.from(document.querySelectorAll('#edit-expense-form [required]')).find(function (field) {
+                    return !field.value || !field.checkValidity();
+                });
+                if (invalidField) {
+                    const fieldLabel = invalidField.closest('.col-md-6, .col-md-4, .col-md-3, .col-12')
+                        ?.querySelector('label')?.textContent.replace(/\*/g, '').trim();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Complete this expense first',
+                        text: fieldLabel
+                            ? `Please complete the ${fieldLabel} field before adding another expense.`
+                            : 'Please complete all required fields before adding another expense.'
+                    }).then(function () { invalidField.focus(); });
+                    return;
+                }
+
+                const index = entries.querySelectorAll('.edit-bill-entry').length;
+                entries.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__index__', index));
+                reindexEntries();
+            });
+
+            entries.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('[data-remove-bill]');
+                if (!removeButton) return;
+                removeButton.closest('.edit-bill-entry').remove();
+                reindexEntries();
+            });
+            entries.addEventListener('input', function (event) {
+                if (event.target.matches('.edit-bill-amount')) updateTotal();
+            });
+            entries.addEventListener('change', function (event) {
+                if (event.target.matches('.edit-bill-amount')) updateTotal();
+            });
+            reindexEntries();
+        })();
+    </script>
+}

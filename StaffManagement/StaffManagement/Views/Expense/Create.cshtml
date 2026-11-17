@@ -20,7 +20,7 @@
                     {
                         <div class="col-md-6">
                             <label asp-for="Expenses[i].EmployeeId" class="form-label">Employee ID <span class="text-danger">*</span></label>
-                            <select asp-for="Expenses[i].EmployeeId" class="form-select"><option value="">-- Select employee --</option>@foreach (var employee in employees) { <option value="@employee.Id">@employee.Id - @employee.FirstName @employee.LastName (@employee.Email)</option> }</select>
+                            <select asp-for="Expenses[i].EmployeeId" class="form-select" required><option value="">-- Select employee --</option>@foreach (var employee in employees) { <option value="@employee.Id">@employee.Id - @employee.FirstName @employee.LastName (@employee.Email)</option> }</select>
                             <span asp-validation-for="Expenses[i].EmployeeId" class="text-danger"></span>
                         </div>
                     }
@@ -31,9 +31,9 @@
                     }
                     @if (i == 0)
                     {
-                        <div class="col-md-6"><label asp-for="Expenses[i].Title" class="form-label">Title <span class="text-danger">*</span></label><input asp-for="Expenses[i].Title" class="form-control shared-expense-field" /><span asp-validation-for="Expenses[i].Title" class="text-danger"></span></div>
-                        <div class="col-md-3"><label asp-for="Expenses[i].FromDate" class="form-label">From date <span class="text-danger">*</span></label><input asp-for="Expenses[i].FromDate" class="form-control shared-expense-field" type="date" /><span asp-validation-for="Expenses[i].FromDate" class="text-danger"></span></div>
-                        <div class="col-md-3"><label asp-for="Expenses[i].ToDate" class="form-label">To date <span class="text-danger">*</span></label><input asp-for="Expenses[i].ToDate" class="form-control shared-expense-field" type="date" /><span asp-validation-for="Expenses[i].ToDate" class="text-danger"></span></div>
+                        <div class="col-md-6"><label asp-for="Expenses[i].Title" class="form-label">Title <span class="text-danger">*</span></label><input asp-for="Expenses[i].Title" class="form-control shared-expense-field" required /><span asp-validation-for="Expenses[i].Title" class="text-danger"></span></div>
+                        <div class="col-md-3"><label asp-for="Expenses[i].FromDate" class="form-label">From date <span class="text-danger">*</span></label><input asp-for="Expenses[i].FromDate" class="form-control shared-expense-field" type="date" required /><span asp-validation-for="Expenses[i].FromDate" class="text-danger"></span></div>
+                        <div class="col-md-3"><label asp-for="Expenses[i].ToDate" class="form-label">To date <span class="text-danger">*</span></label><input asp-for="Expenses[i].ToDate" class="form-control shared-expense-field" type="date" required /><span asp-validation-for="Expenses[i].ToDate" class="text-danger"></span></div>
                     }
                     else
                     {
@@ -41,9 +41,15 @@
                         <input asp-for="Expenses[i].FromDate" type="hidden" data-shared-field="FromDate" />
                         <input asp-for="Expenses[i].ToDate" type="hidden" data-shared-field="ToDate" />
                     }
-                    <div class="col-md-4"><label asp-for="Expenses[i].Category" class="form-label">Category <span class="text-danger">*</span></label><input asp-for="Expenses[i].Category" class="form-control" /><span asp-validation-for="Expenses[i].Category" class="text-danger"></span></div>
-                    <div class="col-md-4"><label asp-for="Expenses[i].Amount" class="form-label">Amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].Amount" class="form-control expense-amount" type="number" min="0.01" step="0.01" /><span asp-validation-for="Expenses[i].Amount" class="text-danger"></span></div>
-                    <div class="col-md-4"><label asp-for="Expenses[i].BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillNumber" class="form-control" /><span asp-validation-for="Expenses[i].BillNumber" class="text-danger"></span></div>
+                    <div class="col-12 expense-add-button-slot d-flex justify-content-end">
+                        @if (i == 0)
+                        {
+                            <button type="button" id="add-expense" class="btn btn-primary">Add Another Expense</button>
+                        }
+                    </div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].Category" class="form-label">Category <span class="text-danger">*</span></label><input asp-for="Expenses[i].Category" class="form-control" required /><span asp-validation-for="Expenses[i].Category" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].Amount" class="form-label">Amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].Amount" class="form-control expense-amount" type="number" min="0.01" step="0.01" required /><span asp-validation-for="Expenses[i].Amount" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Expenses[i].BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillNumber" class="form-control" required /><span asp-validation-for="Expenses[i].BillNumber" class="text-danger"></span></div>
                     <div class="col-md-6">
                         <label for="Documents_@i" class="form-label">Document <span class="text-danger">*</span></label>
                         <input type="file" id="Documents_@i" name="Documents[@i]" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" required />
@@ -51,21 +57,15 @@
                         <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
                     </div>
                     <div class="col-12"><label asp-for="Expenses[i].Description" class="form-label"></label><textarea asp-for="Expenses[i].Description" class="form-control" rows="2"></textarea><span asp-validation-for="Expenses[i].Description" class="text-danger"></span></div>
-                    <div class="col-md-6"><label asp-for="Expenses[i].BillAmount" class="form-label">Bill amount <span class="text-danger">*</span></label><input asp-for="Expenses[i].BillAmount" class="form-control expense-total" type="number" readonly /><span asp-validation-for="Expenses[i].BillAmount" class="text-danger"></span><div class="form-text">Automatically matches this entry's Amount.</div></div>
                 </div>
             </section>
         }
     </div>
-    <div class="col-12">
-        <div class="card border-primary">
-            <div class="card-body row align-items-center">
-                <label for="grand-total" class="col-md-6 col-form-label fw-semibold">Total amount for all entries</label>
-                <div class="col-md-6"><input id="grand-total" class="form-control fw-semibold" type="number" value="" readonly aria-describedby="grand-total-help" /><div id="grand-total-help" class="form-text">Updates automatically as you enter amounts.</div></div>
-            </div>
-        </div>
+    <div class="col-12 d-flex justify-content-end align-items-center gap-2">
+        <span class="fw-semibold">Total amount for all entries:</span>
+        <strong id="grand-total" aria-live="polite">0.00</strong>
     </div>
     <div class="col-12 d-flex gap-2">
-        <button type="button" id="add-expense" class="btn btn-outline-primary">Add another expense</button>
         <button class="btn btn-primary" type="submit">Save expenses</button>
         <a asp-action="Index" class="btn btn-secondary">Cancel</a>
     </div>
@@ -100,6 +100,7 @@
             <input type="hidden" name="Expenses[__index__].Title" data-shared-field="Title" />
             <input type="hidden" name="Expenses[__index__].FromDate" data-shared-field="FromDate" />
             <input type="hidden" name="Expenses[__index__].ToDate" data-shared-field="ToDate" />
+            <div class="col-12 expense-add-button-slot d-flex justify-content-end"></div>
             <div class="col-md-4"><label for="Expenses___index____Category" class="form-label">Category <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].Category" id="Expenses___index____Category" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].Category" data-valmsg-replace="true"></span></div>
             <div class="col-md-4"><label for="Expenses___index____Amount" class="form-label">Amount <span class="text-danger">*</span></label><input type="number" name="Expenses[__index__].Amount" id="Expenses___index____Amount" class="form-control expense-amount" min="0.01" step="0.01" required /><span class="text-danger" data-valmsg-for="Expenses[__index__].Amount" data-valmsg-replace="true"></span></div>
             <div class="col-md-4"><label for="Expenses___index____BillNumber" class="form-label">Bill number <span class="text-danger">*</span></label><input type="text" name="Expenses[__index__].BillNumber" id="Expenses___index____BillNumber" class="form-control" required maxlength="100" /><span class="text-danger" data-valmsg-for="Expenses[__index__].BillNumber" data-valmsg-replace="true"></span></div>
@@ -110,17 +111,18 @@
                 <div class="form-text">PDF, Word, Excel, PNG, or JPEG; maximum size 10 MB.</div>
             </div>
             <div class="col-12"><label for="Expenses___index____Description" class="form-label">Description</label><textarea name="Expenses[__index__].Description" id="Expenses___index____Description" class="form-control" rows="2" maxlength="2000"></textarea><span class="text-danger" data-valmsg-for="Expenses[__index__].Description" data-valmsg-replace="true"></span></div>
-            <div class="col-md-6"><label for="Expenses___index____BillAmount" class="form-label">Bill amount <span class="text-danger">*</span></label><input type="number" name="Expenses[__index__].BillAmount" id="Expenses___index____BillAmount" class="form-control expense-total" readonly /><span class="text-danger" data-valmsg-for="Expenses[__index__].BillAmount" data-valmsg-replace="true"></span><div class="form-text">Automatically matches this entry's Amount.</div></div>
         </div>
     </section>
 </template>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
             const entries = document.getElementById('expense-entries');
             const template = document.getElementById('expense-entry-template');
+            const addExpenseButton = document.getElementById('add-expense');
             const reindexEntries = function () {
                 const cards = entries.querySelectorAll('.expense-entry');
                 cards.forEach(function (card, index) {
@@ -138,20 +140,40 @@
                     const removeButton = card.querySelector('[data-remove-expense]');
                     removeButton.hidden = cards.length === 1;
                 });
+                const firstButtonSlot = entries.querySelector('.expense-entry:first-child .expense-add-button-slot');
+                if (firstButtonSlot && addExpenseButton) firstButtonSlot.appendChild(addExpenseButton);
             };
             const updateGrandTotal = function () {
                 const total = Array.from(entries.querySelectorAll('.expense-amount')).reduce(function (sum, amount) {
                     return sum + (Number.parseFloat(amount.value) || 0);
                 }, 0);
-                document.getElementById('grand-total').value = total > 0 ? total.toFixed(2) : '';
+                document.getElementById('grand-total').textContent = total.toFixed(2);
             };
             const syncTotal = function (amount) {
-                const card = amount.closest('.expense-entry');
-                card.querySelector('.expense-total').value = amount.value;
                 updateGrandTotal();
             };
 
             document.getElementById('add-expense').addEventListener('click', function () {
+                const currentEntry = entries.querySelector('.expense-entry:last-child');
+                const requiredFields = Array.from(currentEntry.querySelectorAll('[required]'));
+                const invalidField = requiredFields.find(function (field) {
+                    return !field.value || !field.checkValidity();
+                });
+                if (invalidField) {
+                    const fieldContainer = invalidField.closest('.col-md-6, .col-md-4, .col-md-3, .col-12');
+                    const fieldLabel = fieldContainer?.querySelector('label')?.textContent.replace(/\*/g, '').trim();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Complete this expense first',
+                        text: fieldLabel
+                            ? `Please complete the ${fieldLabel} field before adding another expense.`
+                            : 'Please complete all required fields before adding another expense.'
+                    }).then(function () {
+                        invalidField.focus();
+                    });
+                    return;
+                }
+
                 const index = entries.querySelectorAll('.expense-entry').length;
                 entries.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__index__', index));
                 const newEntry = entries.querySelector('.expense-entry:last-child');

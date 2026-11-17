@@ -20,4 +20,5 @@ public sealed class EditEmployeeExpenseBillDto
     public decimal Amount { get; set; }
     public string BillNumber { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? DocumentPath { get; set; }
 }

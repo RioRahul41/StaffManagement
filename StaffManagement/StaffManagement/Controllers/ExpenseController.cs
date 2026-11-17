@@ -93,7 +93,8 @@ public sealed class ExpenseController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditGroup(EditEmployeeExpenseGroupDto model, CancellationToken cancellationToken)
     {
-                var existingGroup = await GetExpenseGroupAsync(
+        model.Bills ??= [];
+        var existingGroup = await GetExpenseGroupAsync(
             model.EmployeeId,
             model.BatchId,
             string.IsNullOrWhiteSpace(model.LookupTitle) ? model.Title : model.LookupTitle,
@@ -106,13 +107,54 @@ public sealed class ExpenseController(
         {
             TempData["Error"] = "Reviewed expense groups cannot be edited.";
             return RedirectToAction(nameof(Index));
-        }        if (!ModelState.IsValid)
+        }
+        if (!ModelState.IsValid)
             return View("EditGroup", model);
+
+        for (var index = 0; index < model.Bills.Count; index++)
+        {
+            if (model.Bills[index].Id != 0)
+                continue;
+
+            var document = Request.Form.Files.FirstOrDefault(file =>
+                string.Equals(file.Name, $"Bills[{index}].Document", StringComparison.OrdinalIgnoreCase));
+            if (document is not { Length: > 0 })
+                ModelState.AddModelError($"Bills[{index}].Document", "A document is required for each new bill.");
+        }
+
+        if (!ModelState.IsValid)
+            return View("EditGroup", model);
+
+        var uploadedDocuments = new List<string>();
+        for (var index = 0; index < model.Bills.Count; index++)
+        {
+            var bill = model.Bills[index];
+            if (bill.Id != 0)
+                continue;
+
+            var document = Request.Form.Files.First(file =>
+                string.Equals(file.Name, $"Bills[{index}].Document", StringComparison.OrdinalIgnoreCase));
+            var (documentPath, uploadError) = await SaveDocumentAsync(document, cancellationToken);
+            if (uploadError is not null || documentPath is null)
+            {
+                foreach (var uploadedPath in uploadedDocuments)
+                    DeleteDocument(uploadedPath);
+                ModelState.AddModelError($"Bills[{index}].Document", uploadError ?? "The document could not be uploaded.");
+                return View("EditGroup", model);
+            }
+
+            bill.DocumentPath = documentPath;
+            uploadedDocuments.Add(documentPath);
+        }
 
         var result = await expenseService.UpdateGroupAsync(
             model, CanApproveExpenses(), CurrentIdentityUserId(), cancellationToken);
         if (!result.Succeeded)
+        {
+            foreach (var uploadedPath in uploadedDocuments)
+                DeleteDocument(uploadedPath);
             TempData["Error"] = result.Error;
+        }
         else
             TempData["Success"] = "Expense group updated successfully.";
 
