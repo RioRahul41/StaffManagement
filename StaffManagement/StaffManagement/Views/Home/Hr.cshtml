@@ -18,6 +18,8 @@
         <div class="col-sm-6"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Active employees</p><p class="dashboard-stat-value">@Model.ActiveEmployees</p><p class="dashboard-stat-note">Currently active staff</p></div></div></div>
     </div>
 
+    <partial name="_DashboardCelebrationCards" model="Model" />
+
     <h2 class="dashboard-section-title">People operations</h2>
     <div class="row g-3">
         <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Index"><span class="dashboard-action-icon">E</span><h3>Employee directory</h3><p>Find employees and maintain their records and status.</p><span class="dashboard-action-link">View employees →</span></a></div>

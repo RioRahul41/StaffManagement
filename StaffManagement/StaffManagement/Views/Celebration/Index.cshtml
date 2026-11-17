@@ -1,0 +1,43 @@
+@model StaffManagement.Core.DTOs.EmployeeCelebrationGreetingDto
+@{
+    ViewData["Title"] = "A celebration for you";
+    Layout = "_AuthLayout";
+    var heading = Model.HasBirthday && Model.HasWorkAnniversary
+        ? "A double celebration for you"
+        : Model.HasBirthday
+            ? "Happy Birthday!"
+            : "Happy Work Anniversary!";
+}
+
+<section class="login-celebration-card text-center">
+    <span class="login-celebration-icon" aria-hidden="true">@(Model.HasBirthday && Model.HasWorkAnniversary ? "★" : Model.HasBirthday ? "B" : "A")</span>
+    <p class="login-celebration-kicker">Staff Management celebrates you</p>
+    <h1>@heading</h1>
+    <p class="login-celebration-name">@Model.EmployeeName</p>
+    @if (!string.IsNullOrWhiteSpace(Model.Designation))
+    {
+        <p class="login-celebration-designation">@Model.Designation</p>
+    }
+
+    @if (Model.HasBirthday)
+    {
+        <div class="login-celebration-message login-celebration-birthday">
+            <h2>Birthday celebration</h2>
+            <p>Wishing you a wonderful year ahead filled with happiness, good health, and success. Have a fantastic celebration!</p>
+        </div>
+    }
+
+    @if (Model.HasWorkAnniversary)
+    {
+        <div class="login-celebration-message login-celebration-anniversary">
+            <h2>@Model.CompletedYears @(Model.CompletedYears == 1 ? "year" : "years") of contribution</h2>
+            <p>Thank you for your commitment, contribution, and dedication. We look forward to many more successful years together.</p>
+        </div>
+    }
+
+    <p class="login-celebration-signature">— Staff Management Team</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4">Skip for now</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary px-4">Continue to dashboard</a>
+    </div>
+</section>

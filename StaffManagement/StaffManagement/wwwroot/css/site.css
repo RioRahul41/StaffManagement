@@ -278,6 +278,41 @@ body.dark-mode .form-control::placeholder { color: #9ca3af; }
 .dashboard-project-name { margin: .2rem 0 0; color: #23374f; font-size: 1rem; font-weight: 700; }
 .dashboard-empty-state { padding: 1.25rem 1.4rem; border: 1px dashed #cbd5e1; border-radius: .9rem; color: #334155; background: rgba(255,255,255,.7); }
 .dashboard-empty-state p { margin-top: .35rem; color: #718096; font-size: .88rem; }
+.dashboard-celebrations { margin: 1.5rem 0 1.85rem; }
+.dashboard-celebrations-heading { display: flex; align-items: end; justify-content: space-between; }
+.dashboard-celebrations-heading .dashboard-section-title { margin-top: 0; }
+.celebration-card { --celebration-accent: #7c3aed; --celebration-tint: #f4efff; position: relative; height: 100%; min-height: 235px; overflow: hidden; padding: 1.2rem; border: 1px solid color-mix(in srgb, var(--celebration-accent) 18%, white); border-radius: 1rem; background: linear-gradient(145deg, var(--celebration-tint), #fff 68%); box-shadow: 0 8px 24px rgba(23,43,67,.04); }
+.celebration-card::after { position: absolute; top: -48px; right: -38px; width: 124px; height: 124px; border: 22px solid color-mix(in srgb, var(--celebration-accent) 11%, white); border-radius: 50%; content: ""; }
+.celebration-card-birthday { --celebration-accent: #be185d; --celebration-tint: #fff1f7; }
+.celebration-card-holiday { --celebration-accent: #2563eb; --celebration-tint: #eff6ff; }
+.celebration-card-anniversary { --celebration-accent: #b45309; --celebration-tint: #fff7e8; }
+.celebration-card-header { position: relative; z-index: 1; display: flex; align-items: center; gap: .75rem; padding-bottom: 1rem; border-bottom: 1px solid color-mix(in srgb, var(--celebration-accent) 16%, white); }
+.celebration-card-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 39px; width: 39px; height: 39px; border-radius: 12px; color: #fff; background: var(--celebration-accent); font-size: .88rem; font-weight: 800; box-shadow: 0 6px 14px color-mix(in srgb, var(--celebration-accent) 28%, transparent); }
+.celebration-card-kicker { margin: 0 0 .13rem; color: var(--celebration-accent); font-size: .66rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.celebration-card h3 { margin: 0; color: #23374f; font-size: 1rem; font-weight: 750; }
+.celebration-list { position: relative; z-index: 1; display: flex; flex-direction: column; max-height: 250px; padding: 0; margin: .85rem 0 0; overflow-y: auto; list-style: none; }
+.celebration-list li { display: flex; align-items: center; gap: .65rem; padding: .65rem 0; border-bottom: 1px solid color-mix(in srgb, var(--celebration-accent) 10%, white); }
+.celebration-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.celebration-list-heading { position: relative; z-index: 1; margin: .85rem 0 -.15rem; color: var(--celebration-accent); font-size: .67rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.celebration-list-heading-celebrated { color: #718096; }
+.celebration-birthday-list { max-height: 142px; }
+.celebration-person-mark { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; color: var(--celebration-accent); background: color-mix(in srgb, var(--celebration-accent) 12%, white); font-size: .73rem; font-weight: 800; }
+.celebration-person { min-width: 0; flex: 1; }
+.celebration-person strong, .celebration-person small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.celebration-person strong { color: #334155; font-size: .82rem; }
+.celebration-person small { margin-top: .1rem; color: #7b8797; font-size: .71rem; }
+.celebration-list time { color: var(--celebration-accent); font-size: .75rem; font-weight: 750; white-space: nowrap; }
+.celebration-empty { position: relative; z-index: 1; margin: 1.15rem 0 0; color: #718096; font-size: .82rem; line-height: 1.55; }
+.celebration-holiday-list li { gap: .8rem; }
+.celebration-date-block { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; flex: 0 0 37px; width: 37px; height: 40px; border-radius: 9px; color: var(--celebration-accent); background: color-mix(in srgb, var(--celebration-accent) 11%, white); line-height: 1; }
+.celebration-date-block span { font-size: .84rem; font-weight: 800; }
+.celebration-date-block small { margin-top: .13rem; font-size: .59rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.celebration-holiday-name { color: #334155; font-size: .84rem; }
+.celebration-milestone { margin-left: auto; padding: .26rem .45rem; border-radius: 999px; color: var(--celebration-accent); background: color-mix(in srgb, var(--celebration-accent) 10%, white); font-size: .68rem; font-weight: 800; white-space: nowrap; }
+.celebration-status { margin-left: auto; padding: .26rem .45rem; border-radius: 999px; font-size: .66rem; font-weight: 800; white-space: nowrap; }
+.celebration-status-celebrated { color: #64748b; background: #edf2f7; }
+.celebration-status-upcoming { color: #9d174d; background: #fce7f3; }
+.celebration-status-today { color: #fff; background: #be185d; }
 body.dark-mode .dashboard-hero, body.dark-mode .dashboard-action-card, body.dark-mode .dashboard-project-list, body.dark-mode .dashboard-empty-state { color: #e5e7eb; background-color: #202b40; border-color: rgba(255,255,255,.13); }
 body.dark-mode .dashboard-hero { background-image: linear-gradient(112deg, color-mix(in srgb, var(--dashboard-accent) 20%, #202b40), #202b40 72%); }
 body.dark-mode .dashboard-hero h1, body.dark-mode .dashboard-stat-value, body.dark-mode .dashboard-section-title, body.dark-mode .dashboard-action-card h3, body.dark-mode .dashboard-project-name { color: #e5e7eb; }
@@ -285,6 +320,11 @@ body.dark-mode .dashboard-hero p, body.dark-mode .dashboard-action-card p, body.
 body.dark-mode .dashboard-stat-card { background: #202b40; border-color: rgba(255,255,255,.13); }
 body.dark-mode .dashboard-project-list .list-group-item { background: transparent; border-color: rgba(255,255,255,.1); }
 body.dark-mode .dashboard-empty-state p { color: #b6c2d2; }
+body.dark-mode .celebration-card { border-color: color-mix(in srgb, var(--celebration-accent) 36%, #202b40); background: linear-gradient(145deg, color-mix(in srgb, var(--celebration-accent) 20%, #202b40), #202b40 68%); }
+body.dark-mode .celebration-card::after { border-color: color-mix(in srgb, var(--celebration-accent) 20%, #202b40); }
+body.dark-mode .celebration-card-header, body.dark-mode .celebration-list li { border-color: rgba(255,255,255,.12); }
+body.dark-mode .celebration-card h3, body.dark-mode .celebration-person strong, body.dark-mode .celebration-holiday-name { color: #e5e7eb; }
+body.dark-mode .celebration-person small, body.dark-mode .celebration-empty { color: #b6c2d2; }
 
 @media (min-width: 768px) {
   .app-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
@@ -339,6 +379,20 @@ body.dark-mode .dashboard-empty-state p { color: #b6c2d2; }
 .time-input {
     max-width: 260px;
 }
+
+/* First-login celebration greeting */
+.login-celebration-card { width: 100%; max-width: 575px; margin: 0 auto; padding: clamp(1.5rem, 4vw, 2.5rem); border: 1px solid #f1d5e4; border-radius: 1.25rem; background: radial-gradient(circle at 12% 8%, #fff0f7, transparent 29%), radial-gradient(circle at 88% 12%, #fef3c7, transparent 28%), #fff; box-shadow: 0 18px 44px rgba(99, 35, 80, .12); }
+.login-celebration-icon { display: inline-flex; align-items: center; justify-content: center; width: 58px; height: 58px; margin-bottom: .9rem; border-radius: 17px; color: #fff; background: linear-gradient(135deg, #be185d, #7c3aed); box-shadow: 0 9px 20px rgba(124,58,237,.25); font-size: 1.3rem; font-weight: 800; }
+.login-celebration-kicker { margin: 0; color: #9d174d; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.login-celebration-card h1 { margin: .45rem 0 .35rem; color: #312e81; font-size: clamp(1.65rem, 5vw, 2.25rem); font-weight: 800; letter-spacing: -.045em; }
+.login-celebration-name { margin: 0; color: #334155; font-size: 1.18rem; font-weight: 750; }
+.login-celebration-designation { margin: .2rem 0 0; color: #64748b; font-size: .87rem; }
+.login-celebration-message { margin-top: 1.25rem; padding: 1rem 1.15rem; border-radius: .9rem; text-align: left; }
+.login-celebration-message h2 { margin: 0 0 .35rem; font-size: .95rem; font-weight: 750; }
+.login-celebration-message p { margin: 0; font-size: .87rem; line-height: 1.55; }
+.login-celebration-birthday { color: #831843; background: #fff1f7; }
+.login-celebration-anniversary { color: #78350f; background: #fff8e7; }
+.login-celebration-signature { margin: 1.2rem 0 0; color: #64748b; font-size: .82rem; font-style: italic; }
 
     .time-input .input-group {
         flex-wrap: nowrap;

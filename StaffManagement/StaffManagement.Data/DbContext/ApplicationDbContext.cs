@@ -37,6 +37,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<HelpDeskTicket> HelpDeskTickets { get; set; } = null!;
 
+        public DbSet<EmployeeCelebrationNotification> EmployeeCelebrationNotifications { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -139,6 +141,25 @@ namespace StaffManagement.Data.DbContext
                 .HasOne(ticket => ticket.Employee)
                 .WithMany()
                 .HasForeignKey(ticket => ticket.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeCelebrationNotification>()
+                .Property(notification => notification.CelebrationDate)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<EmployeeCelebrationNotification>()
+                .HasIndex(notification => new
+                {
+                    notification.EmployeeId,
+                    notification.CelebrationType,
+                    notification.CelebrationDate
+                })
+                .IsUnique();
+
+            modelBuilder.Entity<EmployeeCelebrationNotification>()
+                .HasOne(notification => notification.Employee)
+                .WithMany()
+                .HasForeignKey(notification => notification.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }

@@ -1,0 +1,142 @@
+@model StaffManagement.Core.DTOs.DashboardViewModel
+@{
+    var monthName = DateTime.Today.ToString("MMMM");
+    var celebratedBirthdays = Model.MonthlyBirthdays.Where(birthday => birthday.IsCelebrated).ToList();
+    var upcomingBirthdays = Model.MonthlyBirthdays.Where(birthday => !birthday.IsCelebrated).ToList();
+}
+
+<section class="dashboard-celebrations" aria-labelledby="celebrations-heading">
+    <div class="dashboard-celebrations-heading">
+        <div>
+            <span class="dashboard-eyebrow">People and dates</span>
+            <h2 id="celebrations-heading" class="dashboard-section-title">Celebrations</h2>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <article class="celebration-card celebration-card-birthday">
+                <div class="celebration-card-header">
+                    <span class="celebration-card-icon" aria-hidden="true">B</span>
+                    <div>
+                        <p class="celebration-card-kicker">Birthday celebration</p>
+                        <h3>@monthName birthdays</h3>
+                    </div>
+                </div>
+                @if (Model.MonthlyBirthdays.Count > 0)
+                {
+                    @if (celebratedBirthdays.Count > 0)
+                    {
+                        <p class="celebration-list-heading celebration-list-heading-celebrated">Celebrated</p>
+                        <ul class="celebration-list celebration-birthday-list">
+                            @foreach (var birthday in celebratedBirthdays)
+                            {
+                                <li>
+                                    <span class="celebration-person-mark" aria-hidden="true">@birthday.EmployeeName[..1].ToUpperInvariant()</span>
+                                    <div class="celebration-person">
+                                        <strong>@birthday.EmployeeName</strong>
+                                        @if (!string.IsNullOrWhiteSpace(birthday.Designation))
+                                        {
+                                            <small>@birthday.Designation</small>
+                                        }
+                                    </div>
+                                    <span class="celebration-status celebration-status-celebrated">Celebrated</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    @if (upcomingBirthdays.Count > 0)
+                    {
+                        <p class="celebration-list-heading @(celebratedBirthdays.Count > 0 ? "mt-3" : null)">Upcoming</p>
+                        <ul class="celebration-list celebration-birthday-list">
+                            @foreach (var birthday in upcomingBirthdays)
+                            {
+                                <li>
+                                    <span class="celebration-person-mark" aria-hidden="true">@birthday.EmployeeName[..1].ToUpperInvariant()</span>
+                                    <div class="celebration-person">
+                                        <strong>@birthday.EmployeeName</strong>
+                                        @if (!string.IsNullOrWhiteSpace(birthday.Designation))
+                                        {
+                                            <small>@birthday.Designation</small>
+                                        }
+                                    </div>
+                                    <span class="celebration-status @(birthday.IsToday ? "celebration-status-today" : "celebration-status-upcoming")">@(birthday.IsToday ? "Today" : "Upcoming")</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+                else
+                {
+                    <p class="celebration-empty">No birthdays are recorded for @monthName.</p>
+                }
+            </article>
+        </div>
+
+        <div class="col-lg-4">
+            <article class="celebration-card celebration-card-holiday">
+                <div class="celebration-card-header">
+                    <span class="celebration-card-icon" aria-hidden="true">H</span>
+                    <div>
+                        <p class="celebration-card-kicker">Holiday calendar</p>
+                        <h3>Upcoming holidays</h3>
+                    </div>
+                </div>
+                @if (Model.UpcomingHolidays.Count > 0)
+                {
+                    <ul class="celebration-list celebration-holiday-list">
+                        @foreach (var holiday in Model.UpcomingHolidays)
+                        {
+                            <li>
+                                <time class="celebration-date-block" datetime="@holiday.HolidayDate.ToString("yyyy-MM-dd")">
+                                    <span>@holiday.HolidayDate.ToString("dd")</span>
+                                    <small>@holiday.HolidayDate.ToString("MMM")</small>
+                                </time>
+                                <strong class="celebration-holiday-name">@holiday.HolidayName</strong>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="celebration-empty">No upcoming holidays have been added.</p>
+                }
+            </article>
+        </div>
+
+        <div class="col-lg-4">
+            <article class="celebration-card celebration-card-anniversary">
+                <div class="celebration-card-header">
+                    <span class="celebration-card-icon" aria-hidden="true">A</span>
+                    <div>
+                        <p class="celebration-card-kicker">Work milestone</p>
+                        <h3>@monthName anniversaries</h3>
+                    </div>
+                </div>
+                @if (Model.MonthlyWorkAnniversaries.Count > 0)
+                {
+                    <ul class="celebration-list">
+                        @foreach (var anniversary in Model.MonthlyWorkAnniversaries)
+                        {
+                            <li>
+                                <span class="celebration-person-mark" aria-hidden="true">@anniversary.EmployeeName[..1].ToUpperInvariant()</span>
+                                <div class="celebration-person">
+                                    <strong>@anniversary.EmployeeName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(anniversary.Designation))
+                                    {
+                                        <small>@anniversary.Designation</small>
+                                    }
+                                </div>
+                                <span class="celebration-milestone">@anniversary.CompletedYears @(anniversary.CompletedYears == 1 ? "year" : "years")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="celebration-empty">No work anniversaries fall in @monthName.</p>
+                }
+            </article>
+        </div>
+    </div>
+</section>

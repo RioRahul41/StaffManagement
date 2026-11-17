@@ -19,6 +19,8 @@
         <div class="col-sm-6 col-xl-4"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Inactive employees</p><p class="dashboard-stat-value">@Model.InactiveEmployees</p><p class="dashboard-stat-note">Records needing review</p></div></div></div>
     </div>
 
+    <partial name="_DashboardCelebrationCards" model="Model" />
+
     <h2 class="dashboard-section-title">Administration shortcuts</h2>
     <div class="row g-3">
         <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Index"><span class="dashboard-action-icon">E</span><h3>Employee directory</h3><p>Search staff records, review account status, and maintain employee information.</p><span class="dashboard-action-link">Open directory →</span></a></div>
