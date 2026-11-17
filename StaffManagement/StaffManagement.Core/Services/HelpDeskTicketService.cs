@@ -59,7 +59,7 @@ public sealed class HelpDeskTicketService(
         string? documentPath,
         CancellationToken cancellationToken = default)
     {
-        if (!Enum.IsDefined(model.TicketType))
+        if (model.TicketType is null || !Enum.IsDefined(model.TicketType.Value))
             return (false, "Select a valid ticket type.");
         var employee = await employeeRepository.GetByIdentityUserIdAsync(identityUserId, cancellationToken);
         if (employee is null)
@@ -68,7 +68,7 @@ public sealed class HelpDeskTicketService(
         var ticket = new HelpDeskTicket
         {
             EmployeeId = employee.Id,
-            TicketType = model.TicketType,
+            TicketType = model.TicketType.Value,
             Date = DateTime.UtcNow,
             Status = HelpDeskStatus.Open,
             Description = model.Description.Trim(),
