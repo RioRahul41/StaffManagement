@@ -19,36 +19,6 @@
 }
 else
 {
-    @if (canApproveExpenses)
-    {
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-sm-5 col-md-4">
-                        <label for="expenseStatusFilter" class="form-label">Filter by status</label>
-                        <select id="expenseStatusFilter" class="form-select">
-                            <option value="">All statuses</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Mixed">Mixed</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-5 col-md-4">
-                        <label for="expenseActionFilter" class="form-label">Filter by action</label>
-                        <select id="expenseActionFilter" class="form-select">
-                            <option value="">All actions</option>
-                            <option value="Review actions available">Approve / Reject available</option>
-                            <option value="No pending action">No pending action</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-2 col-md-4">
-                        <button id="expenseResetFilters" type="button" class="btn btn-outline-secondary">Reset search</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table id="expenseTable" class="table table-hover align-middle mb-0 expense-table">
         <colgroup><col style="width: 4%" /><col style="width: 7%" /><col style="width: 12%" /><col style="width: 12%" /><col style="width: 9%" /><col style="width: 9%" /><col style="width: 11%" /><col style="width: 10%" /><col style="width: 8%" /><col style="width: 18%" /></colgroup>
         <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Employee ID</th><th>Title</th><th>Categories</th><th class="text-center">From date</th><th class="text-center">To date</th><th class="text-end">Total bill amount</th><th>Approval notes</th><th class="text-center">Expense status</th><th class="text-center">Actions</th></tr></thead>
@@ -56,7 +26,6 @@ else
         @{ var rowNumber = (Model.PageNumber - 1) * Model.PageSize; }
         @foreach (var expense in Model.Items)
         {
-            var hasPendingBills = expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Pending);
             <tr>
                 <td class="text-center">@(++rowNumber)</td>
                 <td class="text-nowrap">@expense.EmployeeId</td>
@@ -76,85 +45,63 @@ else
                     }
                 </td>
                 <td class="text-center text-nowrap"><span class="badge @(expense.Status == "Approved" ? "text-bg-success" : expense.Status == "Rejected" ? "text-bg-danger" : expense.Status == "Mixed" ? "text-bg-info" : "text-bg-warning")">@expense.Status</span></td>
-                <td class="text-center text-nowrap" data-search="@(hasPendingBills ? "Review actions available" : "No pending action")">
-                    @if (canApproveExpenses && hasPendingBills)
+                <td class="text-center text-nowrap">
+                    @if (canApproveExpenses)
                     {
-                        <div class="d-flex justify-content-center gap-1">
-                            <form asp-action="ApproveGroup" method="post" class="expense-review-form" data-review-title="Approve this expense?" data-review-text="All pending bills in this grouped expense will be approved.">
-                                <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
-                                <input type="hidden" name="batchId" value="@expense.BatchId" />
-                                <input type="hidden" name="title" value="@expense.Title" />
-                                <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
-                                <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
-                                <input type="hidden" name="approvalNotes" value="" />
-                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                            </form>
-                            <form asp-action="RejectGroup" method="post" class="expense-review-form" data-review-title="Reject this expense?" data-review-text="All pending bills in this grouped expense will be rejected.">
-                                <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
-                                <input type="hidden" name="batchId" value="@expense.BatchId" />
-                                <input type="hidden" name="title" value="@expense.Title" />
-                                <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
-                                <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
-                                <input type="hidden" name="approvalNotes" value="" />
-                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                            </form>
-                        </div>
+                        var hasPendingBills = expense.Expenses.Any(bill => bill.Status == ExpenseStatus.Pending);
+                        @if (!hasPendingBills)
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                        else
+                        {
+                            <div class="d-flex justify-content-center gap-1">
+                                <form asp-action="ApproveGroup" method="post" class="expense-review-form" data-review-title="Approve this expense?" data-review-text="All pending bills in this grouped expense will be approved.">
+                                    <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
+                                    <input type="hidden" name="batchId" value="@expense.BatchId" />
+                                    <input type="hidden" name="title" value="@expense.Title" />
+                                    <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="approvalNotes" value="" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form asp-action="RejectGroup" method="post" class="expense-review-form" data-review-title="Reject this expense?" data-review-text="All pending bills in this grouped expense will be rejected.">
+                                    <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
+                                    <input type="hidden" name="batchId" value="@expense.BatchId" />
+                                    <input type="hidden" name="title" value="@expense.Title" />
+                                    <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="approvalNotes" value="" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                            </div>
+                        }
                     }
                     else
                     {
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Expense actions">⋮</button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" asp-action="DetailsGroup"
-                                   asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
-                                   asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
-                                   asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">
-                                    <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg>View
-                                </a>
-                            </li>
-                            @if (canApproveExpenses && hasPendingBills)
-                            {
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <form asp-action="ApproveGroup" method="post" class="expense-review-form" data-review-title="Approve this expense?" data-review-text="All pending bills in this grouped expense will be approved.">
-                                        <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
-                                        <input type="hidden" name="batchId" value="@expense.BatchId" />
-                                        <input type="hidden" name="title" value="@expense.Title" />
-                                        <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="approvalNotes" value="" />
-                                        <button type="submit" class="dropdown-item text-success">Approve</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form asp-action="RejectGroup" method="post" class="expense-review-form" data-review-title="Reject this expense?" data-review-text="All pending bills in this grouped expense will be rejected.">
-                                        <input type="hidden" name="employeeId" value="@expense.EmployeeId" />
-                                        <input type="hidden" name="batchId" value="@expense.BatchId" />
-                                        <input type="hidden" name="title" value="@expense.Title" />
-                                        <input type="hidden" name="fromDate" value="@expense.FromDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="toDate" value="@expense.ToDate.ToString("yyyy-MM-dd")" />
-                                        <input type="hidden" name="approvalNotes" value="" />
-                                        <button type="submit" class="dropdown-item text-danger">Reject</button>
-                                    </form>
-                                </li>
-                            }
-                            else if (!canApproveExpenses && expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
-                            {
-                                <li><a class="dropdown-item" asp-action="EditGroup"
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Expense actions">⋮</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-action="DetailsGroup"
                                        asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
                                        asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
-                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Edit</a></li>
-                                <li><a class="dropdown-item text-danger" asp-action="DeleteGroup"
-                                       asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
-                                       asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
-                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Delete</a></li>
-                            }
-                        </ul>
-                    </div>
+                                       asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Details</a></li>
+                                @if (expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
+                                {
+                                    <li><a class="dropdown-item" asp-action="EditGroup"
+                                           asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                           asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Edit</a></li>
+                                }
+@if (expense.Expenses.All(bill => bill.Status == ExpenseStatus.Pending))
+                                {
+                                    <li><a class="dropdown-item text-danger" asp-action="DeleteGroup"
+                                           asp-route-employeeId="@expense.EmployeeId" asp-route-batchId="@expense.BatchId"
+                                           asp-route-title="@expense.Title" asp-route-fromDate="@expense.FromDate.ToString("yyyy-MM-dd")"
+                                           asp-route-toDate="@expense.ToDate.ToString("yyyy-MM-dd")">Delete</a></li>
+                                }
+                            </ul>
+                        </div>
                     }
                 </td>
             </tr>
@@ -187,7 +134,7 @@ else
     <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script>
         if (document.querySelector('#expenseTable')) {
-            const table = new DataTable('#expenseTable', {
+            new DataTable('#expenseTable', {
                 paging: false,
                 info: false,
                 lengthChange: false,
@@ -195,8 +142,7 @@ else
                 columnDefs: [
                     { targets: [0, 1, 4, 5, 8, 9], className: 'text-center text-nowrap' },
                     { targets: 6, className: 'text-end text-nowrap' },
-                    { targets: 0, orderable: false, searchable: false },
-                    { targets: -1, orderable: false, searchable: @(canApproveExpenses.ToString().ToLowerInvariant()) }
+                    { targets: [0, -1], orderable: false, searchable: false }
                 ],
                 drawCallback: function () {
                     const api = this.api();
@@ -206,20 +152,6 @@ else
                     });
                 }
             });
-            @if (canApproveExpenses)
-            {
-                <text>
-                    document.getElementById('expenseStatusFilter').addEventListener('change', function () {
-                        table.column(8).search(this.value, { exact: true }).draw();
-                    });
-                    document.getElementById('expenseActionFilter').addEventListener('change', function () {
-                        table.column(9).search(this.value, { exact: true }).draw();
-                    });
-                    document.getElementById('expenseResetFilters').addEventListener('click', function () {
-                        window.location.reload();
-                    });
-                </text>
-            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
