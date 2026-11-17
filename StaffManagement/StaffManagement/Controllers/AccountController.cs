@@ -15,7 +15,8 @@ public sealed class AccountController(
     IAccountService accountService,
     IDesignationService designationService,
     IDepartmentService departmentService,
-    IEmployeeService employeeService) : Controller
+    IEmployeeService employeeService,
+    IEmployeeCelebrationService employeeCelebrationService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -48,7 +49,15 @@ public sealed class AccountController(
             user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
+        {
+            var celebration = await employeeCelebrationService.GetAndRecordTodayGreetingAsync(
+                user.Id,
+                HttpContext.RequestAborted);
+            if (celebration is not null)
+                return View("~/Views/Celebration/Index.cshtml", celebration);
+
             return RedirectToLocal(returnUrl ?? model.ReturnUrl);
+        }
 
         ModelState.AddModelError(string.Empty, "Invalid login attempt.");
         return View(model);

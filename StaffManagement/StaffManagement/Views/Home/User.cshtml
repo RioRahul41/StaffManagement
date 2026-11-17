@@ -13,6 +13,8 @@
         <a asp-controller="Timesheet" asp-action="Index" class="btn btn-primary">Open timesheets</a>
     </section>
 
+    <partial name="_DashboardCelebrationCards" model="Model" />
+
     <h2 class="dashboard-section-title">My work</h2>
     @if (Model.CurrentProjects.Count > 0)
     {

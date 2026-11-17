@@ -1,3 +1,4 @@
+@model StaffManagement.Core.DTOs.DashboardViewModel
 @{
     ViewData["Title"] = "Support workspace";
 }
@@ -11,6 +12,8 @@
         </div>
         <a asp-controller="HelpDesk" asp-action="Index" class="btn btn-primary">Open Help Desk</a>
     </section>
+
+    <partial name="_DashboardCelebrationCards" model="Model" />
 
     <h2 class="dashboard-section-title">Support tools</h2>
     <div class="row g-3">

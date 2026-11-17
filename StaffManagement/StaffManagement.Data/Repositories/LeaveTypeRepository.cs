@@ -12,7 +12,7 @@ public sealed class LeaveTypeRepository(ApplicationDbContext dbContext) : ILeave
         var query = dbContext.LeaveTypes.AsNoTracking();
         if (!includeInactive)
             query = query.Where(type => type.IsActive);
-        return await query.OrderBy(type => type.Name).ToListAsync(cancellationToken);
+        return await query.OrderBy(type => !type.IsActive).ToListAsync(cancellationToken);
     }
 
     public Task<LeaveTypeMaster?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>

@@ -37,6 +37,8 @@ public class EmployeeDto
     [Required, StringLength(100)]
     public string Location { get; set; } = string.Empty;
 
+    public DateTime CreatedTime { get; set; }
+
     [DataType(DataType.Date)]
     public DateTime? DOB { get; set; }
 

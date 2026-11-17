@@ -413,6 +413,34 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeCelebrationNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CelebrationDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("CelebrationType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ShownAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "CelebrationType", "CelebrationDate")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeCelebrationNotifications");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
                 {
                     b.Property<int>("Id")
@@ -855,6 +883,17 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("IdentityUser");
 
                     b.Navigation("ReportingPerson");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeCelebrationNotification", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>

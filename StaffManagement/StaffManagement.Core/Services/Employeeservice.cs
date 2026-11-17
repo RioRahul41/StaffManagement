@@ -161,6 +161,7 @@ namespace StaffManagement.Core.Services
                 .ToList(),
             Department = employee.Department,
             Location = employee.Location,
+            CreatedTime = employee.CreatedTime,
             DOB = employee.DOB,
             Salary = employee.Salary,
             Designation = employee.Designation,
