@@ -108,9 +108,8 @@ public sealed class LeaveRequestService(
         {
             Items = result.Items.Select(request => Map(
                 request,
-                canReviewAssignedRequests && employee is not null &&
-                (canViewAllRequests || (request.EmployeeId != employee.Id && request.Employee.ReportingPersonId == employee.Id)) &&
-                request.Status == LeaveStatus.Pending,
+                canReviewAssignedRequests && request.Status == LeaveStatus.Pending &&
+                (canViewAllRequests || (employee is not null && request.EmployeeId != employee.Id && request.Employee.ReportingPersonId == employee.Id)),
                 request.Employee.IdentityUserId == identityUserId && request.Status == LeaveStatus.Pending)).ToList(),
             PageNumber = pageNumber,
             PageSize = pageSize,
@@ -141,8 +140,8 @@ public sealed class LeaveRequestService(
         if (string.IsNullOrWhiteSpace(model.LeaveType) || !await leaveTypeRepository.ExistsByNameAsync(model.LeaveType, cancellationToken: cancellationToken))
             return (false, "Select an active leave type.");
 
-        var fromDate = model.FromDate.Date;
-        var toDate = model.ToDate.Date;
+        var fromDate = model.FromDate!.Value.Date;
+        var toDate = model.ToDate!.Value.Date;
         var isSickLeave = model.IsSickLeave;
         if (isSickLeave && (fromDate > DateTime.Today || toDate > DateTime.Today))
             return (false, "Sick leave can only be requested for today or a past date.");

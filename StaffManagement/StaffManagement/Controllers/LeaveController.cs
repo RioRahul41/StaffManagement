@@ -74,7 +74,7 @@ public sealed class LeaveController(
     {
         if (ModelState.IsValid)
         {
-            var requestedDays = (model.ToDate.Date - model.FromDate.Date).Days + 1;
+            var requestedDays = (model.ToDate!.Value.Date - model.FromDate!.Value.Date).Days + 1;
             if (model.IsSickLeave && requestedDays >= 2 && (document is null || document.Length == 0))
                 ModelState.AddModelError(nameof(document), "A supporting document is required for sick leave applications of 2 or more days.");
         }
@@ -85,7 +85,7 @@ public sealed class LeaveController(
             return View(model);
         }
 
-        var requestedLeaveDays = (model.ToDate.Date - model.FromDate.Date).Days + 1;
+        var requestedLeaveDays = (model.ToDate!.Value.Date - model.FromDate!.Value.Date).Days + 1;
         var requiresDocument = model.IsSickLeave && requestedLeaveDays >= 2;
         string? documentPath = null;
         string? uploadError = null;
@@ -117,13 +117,13 @@ public sealed class LeaveController(
     }
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Manager + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.Hr)]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Approve(int id, CancellationToken cancellationToken) =>
         ReviewAsync(id, LeaveStatus.Approved, cancellationToken);
 
     [HttpPost]
-    [Authorize(Roles = RoleNames.Manager + "," + RoleNames.Hr)]
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Manager + "," + RoleNames.Hr)]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> Reject(int id, CancellationToken cancellationToken) =>
         ReviewAsync(id, LeaveStatus.Rejected, cancellationToken);
@@ -163,7 +163,8 @@ public sealed class LeaveController(
         LeaveStatus status,
         CancellationToken cancellationToken)
     {
-        var result = await leaveService.ReviewAsync(id, status, CurrentIdentityUserId(), User.IsInRole(RoleNames.Hr), cancellationToken);
+        var canReviewAllRequests = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr);
+        var result = await leaveService.ReviewAsync(id, status, CurrentIdentityUserId(), canReviewAllRequests, cancellationToken);
         if (result.Succeeded)
             TempData["Success"] = status == LeaveStatus.Approved
                 ? "Leave request approved."
@@ -185,7 +186,7 @@ public sealed class LeaveController(
     }
 
     private bool CanReviewLeaves() =>
-        User.IsInRole(RoleNames.Manager) || User.IsInRole(RoleNames.Hr);
+        User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Manager) || User.IsInRole(RoleNames.Hr);
 
     private bool CanViewAllLeaves() =>
         User.IsInRole(RoleNames.Hr) || User.IsInRole(RoleNames.Admin);

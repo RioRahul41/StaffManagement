@@ -136,7 +136,7 @@
                         var breadcrumbController = currentController ?? "Home";
                         var breadcrumbLabel = ViewData["BreadcrumbTitle"]?.ToString() ?? ViewData["Title"]?.ToString() ?? breadcrumbAction;
                     }
-                    @if (breadcrumbController == "Leave")
+                    @if (breadcrumbController == "Leave" && breadcrumbAction is not "Index" and not "Create")
                     {
                         <nav aria-label="Breadcrumb" class="mb-3">
                             <ol class="breadcrumb small mb-0">
