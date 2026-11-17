@@ -4,6 +4,7 @@
     var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
     var canDelete = User.IsInRole("Admin");
     var canCreate = User.IsInRole("Admin") || User.IsInRole("HR");
+    var showEmployeeId = User.IsInRole("Admin") || User.IsInRole("HR");
 }
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
@@ -87,13 +88,20 @@ else
         <span class="text-muted">Page @Model.PageNumber of @Model.TotalPages</span>
     </div>
     <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-                <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Name</th><th>Email</th><th>Department</th><th>Assigned projects</th><th>Reporting-Person</th><th>Account</th><th>Status</th><th>Project assignment</th><th class="text-end">Actions</th></tr></thead>
+                <thead class="table-light"><tr><th class="text-center">S.No.</th><th>@(showEmployeeId ? "Employee ID" : "Name")</th><th>Email</th><th>Department</th><th>Assigned projects</th><th>Reporting-Person</th><th>Account</th><th>Status</th><th>Project assignment</th><th class="text-end">Actions</th></tr></thead>
         <tbody>
         @foreach (var employee in Model.Employees.Select((item, index) => new { Item = item, Index = (Model.PageNumber - 1) * Model.PageSize + index + 1 }))
         {
             <tr>
                 <td class="text-center">@employee.Index</td>
-                <td><strong>@employee.Item.FirstName @employee.Item.LastName</strong><br /><small class="text-muted">@employee.Item.Designation</small></td>
+                @if (showEmployeeId)
+                {
+                    <td>@employee.Item.Id</td>
+                }
+                else
+                {
+                    <td><strong>@employee.Item.FirstName @employee.Item.LastName</strong><br /><small class="text-muted">@employee.Item.Designation</small></td>
+                }
                 <td>@employee.Item.Email</td>
                 <td>@(employee.Item.Department ?? "-")</td>
                 <td>@(employee.Item.AssignedProjects.Count == 0 ? "None" : string.Join(", ", employee.Item.AssignedProjects.Select(project => project.ProjectName)))</td>

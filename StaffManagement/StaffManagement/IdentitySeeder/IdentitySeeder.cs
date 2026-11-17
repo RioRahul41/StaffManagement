@@ -25,6 +25,8 @@ public static class IdentitySeeder
             }
         }
 
+        await SynchronizeLeaveAllowancesAsync(userManager, dbContext);
+
         var admins = await userManager.GetUsersInRoleAsync(RoleNames.Admin);
         if (admins.Count > 1)
             throw new InvalidOperationException("The database contains more than one Admin account.");
@@ -63,9 +65,44 @@ public static class IdentitySeeder
             Location = admin.Location,
             CreatedTime = DateTime.UtcNow,
             EmpIsActive = true,
-            IdentityUserId = admin.Id
+            IdentityUserId = admin.Id,
+            SickLeaveAllowance = RoleLeavePolicy.For(RoleNames.Admin).Sick,
+            CasualLeaveAllowance = RoleLeavePolicy.For(RoleNames.Admin).Casual
         });
         await dbContext.SaveChangesAsync();
+    }
+
+    private static async Task SynchronizeLeaveAllowancesAsync(
+        UserManager<ApplicationIdentity> userManager,
+        ApplicationDbContext dbContext)
+    {
+        var employeesByUserId = await dbContext.Employees
+            .Where(employee => !employee.EmpIsDeleted && employee.IdentityUserId != null)
+            .ToDictionaryAsync(employee => employee.IdentityUserId!, StringComparer.Ordinal);
+        var updatedUserIds = new HashSet<string>(StringComparer.Ordinal);
+        var hasChanges = false;
+
+        foreach (var role in RoleNames.All)
+        {
+            var allowance = RoleLeavePolicy.For(role);
+            var users = await userManager.GetUsersInRoleAsync(role);
+            foreach (var user in users)
+            {
+                if (!updatedUserIds.Add(user.Id) || !employeesByUserId.TryGetValue(user.Id, out var employee))
+                    continue;
+
+                if (employee.SickLeaveAllowance == allowance.Sick && employee.CasualLeaveAllowance == allowance.Casual)
+                    continue;
+
+                employee.SickLeaveAllowance = allowance.Sick;
+                employee.CasualLeaveAllowance = allowance.Casual;
+                employee.UpdatedTime = DateTime.UtcNow;
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+            await dbContext.SaveChangesAsync();
     }
 
     private static void EnsureSuccess(IdentityResult result, string operation)
