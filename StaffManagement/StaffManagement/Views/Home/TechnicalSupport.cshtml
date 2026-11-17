@@ -1,13 +1,20 @@
-@{ ViewData["Title"] = "Technical Support"; }
-<div class="mb-4">
-    <p class="text-primary fw-semibold mb-1">SUPPORT PORTAL</p>
-    <h1 class="mb-1">Technical Support</h1>
-    <p class="text-muted mb-0">Review employee Help Desk requests and update their status.</p>
-</div>
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-        <h2 class="h5">Help Desk requests</h2>
-        <p class="text-muted">View submitted tickets, download attached documents, and keep request status up to date.</p>
+@{
+    ViewData["Title"] = "Support workspace";
+}
+
+<div class="dashboard-page dashboard-support">
+    <section class="dashboard-hero mb-4">
+        <div>
+            <span class="dashboard-eyebrow">Service operations</span>
+            <h1>Technical Support</h1>
+            <p>Review Help Desk requests, open ticket details, and update support statuses.</p>
+        </div>
         <a asp-controller="HelpDesk" asp-action="Index" class="btn btn-primary">Open Help Desk</a>
+    </section>
+
+    <h2 class="dashboard-section-title">Support tools</h2>
+    <div class="row g-3">
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="HelpDesk" asp-action="Index"><span class="dashboard-action-icon">?</span><h3>Help Desk requests</h3><p>View tickets, review attached documents, and update request status.</p><span class="dashboard-action-link">Manage requests →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Policy" asp-action="Index"><span class="dashboard-action-icon">P</span><h3>Company policies</h3><p>Read the current staff policies and reference information.</p><span class="dashboard-action-link">View policies →</span></a></div>
     </div>
 </div>

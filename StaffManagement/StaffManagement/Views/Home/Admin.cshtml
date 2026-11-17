@@ -1,5 +1,31 @@
 @model StaffManagement.Core.DTOs.DashboardViewModel
-@{ ViewData["Title"] = "Admin Dashboard"; }
-<div class="d-flex justify-content-between align-items-center mb-4"><div><span class="text-primary fw-semibold">ADMIN CONSOLE</span><h1 class="display-6 fw-bold">Welcome, @Model.DisplayName</h1><p class="text-muted">Manage workforce access, roles, and employee records.</p></div><a asp-controller="Account" asp-action="Create" class="btn btn-primary">Create account</a></div>
-<div class="row g-3 mb-4"><div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Total employees</p><h2>@Model.TotalEmployees</h2></div></div></div><div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Active employees</p><h2 class="text-success">@Model.ActiveEmployees</h2></div></div></div><div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Inactive employees</p><h2 class="text-secondary">@Model.InactiveEmployees</h2></div></div></div></div>
-<div class="row g-3"><div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>Account administration</h5><p class="text-muted">Create HR, Manager, and User accounts. Only one Admin account is permitted.</p><a asp-controller="Account" asp-action="Create" class="btn btn-outline-primary">Manage accounts</a></div></div></div><div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>Employee records</h5><p class="text-muted">Review, edit, and deactivate employee records.</p><a asp-controller="Employee" asp-action="Index" class="btn btn-outline-primary">Open employees</a></div></div></div><div class="col-md-4"><div class="card h-100"><div class="card-body"><h5>Department management</h5><p class="text-muted">Create, view, edit, and delete departments.</p><a asp-controller="Department" asp-action="Index" class="btn btn-outline-primary">Manage departments</a></div></div></div></div>
+@{
+    ViewData["Title"] = "Admin overview";
+}
+
+<div class="dashboard-page dashboard-admin">
+    <section class="dashboard-hero mb-4">
+        <div>
+            <span class="dashboard-eyebrow">Administration</span>
+            <h1>Welcome, @Model.DisplayName</h1>
+            <p>Manage staff access, workforce records, and organization settings from one place.</p>
+        </div>
+        <a asp-controller="Account" asp-action="Create" class="btn btn-primary">Create account</a>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-4"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Total employees</p><p class="dashboard-stat-value">@Model.TotalEmployees</p><p class="dashboard-stat-note">Current workforce records</p></div></div></div>
+        <div class="col-sm-6 col-xl-4"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Active employees</p><p class="dashboard-stat-value">@Model.ActiveEmployees</p><p class="dashboard-stat-note">Active staff accounts</p></div></div></div>
+        <div class="col-sm-6 col-xl-4"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Inactive employees</p><p class="dashboard-stat-value">@Model.InactiveEmployees</p><p class="dashboard-stat-note">Records needing review</p></div></div></div>
+    </div>
+
+    <h2 class="dashboard-section-title">Administration shortcuts</h2>
+    <div class="row g-3">
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Index"><span class="dashboard-action-icon">E</span><h3>Employee directory</h3><p>Search staff records, review account status, and maintain employee information.</p><span class="dashboard-action-link">Open directory →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Account" asp-action="Create"><span class="dashboard-action-icon">A</span><h3>Accounts and roles</h3><p>Create staff accounts and assign the appropriate access level.</p><span class="dashboard-action-link">Manage accounts →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Department" asp-action="Index"><span class="dashboard-action-icon">D</span><h3>Organization setup</h3><p>Maintain departments and designations used across the staff directory.</p><span class="dashboard-action-link">Manage departments →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Leave" asp-action="Allowances"><span class="dashboard-action-icon">L</span><h3>Leave administration</h3><p>Review employee leave allowances and leave type settings.</p><span class="dashboard-action-link">Open leave settings →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Holiday" asp-action="Index"><span class="dashboard-action-icon">H</span><h3>Holiday calendar</h3><p>Keep company holiday dates up to date for staff.</p><span class="dashboard-action-link">View holidays →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="HelpDesk" asp-action="Index"><span class="dashboard-action-icon">?</span><h3>Help Desk</h3><p>Review staff support requests and keep their status current.</p><span class="dashboard-action-link">Open requests →</span></a></div>
+    </div>
+</div>

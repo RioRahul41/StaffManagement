@@ -1,5 +1,30 @@
 @model StaffManagement.Core.DTOs.DashboardViewModel
-@{ ViewData["Title"] = "HR Dashboard"; }
-<div class="mb-4"><span class="text-primary fw-semibold">PEOPLE OPERATIONS</span><h1 class="display-6 fw-bold">HR Dashboard</h1><p class="text-muted">Welcome, @Model.DisplayName. Keep employee information accurate and up to date.</p></div>
-<div class="row g-3 mb-4"><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Team members</p><h2>@Model.TotalEmployees</h2></div></div></div><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Active members</p><h2 class="text-success">@Model.ActiveEmployees</h2></div></div></div></div>
-<div class="card border-0 shadow-sm"><div class="card-body"><h5>HR actions</h5><p class="text-muted">Create User accounts and maintain employee and department records.</p><a asp-controller="Account" asp-action="Create" class="btn btn-primary me-2">Create User account</a><a asp-controller="Employee" asp-action="Index" class="btn btn-outline-primary me-2">View employees</a><a asp-controller="Department" asp-action="Index" class="btn btn-outline-primary">Manage departments</a></div></div>
+@{
+    ViewData["Title"] = "HR overview";
+}
+
+<div class="dashboard-page dashboard-hr">
+    <section class="dashboard-hero mb-4">
+        <div>
+            <span class="dashboard-eyebrow">People operations</span>
+            <h1>Welcome, @Model.DisplayName</h1>
+            <p>Keep employee records, leave settings, and staff support requests organized.</p>
+        </div>
+        <a asp-controller="Account" asp-action="Create" class="btn btn-primary">Create user account</a>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Employees</p><p class="dashboard-stat-value">@Model.TotalEmployees</p><p class="dashboard-stat-note">Workforce directory</p></div></div></div>
+        <div class="col-sm-6"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Active employees</p><p class="dashboard-stat-value">@Model.ActiveEmployees</p><p class="dashboard-stat-note">Currently active staff</p></div></div></div>
+    </div>
+
+    <h2 class="dashboard-section-title">People operations</h2>
+    <div class="row g-3">
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Index"><span class="dashboard-action-icon">E</span><h3>Employee directory</h3><p>Find employees and maintain their records and status.</p><span class="dashboard-action-link">View employees →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Account" asp-action="Create"><span class="dashboard-action-icon">+</span><h3>Create user account</h3><p>Set up an employee account and link it to their staff record.</p><span class="dashboard-action-link">Create account →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Leave" asp-action="Allowances"><span class="dashboard-action-icon">L</span><h3>Leave allowances</h3><p>Review and maintain employee leave balances.</p><span class="dashboard-action-link">Manage allowances →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="LeaveType" asp-action="Index"><span class="dashboard-action-icon">T</span><h3>Leave types</h3><p>Maintain the leave types employees can request.</p><span class="dashboard-action-link">Manage leave types →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Department" asp-action="Index"><span class="dashboard-action-icon">D</span><h3>Departments</h3><p>Keep organization structure and employee assignments accurate.</p><span class="dashboard-action-link">Manage departments →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="HelpDesk" asp-action="Index"><span class="dashboard-action-icon">?</span><h3>Help Desk</h3><p>Review staff support requests and their current status.</p><span class="dashboard-action-link">Open Help Desk →</span></a></div>
+    </div>
+</div>

@@ -1,5 +1,30 @@
 @model StaffManagement.Core.DTOs.DashboardViewModel
-@{ ViewData["Title"] = "Manager Dashboard"; }
-<div class="mb-4"><span class="text-primary fw-semibold">TEAM MANAGEMENT</span><h1 class="display-6 fw-bold">Manager Dashboard</h1><p class="text-muted">Welcome, @Model.DisplayName. Review and maintain your team records.</p></div>
-<div class="row g-3 mb-4"><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Employees</p><h2>@Model.TotalEmployees</h2></div></div></div><div class="col-md-6"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-muted mb-1">Active</p><h2 class="text-success">@Model.ActiveEmployees</h2></div></div></div></div>
-<div class="card border-0 shadow-sm"><div class="card-body"><h5>Team actions</h5><p class="text-muted">Managers can review, edit, and deactivate employee records. Account creation is restricted to Admin and HR.</p><a asp-controller="Employee" asp-action="Index" class="btn btn-primary">Open team records</a></div></div>
+@{
+    ViewData["Title"] = "Team overview";
+}
+
+<div class="dashboard-page dashboard-manager">
+    <section class="dashboard-hero mb-4">
+        <div>
+            <span class="dashboard-eyebrow">Team management</span>
+            <h1>Welcome, @Model.DisplayName</h1>
+            <p>Manage your team records, create employee accounts, and keep project work moving.</p>
+        </div>
+        <a asp-controller="Employee" asp-action="Create" class="btn btn-primary">Add employee</a>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Employees</p><p class="dashboard-stat-value">@Model.TotalEmployees</p><p class="dashboard-stat-note">Staff directory records</p></div></div></div>
+        <div class="col-sm-6"><div class="card dashboard-stat-card"><div class="card-body"><p class="dashboard-stat-label">Active employees</p><p class="dashboard-stat-value">@Model.ActiveEmployees</p><p class="dashboard-stat-note">Currently active staff</p></div></div></div>
+    </div>
+
+    <h2 class="dashboard-section-title">Team shortcuts</h2>
+    <div class="row g-3">
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Index"><span class="dashboard-action-icon">E</span><h3>Team directory</h3><p>Search staff, review records, and update team details.</p><span class="dashboard-action-link">Open team records →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Employee" asp-action="Create"><span class="dashboard-action-icon">+</span><h3>Add employee</h3><p>Create a User account for a new member of your team.</p><span class="dashboard-action-link">Create employee →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Project" asp-action="Index"><span class="dashboard-action-icon">P</span><h3>Projects</h3><p>Review projects and manage assignments for your team.</p><span class="dashboard-action-link">View projects →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Timesheet" asp-action="Index"><span class="dashboard-action-icon">T</span><h3>Timesheets</h3><p>Review team work entries and their current status.</p><span class="dashboard-action-link">View timesheets →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Leave" asp-action="Index"><span class="dashboard-action-icon">L</span><h3>Leave requests</h3><p>Review leave requests submitted by your team.</p><span class="dashboard-action-link">Open leave →</span></a></div>
+        <div class="col-sm-6 col-xl-4"><a class="dashboard-action-card" asp-controller="Expense" asp-action="Index"><span class="dashboard-action-icon">$</span><h3>Expenses</h3><p>View expense submissions and follow their review progress.</p><span class="dashboard-action-link">View expenses →</span></a></div>
+    </div>
+</div>
