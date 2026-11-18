@@ -11,8 +11,8 @@ public sealed class DesignationRepository(ApplicationDbContext context) : IDesig
     {
         return await context.Designations
             .AsNoTracking()
-            .Where(designation => designation.IsActive)
-            .OrderBy(designation => designation.DesignationName)
+            .Where(designation => designation.IsActive || !designation.IsActive)
+            .OrderBy(designation => !designation.IsActive)
             .ToListAsync();
     }
 
@@ -20,7 +20,7 @@ public sealed class DesignationRepository(ApplicationDbContext context) : IDesig
     {
         return context.Designations
             .FirstOrDefaultAsync(designation =>
-                designation.DesignationId == designationId && designation.IsActive);
+                designation.DesignationId == designationId && designation.IsActive || !designation.IsActive);
     }
 
     public Task<bool> ExistsByNameAsync(string designationName, int? excludedId = null)

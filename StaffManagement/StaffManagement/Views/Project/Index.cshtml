@@ -1,6 +1,8 @@
 @model IReadOnlyList<StaffManagement.Model.Entities.Project>
 
-@{ ViewData["Title"] = "Projects"; }
+@{
+    ViewData["Title"] = "Projects";
+}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -47,36 +49,45 @@
             </div>
             <div class="table-responsive">
                 <table id="projectTable" class="table table-hover align-middle mb-0">
-                    <thead class="table-light"><tr><th class="text-center">S.No.</th><th>Project</th><th>Description</th><th>Timeline</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
-                    <tbody>
-                    @foreach (var project in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
-                    {
+                    <thead class="table-light">
                         <tr>
-                            <td class="text-center">@project.Index</td>
-                            <td class="fw-semibold">@project.Item.ProjectName</td>
-                            <td>@(string.IsNullOrWhiteSpace(project.Item.Description) ? "—" : project.Item.Description)</td>
-                            <td>@(project.Item.StartDate?.ToString("MMM dd, yyyy") ?? "—") – @(project.Item.EndDate?.ToString("MMM dd, yyyy") ?? "—")</td>
-                            <td><span class="badge @(project.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">@(project.Item.IsActive ? "Active" : "Inactive")</span></td>
-                            <td class="text-end text-nowrap">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Project actions">⋮</button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a asp-action="Detail" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Details</a></li>
-                                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
-                                        {
-                                            <li><a asp-action="Edit" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Edit</a></li>
-                                            <li>
-                                                <form asp-action="Delete" asp-route-id="@project.Item.ProjectId" method="post" class="delete-form">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                                </form>
-                                            </li>
-                                        }
-                                    </ul>
-                                </div>
-                            </td>
+                            <th class="text-center">S.No.</th>
+                            <th>Project</th>
+                            <th>Description</th>
+                            <th>Timeline</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
                         </tr>
-                    }
+                    </thead>
+                    <tbody>
+                        @foreach (var project in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
+                        {
+                            <tr>
+                                <td class="text-center">@project.Index</td>
+                                <td class="fw-semibold">@project.Item.ProjectName</td>
+                                <td>@(string.IsNullOrWhiteSpace(project.Item.Description) ? "—" : project.Item.Description)</td>
+                                <td>@(project.Item.StartDate?.ToString("MMM dd, yyyy") ?? "—") – @(project.Item.EndDate?.ToString("MMM dd, yyyy") ?? "—")</td>
+                                <td><span class="badge @(project.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">@(project.Item.IsActive ? "Active" : "Inactive")</span></td>
+                                <td class="text-end text-nowrap">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Project actions">⋮</button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a asp-action="Detail" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Details</a></li>
+                                            @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                                            {
+                                                <li><a asp-action="Edit" asp-route-id="@project.Item.ProjectId" class="dropdown-item">Edit</a></li>
+                                                <li>
+                                                    <form asp-action="Delete" asp-route-id="@project.Item.ProjectId" method="post" class="delete-form">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                    </form>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -85,51 +96,110 @@
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+    <!-- DataTables CSS CDN (Ensure you include Bootstrap 5 integration styles if necessary) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" />
 }
 
 @section Scripts {
-    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
-    <script>
-        if (document.querySelector('#projectTable')) {
-            const projectTable = new DataTable('#projectTable', {
-                pageLength: 10,
-                lengthChange: true,
-                autoWidth: false,
-                columnDefs: [{ targets: [0, -1], orderable: false, searchable: false }],
-                drawCallback: function () {
-                    const api = this.api();
-                    const pageStart = api.page.info().start;
-                    api.column(0, { page: 'current', order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
-                        cell.textContent = pageStart + index + 1;
-                    });
-                }
-            });
-
-            document.getElementById('projectStatusFilter').addEventListener('change', function () {
-                const value = this.value;
-                projectTable.column(4).search(value ? '^' + value + '$' : '', true, false).draw();
-            });
-            document.getElementById('projectResetSearch').addEventListener('click', function () {
-                document.getElementById('projectStatusFilter').value = '';
-                projectTable.search('').columns().search('').draw();
-                const searchInput = document.querySelector('#projectTable_wrapper .dt-search input');
-                if (searchInput) searchInput.value = '';
-            });
-        }
-    </script>
+    <!-- DataTables & SweetAlert2 JS CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @if (TempData["SuccessMessage"] is string)
-    {
-        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SuccessMessage"])), timer: 2200, showConfirmButton: false });</script>
-    }
+
     <script>
-        document.querySelectorAll('.delete-form').forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-                Swal.fire({ title: 'Delete this project?', text: 'The project will be deactivated.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, delete it', cancelButtonText: 'Cancel' })
-                    .then(function (result) { if (result.isConfirmed) form.submit(); });
-            });
-        });
+        (function () {
+            function initProjectPage() {
+                const tableElement = document.querySelector('#projectTable');
+                if (tableElement) {
+                    const projectTable = $.fn.DataTable.isDataTable(tableElement)
+                        ? $(tableElement).DataTable()
+                        : $(tableElement).DataTable({
+                            pageLength: 10,
+                            lengthChange: true,
+                            autoWidth: false,
+                            columnDefs: [{ targets: [0, -1], orderable: false, searchable: false }],
+                            drawCallback: function () {
+                                const api = this.api();
+                                const pageStart = api.page.info().start;
+                                api.column(0, { page: 'current', order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
+                                    cell.textContent = pageStart + index + 1;
+                                });
+                            }
+                        });
+
+                    const statusFilter = document.getElementById('projectStatusFilter');
+                    if (statusFilter) {
+                        statusFilter.addEventListener('change', function () {
+                            const value = this.value;
+                            projectTable.column(4).search(value ? '^' + value + '$' : '', true, false).draw();
+                        });
+                    }
+
+                    const resetButton = document.getElementById('projectResetSearch');
+                    if (resetButton) {
+                        resetButton.addEventListener('click', function () {
+                            if (statusFilter) {
+                                statusFilter.value = '';
+                            }
+
+                            // Clear global search and reset regex/smart flags
+                            projectTable.search('', false, true);
+
+                            // Clear every column search and reset regex/smart flags
+                            projectTable.columns().every(function () {
+                                this.search('', false, true);
+                            });
+
+                            // Clear visible search box input if still populated
+                            const searchInput = document.querySelector('#projectTable_wrapper .dt-search input');
+                            if (searchInput) {
+                                searchInput.value = '';
+                            }
+
+                            // Reset to first page and redraw full dataset
+                            projectTable.page('first').draw();
+                        });
+                    }
+                }
+
+                document.querySelectorAll('.delete-form').forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        event.preventDefault();
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: 'This project will be permanently deleted.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Yes, delete it'
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initProjectPage);
+            } else {
+                initProjectPage();
+            }
+        })();
     </script>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: @Json.Serialize(successMessage),
+                timer: 3000,
+                showConfirmButton: false
+            });
+        </script>
+    }
 }

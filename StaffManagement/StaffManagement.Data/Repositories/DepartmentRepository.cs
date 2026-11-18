@@ -11,8 +11,8 @@ public class DepartmentRepository(ApplicationDbContext context) : IDepartmentRep
     {
         return await context.Departments
             .AsNoTracking()
-            .Where(d => d.IsActive)
-            .OrderBy(d => d.DepartmentName)
+            .Where(d => d.IsActive || !d.IsActive)
+            .OrderBy(d => !d.IsActive)
             .ToListAsync();
     }
 
@@ -20,6 +20,7 @@ public class DepartmentRepository(ApplicationDbContext context) : IDepartmentRep
     {
         return await context.Departments
             .AsNoTracking()
+            .Where(d=>d.IsActive || !d.IsActive)
             .OrderBy(d => d.DepartmentName)
             .ToListAsync();
     }
@@ -28,7 +29,7 @@ public class DepartmentRepository(ApplicationDbContext context) : IDepartmentRep
     {
         return context.Departments
             .FirstOrDefaultAsync(department =>
-                department.DepartmentId == departmentId && department.IsActive);
+                department.DepartmentId == departmentId && department.IsActive || !department.IsActive );
     }
 
     public Task<bool> ExistsByNameAsync(string departmentName, int? excludedId = null)

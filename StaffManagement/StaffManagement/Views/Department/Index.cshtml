@@ -1,6 +1,8 @@
 @model IReadOnlyList<StaffManagement.Model.Entities.Department>
 
-@{ ViewData["Title"] = "Departments"; }
+@{
+    ViewData["Title"] = "Departments";
+}
 
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
@@ -64,37 +66,37 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach (var department in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
-                    {
-                        <tr>
-                            <td class="text-center"></td>
-                            <td class="fw-semibold">@department.Item.DepartmentName</td>
-                            <td>@(string.IsNullOrWhiteSpace(department.Item.Description) ? "—" : department.Item.Description)</td>
-                            <td>@department.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
-                            <td>
-                                <span class="badge @(department.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">
-                                    @(department.Item.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </td>
-                            <td class="text-end text-nowrap">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Department actions">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false" style="display:block"><circle cx="8" cy="3" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="8" cy="13" r="1.3"/></svg>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a asp-action="Detail" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Details</a></li>
-                                        <li><a asp-action="Edit" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Edit</a></li>
-                                        <li>
-                                            <form asp-action="Delete" asp-route-id="@department.Item.DepartmentId" method="post" class="delete-form">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                        @foreach (var department in Model.Select((item, index) => new { Item = item, Index = index + 1 }))
+                        {
+                            <tr>
+                                <td class="text-center"></td>
+                                <td class="fw-semibold">@department.Item.DepartmentName</td>
+                                <td>@(string.IsNullOrWhiteSpace(department.Item.Description) ? "—" : department.Item.Description)</td>
+                                <td>@department.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <span class="badge @(department.Item.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                                        @(department.Item.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Department actions">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false" style="display:block"><circle cx="8" cy="3" r="1.3" /><circle cx="8" cy="8" r="1.3" /><circle cx="8" cy="13" r="1.3" /></svg>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a asp-action="Detail" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Details</a></li>
+                                            <li><a asp-action="Edit" asp-route-id="@department.Item.DepartmentId" class="dropdown-item">Edit</a></li>
+                                            <li>
+                                                <form asp-action="Delete" asp-route-id="@department.Item.DepartmentId" method="post" class="delete-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -105,66 +107,111 @@
 @section Scripts {
     <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @if (Model.Count > 0)
-    {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const table = new DataTable('#departmentTable', {
-                    pageLength: 10,
-                    columnDefs: [
-                        { targets: [0, 5], orderable: false, searchable: false }
-                    ],
-                    drawCallback: function () {
-                        const info = this.api().page.info();
-                        this.api().column(0, { page: 'current' }).nodes().each(function (cell, index) {
-                            cell.textContent = info.start + index + 1;
+    <script>
+        (function () {
+            function initDepartmentPage() {
+                const tableElement = document.querySelector('#departmentTable');
+                if (tableElement) {
+                    const table = DataTable.isDataTable(tableElement)
+                        ? new DataTable(tableElement)
+                        : new DataTable(tableElement, {
+                            pageLength: 10,
+                            columnDefs: [
+                                { targets: [0, 5], orderable: false, searchable: false }
+                            ],
+                            drawCallback: function () {
+                                const info = this.api().page.info();
+                                this.api().column(0, { page: 'current', order: 'applied', search: 'applied' }).nodes().each(function (cell, index) {
+                                    cell.textContent = info.start + index + 1;
+                                });
+                            }
+                        });
+
+                    const nameFilter = document.getElementById('departmentNameFilter');
+                    const statusFilter = document.getElementById('departmentStatusFilter');
+                    const resetButton = document.getElementById('departmentResetSearch');
+
+                    // Department Name Filter
+                    if (nameFilter) {
+                        nameFilter.addEventListener('change', function () {
+                            const val = this.value;
+                            table.column(1).search(val ? '^' + DataTable.util.escapeRegex(val) + '$' : '', true, false).draw();
                         });
                     }
-                });
 
-                document.getElementById('departmentNameFilter').addEventListener('change', function () {
-                    table.column(1).search(this.value, { exact: true }).draw();
+                    // Status Filter
+                    if (statusFilter) {
+                        statusFilter.addEventListener('change', function () {
+                            const val = this.value;
+                            table.column(4).search(val ? '^\\s*' + DataTable.util.escapeRegex(val) + '\\s*$' : '', true, false).draw();
+                        });
+                    }
+
+                    // Reset Search Button
+                    if (resetButton) {
+                        resetButton.addEventListener('click', function () {
+                            if (nameFilter) nameFilter.value = '';
+                            if (statusFilter) statusFilter.value = '';
+
+                            // Clear global search and reset regex/smart flags
+                            table.search('', false, true);
+
+                            // Clear every column search and reset regex/smart flags
+                            table.columns().every(function () {
+                                this.search('', false, true);
+                            });
+
+                            // Clear the global search input visually if present
+                            const searchInput = document.querySelector('#departmentTable_wrapper .dt-search input');
+                            if (searchInput) {
+                                searchInput.value = '';
+                            }
+
+                            // Go to first page and redraw full dataset
+                            table.page('first').draw();
+                        });
+                    }
+                }
+
+                // Delete confirmation
+                document.querySelectorAll('.delete-form').forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        event.preventDefault();
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: 'This department will be permanently deleted.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Yes, delete it'
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
                 });
-                document.getElementById('departmentStatusFilter').addEventListener('change', function () {
-                    table.column(4).search(this.value, { exact: true }).draw();
-                });
-                document.getElementById('departmentResetSearch').addEventListener('click', function () {
-                    window.location.reload();
-                });
-            });
-        </script>
-    }
-    @if (TempData["SuccessMessage"] is string)
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initDepartmentPage);
+            } else {
+                initDepartmentPage();
+            }
+        })();
+    </script>
+
+    @if (TempData["SuccessMessage"] is string successMessage)
     {
         <script>
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: '@TempData["SuccessMessage"]',
+                text: @Json.Serialize(successMessage),
                 timer: 2200,
                 showConfirmButton: false
             });
         </script>
     }
-    <script>
-        document.querySelectorAll('.delete-form').forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-                Swal.fire({
-                    title: 'Delete this department?',
-                    text: 'The department will be deactivated.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it',
-                    cancelButtonText: 'Cancel'
-                }).then(function (result) {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            });
-        });
-    </script>
 }
