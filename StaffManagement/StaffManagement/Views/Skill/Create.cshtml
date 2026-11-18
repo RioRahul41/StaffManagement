@@ -1,0 +1,27 @@
+@model StaffManagement.Core.DTOs.SkillModel.SkillCreateViewModel
+@{
+    ViewData["Title"] = "Add skill";
+}
+
+<div class="card border-0 shadow-sm" style="max-width: 620px;">
+    <div class="card-body p-4">
+        <h1 class="h3 mb-1">Add skill</h1>
+        <p class="text-muted mb-4">Add a skill that employees can select on their profile.</p>
+        <form asp-action="Create" method="post" class="row g-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="col-12">
+                <label asp-for="SkillName" class="form-label"></label>
+                <input asp-for="SkillName" class="form-control" autofocus />
+                <span asp-validation-for="SkillName" class="text-danger"></span>
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save skill</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -19,6 +19,7 @@ public sealed class AccountController(
     IDesignationService designationService,
     IDepartmentService departmentService,
     IEmployeeService employeeService,
+    ISkillService skillService,
     IEmployeeCelebrationService employeeCelebrationService,
     IWebHostEnvironment environment,
     ApplicationDbContext dbContext) : Controller
@@ -129,13 +130,19 @@ public sealed class AccountController(
         var employee = await GetCurrentEmployeeAsync(cancellationToken);
         if (employee is null)
             return NotFound();
+
+        await LoadActiveSkillsAsync(cancellationToken);
         return View(employee);
     }
 
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditProfile(EmployeeDto model, IFormFile? profilePhoto, CancellationToken cancellationToken)
+    public async Task<IActionResult> EditProfile(
+        EmployeeDto model,
+        List<string>? selectedSkillNames,
+        IFormFile? profilePhoto,
+        CancellationToken cancellationToken)
     {
         var currentEmployee = await GetCurrentEmployeeAsync(cancellationToken);
         if (currentEmployee is null)
@@ -161,6 +168,24 @@ public sealed class AccountController(
         model.SickLeaveAllowance = currentEmployee.SickLeaveAllowance;
         model.CasualLeaveAllowance = currentEmployee.CasualLeaveAllowance;
 
+        var activeSkills = await skillService.GetActiveAsync(cancellationToken);
+        var activeSkillNames = activeSkills.ToDictionary(
+            skill => skill.SkillName,
+            skill => skill.SkillName,
+            StringComparer.OrdinalIgnoreCase);
+        var selectedSkills = (selectedSkillNames ?? [])
+            .Where(skillName => !string.IsNullOrWhiteSpace(skillName))
+            .Select(skillName => skillName.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (selectedSkills.Any(skillName => !activeSkillNames.ContainsKey(skillName)))
+            ModelState.AddModelError(nameof(EmployeeDto.Skills), "Select skills from the available list.");
+
+        model.Skills = selectedSkills.Count == 0
+            ? null
+            : string.Join(", ", selectedSkills.Select(skillName => activeSkillNames[skillName]));
+
         // These employee-management fields are intentionally not editable in the
         // self-service profile form. Their values are restored above, so remove
         // binder validation entries for fields that were not posted by the form.
@@ -183,7 +208,10 @@ public sealed class AccountController(
         ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
 
         if (!ModelState.IsValid)
+        {
+            ViewBag.ActiveSkills = activeSkills;
             return View(model);
+        }
 
         string? newProfilePhotoPath = null;
         if (profilePhoto is { Length: > 0 })
@@ -192,6 +220,7 @@ public sealed class AccountController(
             if (savedPhoto.Error is not null)
             {
                 ModelState.AddModelError(nameof(profilePhoto), savedPhoto.Error);
+                ViewBag.ActiveSkills = activeSkills;
                 return View(model);
             }
             newProfilePhotoPath = savedPhoto.FileName;
@@ -203,6 +232,7 @@ public sealed class AccountController(
         {
             DeleteProfilePhoto(newProfilePhotoPath);
             ModelState.AddModelError(string.Empty, result.Error!);
+            ViewBag.ActiveSkills = activeSkills;
             return View(model);
         }
 
@@ -222,6 +252,7 @@ public sealed class AccountController(
                 foreach (var error in identityResult.Errors)
                     ModelState.AddModelError(string.Empty, error.Description);
 
+                ViewBag.ActiveSkills = activeSkills;
                 return View(model);
             }
 
@@ -399,6 +430,12 @@ public sealed class AccountController(
         if (System.IO.File.Exists(path))
             System.IO.File.Delete(path);
     }
+
+    private async Task LoadActiveSkillsAsync(CancellationToken cancellationToken)
+    {
+        ViewBag.ActiveSkills = await skillService.GetActiveAsync(cancellationToken);
+    }
+
     private Task<EmployeeDto?> GetCurrentEmployeeAsync(CancellationToken cancellationToken) =>
         employeeService.GetByIdentityUserIdAsync(userManager.GetUserId(User)!, cancellationToken);
 }

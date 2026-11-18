@@ -54,6 +54,8 @@ builder.Services.AddScoped<IHelpDeskTicketRepository, HelpDeskTicketRepository>(
 builder.Services.AddScoped<IHelpDeskTicketService, HelpDeskTicketService>();
 builder.Services.AddScoped<IEmployeeCelebrationNotificationRepository, EmployeeCelebrationNotificationRepository>();
 builder.Services.AddScoped<IEmployeeCelebrationService, EmployeeCelebrationService>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+builder.Services.AddScoped<ISkillService, SkillService>();
 
 
 

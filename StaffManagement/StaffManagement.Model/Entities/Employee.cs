@@ -94,6 +94,7 @@ namespace StaffManagement.Model.Entities
 
         [StringLength(100)]
         public string? Designation { get; set; }
+
         public ApplicationIdentity IdentityUser { get; set; } = null!;
 
 

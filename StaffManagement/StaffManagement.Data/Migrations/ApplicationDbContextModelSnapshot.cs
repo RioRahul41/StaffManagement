@@ -928,6 +928,39 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.SkillSet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SkillName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillName")
+                        .IsUnique();
+
+                    b.ToTable("SkillSets");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.Timesheet", b =>
                 {
                     b.Property<int>("Id")

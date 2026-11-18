@@ -39,6 +39,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<EmployeeCelebrationNotification> EmployeeCelebrationNotifications { get; set; } = null!;
 
+        public DbSet<SkillSet> SkillSets { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -58,6 +60,10 @@ namespace StaffManagement.Data.DbContext
 
             modelBuilder.Entity<Holiday>()
                 .HasIndex(holiday => holiday.HolidayDate);
+
+            modelBuilder.Entity<SkillSet>()
+                .HasIndex(skill => skill.SkillName)
+                .IsUnique();
 
             modelBuilder.Entity<EmployeeOtherDetail>()
                 .HasOne(detail => detail.Employee)
