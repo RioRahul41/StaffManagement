@@ -232,7 +232,8 @@ body {
 
 .profile-avatar-lg { width: 64px; height: 64px; flex-basis: 64px; font-size: 1.25rem; }
 .profile-menu { min-width: 245px; padding: .45rem 0; }
-.profile-menu .dropdown-item { padding: .6rem 1rem; }
+.profile-menu .dropdown-item { display: flex; align-items: center; gap: .65rem; padding: .6rem 1rem; }
+.profile-menu-icon { flex: 0 0 18px; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .menu-icon { display: inline-block; width: 1.5rem; font-size: 1rem; }
 .profile-card { max-width: 850px; border: 0; box-shadow: 0 .25rem 1rem rgba(23, 32, 51, .06); }
 .password-card { max-width: 580px; }
@@ -545,6 +546,8 @@ body.dark-mode .celebration-person small, body.dark-mode .celebration-empty { co
 .profile-section-menu .nav-link.active { background: #f4edff; color: #5e35b1; }
 .profile-section-menu .nav-link .bg-light { background: #f0e8ff !important; color: #7143d6 !important; flex: 0 0 28px; }
 .profile-section-menu .nav-link.active .bg-light { background: #7c4dff !important; color: #fff !important; }
+.profile-section-icon { flex: 0 0 18px; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.profile-section-icon-small { flex-basis: 16px; width: 16px; height: 16px; }
 
 .profile-view-page .profile-card { max-width: none; }
 .profile-info-grid { margin-top: .25rem; }
