@@ -167,6 +167,7 @@ public sealed class AccountController(
         model.DepartmentId = currentEmployee.DepartmentId;
         model.Department = currentEmployee.Department;
         model.Designation = currentEmployee.Designation;
+        model.DesignationId = currentEmployee.DesignationId;
         model.Salary = currentEmployee.Salary;
         model.ProjectIds = currentEmployee.ProjectIds;
         model.EmpIsActive = currentEmployee.EmpIsActive;
@@ -206,6 +207,7 @@ public sealed class AccountController(
         ModelState.Remove(nameof(EmployeeDto.DepartmentId));
         ModelState.Remove(nameof(EmployeeDto.Department));
         ModelState.Remove(nameof(EmployeeDto.Designation));
+        ModelState.Remove(nameof(EmployeeDto.DesignationId));
         ModelState.Remove(nameof(EmployeeDto.Salary));
         ModelState.Remove(nameof(EmployeeDto.ProjectIds));
         ModelState.Remove(nameof(EmployeeDto.EmpIsActive));

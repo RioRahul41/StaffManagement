@@ -1,0 +1,7 @@
+@model StaffManagement.Model.Entities.EmployeeExperience
+@{ ViewData["Title"] = "Experience information"; var backToEmployee = ViewBag.ReturnToEmployeeDetails is true; var backToEditProfile = ViewBag.ReturnToEditProfile is true; var backToProfile = ViewBag.ReturnToProfile is true; }
+<div class="mb-4"><h1 class="h2">Experience Information</h1><p class="text-muted mb-0">@Model.Employee.FirstName @Model.Employee.LastName</p></div>
+<div class="card profile-card"><div class="card-body"><dl class="row mb-0"><dt class="col-sm-4">Previous company</dt><dd class="col-sm-8">@Model.PreviousCompany</dd><dt class="col-sm-4">Date of joining</dt><dd class="col-sm-8">@Model.DateOfJoining?.ToString("d")</dd><dt class="col-sm-4">Date of relieving</dt><dd class="col-sm-8">@Model.DateOfRelieving?.ToString("d")</dd></dl><div class="mt-4"><a asp-action="Edit" asp-route-id="@Model.EmployeeExperienceId" asp-route-returnToEmployeeDetails="@backToEmployee" asp-route-returnToEditProfile="@backToEditProfile" asp-route-returnToProfile="@backToProfile" class="btn btn-outline-primary">Edit</a> @if (backToEmployee) { <a asp-controller="Employee" asp-action="Details" asp-route-id="@Model.EmployeeId" class="btn btn-secondary">Back</a> } else { <a asp-controller="Account" asp-action="@(backToEditProfile ? "EditProfile" : "Profile")" class="btn btn-secondary">Back</a> }</div></div></div>
+
+
+

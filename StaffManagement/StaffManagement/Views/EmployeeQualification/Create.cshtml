@@ -1,0 +1,20 @@
+@model StaffManagement.Model.Entities.EmployeeQualification
+@{ ViewData["Title"] = "Add qualification"; }
+<div class="mb-4"><h1 class="h2">Add Qualification</h1><div class="small text-muted"><span class="text-danger">*</span> Required field</div><p class="text-muted mb-0">@(ViewBag.EmployeeName)</p></div>
+<div class="card profile-card"><div class="card-body">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <input asp-for="EmployeeId" type="hidden" />
+    <input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" />
+    <input type="hidden" name="returnToEditProfile" value="@(ViewBag.ReturnToEditProfile is true ? "true" : "false")" />
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="Qualification" class="form-label">Qualification <span class="text-danger" aria-label="required">*</span></label><input asp-for="Qualification" required class="form-control" /><span asp-validation-for="Qualification" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="InstitutionName" class="form-label">Institution Name <span class="text-danger" aria-label="required">*</span></label><input asp-for="InstitutionName" required class="form-control" /><span asp-validation-for="InstitutionName" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="Percentage" class="form-label"></label><input asp-for="Percentage" type="number" min="0" max="100" step="0.01" class="form-control" /><span asp-validation-for="Percentage" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="YearOfPassing" class="form-label">Year of Passing <span class="text-danger" aria-label="required">*</span></label><input asp-for="YearOfPassing" type="number" required min="1900" max="2100" class="form-control" /><span asp-validation-for="YearOfPassing" class="text-danger"></span></div>
+        <div class="col-12"><label for="qualificationFile" class="form-label">Certificate / Document <span class="text-danger" aria-label="required">*</span></label><input id="qualificationFile" name="qualificationFile" type="file" required class="form-control" accept=".pdf,.jpg,.jpeg,.png" /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>@Html.ValidationMessage("qualificationFile", new { @class = "text-danger" })</div>
+    </div>
+    <div class="d-flex gap-2 mt-4"><button type="submit" class="btn btn-primary">Save Qualification</button>@if (ViewBag.ReturnToEditProfile is true) { <a asp-controller="Account" asp-action="EditProfile" class="btn btn-outline-secondary">Cancel</a> } else if (ViewBag.ReturnToProfile is true) { <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a> } else { <a asp-action="Index" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary">Cancel</a> }</div>
+</form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+

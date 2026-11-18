@@ -1,0 +1,10 @@
+@model StaffManagement.Model.Entities.EmployeeExperience
+@{ ViewData["Title"] = "Edit experience"; }
+<div class="mb-4"><h1 class="h2">Edit Experience Information</h1><div class="small text-muted"><span class="text-danger">*</span> Required field</div><p class="text-muted mb-0">@ViewBag.EmployeeName</p></div>
+<div class="card profile-card"><div class="card-body"><form asp-action="Edit" method="post"><input asp-for="EmployeeExperienceId" type="hidden" /><input asp-for="EmployeeId" type="hidden" /><input type="hidden" name="returnToEditProfile" value="@(ViewBag.ReturnToEditProfile is true ? "true" : "false")" /><input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" /><input type="hidden" name="returnToEmployeeDetails" value="@(ViewBag.ReturnToEmployeeDetails is true ? "true" : "false")" />
+<div class="row g-3"><div class="col-md-4"><label asp-for="PreviousCompany" class="form-label"></label> <span class="text-danger" aria-label="required">*</span><input asp-for="PreviousCompany" class="form-control" required maxlength="200" /><span asp-validation-for="PreviousCompany" class="text-danger"></span></div>
+<div class="col-md-4"><label asp-for="DateOfJoining" class="form-label"></label> <span class="text-danger" aria-label="required">*</span><input asp-for="DateOfJoining" type="date" class="form-control" required /><span asp-validation-for="DateOfJoining" class="text-danger"></span></div>
+<div class="col-md-4"><label asp-for="DateOfRelieving" class="form-label"></label> <span class="text-danger" aria-label="required">*</span><input asp-for="DateOfRelieving" type="date" class="form-control" required /><span asp-validation-for="DateOfRelieving" class="text-danger"></span></div></div>
+<div class="mt-4"><button type="submit" class="btn btn-primary">Save changes</button> <a asp-controller="Account" asp-action="@(ViewBag.ReturnToEditProfile is true ? "EditProfile" : "Profile")" class="btn btn-outline-secondary">Cancel</a></div></form></div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+

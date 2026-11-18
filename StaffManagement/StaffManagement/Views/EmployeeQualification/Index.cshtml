@@ -1,0 +1,26 @@
+@model IReadOnlyList<StaffManagement.Model.Entities.EmployeeQualification>
+@{ var employee = ViewBag.Employee as StaffManagement.Model.Entities.Employee; ViewData["Title"] = "Qualification Information"; }
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div><h1 class="mb-1">Qualification Information</h1><p class="text-muted mb-0">@(employee?.FirstName) @(employee?.LastName)</p></div>
+    @if (ViewBag.CanAddQualification is true) { <a asp-action="Create" asp-route-employeeId="@employee?.Id" class="btn btn-primary">Add Qualification</a> }
+</div>
+@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
+<div class="card profile-card"><div class="card-body">
+@if (Model.Count == 0) { <p class="text-muted mb-0">No qualification information has been added yet.</p> }
+else
+{
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Qualification</th><th>Institution Name</th><th>Percentage</th><th>Year of Passing</th><th class="text-end">Action</th></tr></thead><tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Qualification</td><td>@item.InstitutionName</td><td>@item.Percentage.ToString("0.##")%</td><td>@item.YearOfPassing</td>
+            <td class="text-end"><div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions" aria-label="Actions for @item.Qualification">⋮</button>
+                <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-action="Download" asp-route-id="@item.EmployeeQualificationId"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-2" aria-hidden="true"><path d="M.5 9.9v3.6c0 .8.7 1.5 1.5 1.5h12c.8 0 1.5-.7 1.5-1.5V9.9h-1.5v3.6H2V9.9z"/><path d="M7.25 0h1.5v8.1l2.3-2.3 1.1 1.1L8 11.05 3.85 6.9l1.1-1.1 2.3 2.3z"/></svg>Download</a></li></ul>
+            </div></td>
+        </tr>
+    }
+    </tbody></table></div>
+}
+</div></div>
+<a asp-controller="Employee" asp-action="Details" asp-route-id="@employee?.Id" class="btn btn-outline-secondary mt-3">Back to Employee</a>
