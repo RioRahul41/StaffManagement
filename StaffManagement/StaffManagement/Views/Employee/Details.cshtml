@@ -20,6 +20,8 @@
             {
                 <span class="nav-link disabled">Profile information not added</span>
             }
+            <a class="nav-link" asp-controller="EmployeeQualification" asp-action="Index" asp-route-employeeId="@Model.Id">Qualification Information</a>
+            <a class="nav-link" href="#experience-information">Experience Information</a>
         </nav>
     </aside>
     <main class="col-md-9 col-lg-10">
@@ -44,6 +46,10 @@
                 }
             </div>
         </section>
-        <a asp-action="Index" class="btn btn-secondary mt-3">Back</a>
+        <section id="experience-information" class="card mt-4"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-4"><h2 class="h4 mb-0">Experience Information</h2><a asp-controller="EmployeeExperience" asp-action="Create" asp-route-employeeId="@Model.Id" asp-route-returnToEmployeeDetails="true" class="btn btn-outline-primary btn-sm">Add Experience</a></div>
+        @{ var experiences = ViewBag.EmployeeExperiences as IReadOnlyList<StaffManagement.Model.Entities.EmployeeExperience> ?? Array.Empty<StaffManagement.Model.Entities.EmployeeExperience>(); }
+        @if (experiences.Count == 0) { <p class="text-muted mb-0">No experience information has been added yet.</p> } else { <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Previous company</th><th>Date of joining</th><th>Date of relieving</th><th class="text-end">Action</th></tr></thead><tbody>@foreach (var item in experiences) { <tr><td>@item.PreviousCompany</td><td>@item.DateOfJoining?.ToString("d")</td><td>@item.DateOfRelieving?.ToString("d")</td><td class="text-end"><div class="dropdown"><button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.PreviousCompany">⋮</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-controller="EmployeeExperience" asp-action="Details" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEmployeeDetails="true">View</a></li><li><a class="dropdown-item" asp-controller="EmployeeExperience" asp-action="Edit" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEmployeeDetails="true">Edit</a></li><li><form asp-controller="EmployeeExperience" asp-action="Delete" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEmployeeDetails="true" method="post"><button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this experience record?');">Delete</button></form></li></ul></div></td></tr> }</tbody></table></div> }
+        </div></section>        <a asp-action="Index" class="btn btn-secondary mt-3">Back</a>
     </main>
 </div>
+

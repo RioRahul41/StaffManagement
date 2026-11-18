@@ -292,6 +292,9 @@ namespace StaffManagement.Data.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -308,6 +311,8 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("DesignationId");
+
+                    b.HasIndex("DepartmentId");
 
                     b.ToTable("Designations");
                 });
@@ -351,21 +356,13 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("DesignationId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("EmergencyContactName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("EmergencyContactPhone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactRelationship")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("EmpIsActive")
                         .HasColumnType("bit");
@@ -437,11 +434,124 @@ namespace StaffManagement.Data.Migrations
 
                     b.HasIndex("DepartmentId");
 
+                    b.HasIndex("DesignationId");
+
                     b.HasIndex("IdentityUserId");
 
                     b.HasIndex("ReportingPersonId");
 
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeAddressInformation", b =>
+                {
+                    b.Property<int>("EmployeeAddressInformationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeAddressInformationId"));
+
+                    b.Property<string>("CurrentAddressLine1")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CurrentAddressLine2")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CurrentCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CurrentCountry")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CurrentPincode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CurrentState")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PermanentAddressLine1")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PermanentAddressLine2")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PermanentCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PermanentCountry")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PermanentPincode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PermanentState")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("EmployeeAddressInformationId");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeAddressInformations");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeBankDetail", b =>
+                {
+                    b.Property<int>("EmployeeBankDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeBankDetailId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(34)
+                        .HasColumnType("nvarchar(34)");
+
+                    b.Property<string>("Branch")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IFSCCode")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
+
+                    b.HasKey("EmployeeBankDetailId");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeBankDetails");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeCelebrationNotification", b =>
@@ -548,6 +658,35 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("EmployeeExpenses");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExperience", b =>
+                {
+                    b.Property<int>("EmployeeExperienceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeExperienceId"));
+
+                    b.Property<DateTime>("DateOfJoining")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateOfRelieving")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PreviousCompany")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("EmployeeExperienceId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeExperiences");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeOtherDetail", b =>
                 {
                     b.Property<int>("EmployeeOtherDetailId")
@@ -609,30 +748,6 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(5)
                         .HasColumnType("nvarchar(5)");
 
-                    b.Property<string>("CurrentAddressLine1")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("CurrentAddressLine2")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("CurrentCity")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CurrentCountry")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CurrentPincode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CurrentState")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime?>("DOB")
                         .HasColumnType("datetime2");
 
@@ -656,30 +771,6 @@ namespace StaffManagement.Data.Migrations
                     b.Property<string>("MaritalStatus")
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("PermanentAddressLine1")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PermanentAddressLine2")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PermanentCity")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PermanentCountry")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PermanentPincode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("PermanentState")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
@@ -705,6 +796,56 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("EmployeeProjects");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeQualification", b =>
+                {
+                    b.Property<int>("EmployeeQualificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeQualificationId"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InstitutionName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Qualification")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("YearOfPassing")
+                        .HasColumnType("int");
+
+                    b.HasKey("EmployeeQualificationId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeQualifications");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.HelpDeskTicket", b =>
@@ -1072,11 +1213,26 @@ namespace StaffManagement.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.Designation", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Department");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
                 {
                     b.HasOne("StaffManagement.Model.Entities.Department", null)
                         .WithMany()
                         .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StaffManagement.Model.Entities.Designation", "DesignationRecord")
+                        .WithMany()
+                        .HasForeignKey("DesignationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("StaffManagement.Model.Entities.ApplicationIdentity", "IdentityUser")
@@ -1088,9 +1244,34 @@ namespace StaffManagement.Data.Migrations
                         .HasForeignKey("ReportingPersonId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("DesignationRecord");
+
                     b.Navigation("IdentityUser");
 
                     b.Navigation("ReportingPerson");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeAddressInformation", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.EmployeeProfile", "EmployeeProfile")
+                        .WithOne()
+                        .HasForeignKey("StaffManagement.Model.Entities.EmployeeAddressInformation", "EmployeeId")
+                        .HasPrincipalKey("StaffManagement.Model.Entities.EmployeeProfile", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeProfile");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeBankDetail", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeCelebrationNotification", b =>
@@ -1105,6 +1286,17 @@ namespace StaffManagement.Data.Migrations
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExpense", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeExperience", b =>
                 {
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
                         .WithMany()
@@ -1154,6 +1346,17 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeQualification", b =>
+                {
+                    b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.HelpDeskTicket", b =>

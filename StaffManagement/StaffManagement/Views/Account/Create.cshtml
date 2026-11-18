@@ -67,14 +67,15 @@
     <div class="col-md-4"><label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span><select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentId", "DepartmentName", Model.DepartmentId))"><option value="">-- Select Department --</option></select><span asp-validation-for="DepartmentId" class="text-danger"></span></div>
     
     <div class="col-md-4">
-        <label asp-for="Designation" class="form-label"></label>
-        <select asp-for="Designation" class="form-select">
+        <label asp-for="DesignationId" class="form-label">Designation</label>
+        <select asp-for="DesignationId" class="form-select" data-department-designation>
             <option value="">Select designation</option>
-            @foreach (var designation in designations) 
-            { 
-                <option value="@designation.DesignationName">@designation.DesignationName</option> 
+            @foreach (var designation in designations)
+            {
+                <option value="@designation.DesignationId" data-department-id="@designation.DepartmentId">@designation.DesignationName</option>
             }
         </select>
+        <span asp-validation-for="DesignationId" class="text-danger"></span>
     </div>
     <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
     <div class="col-12"><h2 class="h5 mb-0">Annual leave allowances</h2><p class="text-muted mb-0">Pending requests reserve days. Approved requests count as used.</p></div>
@@ -140,6 +141,19 @@
             role.addEventListener('change', updateLeaveAllowances);
             updateReportingPersonOptions();
             updateLeaveAllowances();
+            const department = document.getElementById('@Html.IdFor(model => model.DepartmentId)');
+            const designationSelect = document.querySelector('[data-department-designation]');
+            const updateDesignations = () => {
+                Array.from(designationSelect.options).forEach(option => {
+                    if (!option.value) return;
+                    const allowed = option.dataset.departmentId === department.value;
+                    option.hidden = !allowed;
+                    option.disabled = !allowed;
+                    if (!allowed && option.selected) designationSelect.value = '';
+                });
+            };
+            department.addEventListener('change', updateDesignations);
+            updateDesignations();
         })();
     </script>
 }

@@ -22,7 +22,10 @@ public sealed class AccountController(
     ISkillService skillService,
     IEmployeeCelebrationService employeeCelebrationService,
     IWebHostEnvironment environment,
-    ApplicationDbContext dbContext) : Controller
+    IEmployeeProfileService employeeProfileService,
+    IEmployeeQualificationService employeeQualificationService,
+    IEmployeeExperienceService employeeExperienceService,
+    IEmployeeBankDetailService employeeBankDetailService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -87,12 +90,14 @@ public sealed class AccountController(
         var employee = await GetCurrentEmployeeAsync(cancellationToken);
         if (employee is null)
             return NotFound();
-        ViewBag.ProfileInformation = await dbContext.EmployeeProfiles.AsNoTracking()
-            .FirstOrDefaultAsync(profile => profile.EmployeeId == employee.Id, cancellationToken);
-        ViewBag.OtherDetails = await dbContext.EmployeeOtherDetails.AsNoTracking()
-            .Where(detail => detail.EmployeeId == employee.Id)
-            .OrderBy(detail => detail.DocumentType)
-            .ToListAsync(cancellationToken);
+        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employee.Id, asNoTracking: true, cancellationToken);
+        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employee.Id, cancellationToken);
+        ViewBag.EmployeeQualifications = await employeeQualificationService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
+        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
+        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employee.Id, asNoTracking: true, cancellationToken);
+        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employee.Id, cancellationToken);
+        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
+        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
         return View(employee);
     }
 
@@ -132,6 +137,8 @@ public sealed class AccountController(
             return NotFound();
 
         await LoadActiveSkillsAsync(cancellationToken);
+        await LoadQualificationRowsAsync(employee.Id, cancellationToken);
+
         return View(employee);
     }
 
@@ -147,6 +154,7 @@ public sealed class AccountController(
         var currentEmployee = await GetCurrentEmployeeAsync(cancellationToken);
         if (currentEmployee is null)
             return NotFound();
+        await LoadQualificationRowsAsync(currentEmployee.Id, cancellationToken);
 
         model.Id = currentEmployee.Id;
         model.IdentityUserId = currentEmployee.IdentityUserId;
@@ -156,9 +164,6 @@ public sealed class AccountController(
         model.DOB = currentEmployee.DOB;
         model.MaritalStatus = currentEmployee.MaritalStatus;
         model.BloodGroup = currentEmployee.BloodGroup;
-        model.EmergencyContactName = currentEmployee.EmergencyContactName;
-        model.EmergencyContactRelationship = currentEmployee.EmergencyContactRelationship;
-        model.EmergencyContactPhone = currentEmployee.EmergencyContactPhone;
         model.DepartmentId = currentEmployee.DepartmentId;
         model.Department = currentEmployee.Department;
         model.Designation = currentEmployee.Designation;
@@ -312,6 +317,14 @@ public sealed class AccountController(
     {
         var creatorRoles = GetCreatorRoles();
         var allowedRoles = accountService.GetCreatableRoles(creatorRoles);
+        if (model.DepartmentId.HasValue)
+        {
+            var selectedDepartment = await departmentService.GetByIdAsync(model.DepartmentId.Value);
+            if (selectedDepartment is null)
+                ModelState.AddModelError(nameof(model.DepartmentId), "Select a valid department.");
+            else
+                model.Department = selectedDepartment.DepartmentName;
+        }
         var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
         if (!allowedRoles.Contains(model.Role, StringComparer.OrdinalIgnoreCase))
             ModelState.AddModelError(nameof(model.Role), "You cannot create an account with this role.");
@@ -328,6 +341,19 @@ public sealed class AccountController(
                 var allowedRoleText = allowedReportingRoles.Count == 0 ? "none" : string.Join(" or ", allowedReportingRoles);
                 ModelState.AddModelError(nameof(model.ReportingPersonId), $"{model.Role} accounts can only report to: {allowedRoleText}.");
             }
+        }
+
+        if (model.DesignationId.HasValue)
+        {
+            var selectedDesignation = await designationService.GetByIdAsync(model.DesignationId.Value);
+            if (selectedDesignation is null || selectedDesignation.DepartmentId != model.DepartmentId)
+                ModelState.AddModelError(nameof(model.DesignationId), "Select a designation assigned to the selected department.");
+            else
+                model.Designation = selectedDesignation.DesignationName;
+        }
+        else
+        {
+            model.Designation = null;
         }
 
         if (!ModelState.IsValid)
@@ -438,7 +464,21 @@ public sealed class AccountController(
 
     private Task<EmployeeDto?> GetCurrentEmployeeAsync(CancellationToken cancellationToken) =>
         employeeService.GetByIdentityUserIdAsync(userManager.GetUserId(User)!, cancellationToken);
+    private async Task LoadQualificationRowsAsync(int employeeId, CancellationToken cancellationToken)
+    {
+        ViewBag.EmployeeQualifications = await employeeQualificationService.GetByEmployeeIdAsync(employeeId, cancellationToken);
+        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(employeeId, cancellationToken);
+        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employeeId, asNoTracking: true, cancellationToken);
+        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employeeId, cancellationToken);
+        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employeeId, cancellationToken);
+        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employeeId, cancellationToken);
+    }
 }
+
+
+
+
+
 
 
 

@@ -19,7 +19,11 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<Employee> Employees { get; set; } = null!;
         public DbSet<EmployeeProfile> EmployeeProfiles { get; set; } = null!;
+        public DbSet<EmployeeAddressInformation> EmployeeAddressInformations { get; set; } = null!;
         public DbSet<EmployeeOtherDetail> EmployeeOtherDetails { get; set; } = null!;
+        public DbSet<EmployeeQualification> EmployeeQualifications { get; set; } = null!;
+        public DbSet<EmployeeExperience> EmployeeExperiences { get; set; } = null!;
+        public DbSet<EmployeeBankDetail> EmployeeBankDetails { get; set; } = null!;
 
         public DbSet<EmployeeProject> EmployeeProjects { get; set; } = null!;
 
@@ -48,6 +52,26 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<EmployeeBankDetail>()
+                .HasOne(detail => detail.Employee)
+                .WithMany()
+                .HasForeignKey(detail => detail.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeBankDetail>()
+                .HasIndex(detail => detail.EmployeeId)
+                .IsUnique();
+
+            modelBuilder.Entity<EmployeeExperience>()
+                .HasOne(experience => experience.Employee)
+                .WithMany()
+                .HasForeignKey(experience => experience.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EmployeeQualification>()
+                .Property(qualification => qualification.Percentage)
+                .HasPrecision(5, 2);
 
             modelBuilder.Entity<Employee>().Property(employee => employee.SickLeaveAllowance).HasDefaultValue(10);
             modelBuilder.Entity<Employee>().Property(employee => employee.SickLeaveRemaining).HasDefaultValue(10);
@@ -80,6 +104,29 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<EmployeeProfile>()
                 .HasIndex(profile => profile.EmployeeId)
                 .IsUnique();
+
+            modelBuilder.Entity<EmployeeQualification>()
+                .HasOne(qualification => qualification.Employee)
+                .WithMany()
+                .HasForeignKey(qualification => qualification.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<EmployeeAddressInformation>()
+                .HasOne(address => address.EmployeeProfile)
+                .WithOne()
+                .HasForeignKey<EmployeeAddressInformation>(address => address.EmployeeId)
+                .HasPrincipalKey<EmployeeProfile>(profile => profile.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Designation>()
+                .HasOne(designation => designation.Department)
+                .WithMany()
+                .HasForeignKey(designation => designation.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(employee => employee.DesignationRecord)
+                .WithMany()
+                .HasForeignKey(employee => employee.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Employee>()
                 .HasOne<Department>()
@@ -171,5 +218,10 @@ namespace StaffManagement.Data.DbContext
         }
     }
 }
+
+
+
+
+
 
 

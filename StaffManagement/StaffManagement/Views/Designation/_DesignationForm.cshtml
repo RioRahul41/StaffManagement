@@ -7,6 +7,11 @@
     <span asp-validation-for="DesignationName" class="text-danger"></span>
 </div>
 <div class="mb-3">
+    <label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span>
+    <select asp-for="DepartmentId" class="form-select" required><option value="">Select department</option>@foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Model.Entities.Department> ?? []) { <option value="@department.DepartmentId">@department.DepartmentName</option> }</select>
+    <span asp-validation-for="DepartmentId" class="text-danger"></span>
+</div>
+<div class="mb-3">
     <label asp-for="Description" class="form-label"></label>
     <textarea asp-for="Description" class="form-control" rows="4"></textarea>
     <span asp-validation-for="Description" class="text-danger"></span>

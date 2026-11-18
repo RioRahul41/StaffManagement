@@ -14,6 +14,7 @@ public sealed class EmployeeRepository(ApplicationDbContext dbContext) : IEmploy
             .Include(employee => employee.ProjectAssignments)
                 .ThenInclude(assignment => assignment.Project)
             .Include(employee => employee.ReportingPerson)
+            .Include(employee => employee.DesignationRecord)
             .Where(employee => !employee.EmpIsDeleted)
             .OrderBy(employee => employee.LastName)
             .ThenBy(employee => employee.FirstName)

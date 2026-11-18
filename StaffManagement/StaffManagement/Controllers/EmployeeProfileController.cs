@@ -1,49 +1,38 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
-using StaffManagement.Data.DbContext;
 using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Controllers;
 
 [Authorize]
-public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : Controller
+public sealed class EmployeeProfileController(IEmployeeProfileService profileService, IEmployeeExperienceService experienceService, IEmployeeBankDetailService bankDetailService) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var profiles = await dbContext.EmployeeProfiles
-            .AsNoTracking()
-            .Include(profile => profile.Employee)
-            .Where(profile => !profile.Employee.EmpIsDeleted)
-            .OrderBy(profile => profile.Employee.LastName)
-            .ThenBy(profile => profile.Employee.FirstName)
-            .ToListAsync(cancellationToken);
+        var profiles = await profileService.GetAllAsync(cancellationToken);
         return View(profiles);
     }
 
     public async Task<IActionResult> Details(int employeeId, CancellationToken cancellationToken)
     {
-        var profile = await dbContext.EmployeeProfiles
-            .AsNoTracking()
-            .Include(item => item.Employee)
-            .FirstOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
+        var profile = await profileService.GetByEmployeeIdAsync(employeeId, asNoTracking: true, cancellationToken);
         if (profile is null)
             return NotFound();
 
-        ViewBag.OtherDetails = await dbContext.EmployeeOtherDetails.AsNoTracking()
-            .Where(detail => detail.EmployeeId == employeeId)
-            .OrderBy(detail => detail.DocumentType)
-            .ToListAsync(cancellationToken);
+        ViewBag.OtherDetails = await profileService.GetOtherDetailsAsync(employeeId, cancellationToken);
+        ViewBag.EmployeeExperiences = await experienceService.GetByEmployeeIdAsync(employeeId, cancellationToken);
+        ViewBag.BankDetails = await bankDetailService.GetByEmployeeIdAsync(employeeId, cancellationToken);
         ViewBag.CanManageOtherDetails = await CanEditProfileAsync(employeeId, cancellationToken);
-        ViewBag.CanEditProfile = await CanEditProfileAsync(employeeId, cancellationToken);
+        ViewBag.CanEditProfile = ViewBag.CanManageOtherDetails;
         ViewBag.CanDeleteProfile = CanManageAllProfiles();
         ViewData["Title"] = "Profile Information";
         return View(profile);
     }
 
-    public async Task<IActionResult> Create(int? employeeId, CancellationToken cancellationToken, bool returnToProfile = false)
+    public async Task<IActionResult> Create(int? employeeId, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
     {
         var canManageAll = CanManageAllProfiles();
         if (!canManageAll)
@@ -54,20 +43,22 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
             employeeId = ownEmployeeId.Value;
         }
 
-        if (employeeId.HasValue && await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == employeeId.Value, cancellationToken))
+        if (employeeId.HasValue && await profileService.EmployeeHasProfileAsync(employeeId.Value, cancellationToken))
             return RedirectToAction(nameof(Details), new { employeeId = employeeId.Value });
 
         if (canManageAll)
             await LoadEmployeesAsync(employeeId, cancellationToken);
         ViewBag.CanChooseEmployee = canManageAll && !employeeId.HasValue;
         ViewBag.ReturnToProfile = returnToProfile;
+        ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Create profile information";
-        return View(new EmployeeProfile { EmployeeId = employeeId ?? 0 });
+        var employee = employeeId.HasValue ? await profileService.GetEmployeeByIdAsync(employeeId.Value, cancellationToken) : null;
+        return View(new EmployeeProfile { EmployeeId = employeeId ?? 0, DOB = employee?.DOB });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false)
+    public async Task<IActionResult> Create(EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
     {
         var canManageAll = CanManageAllProfiles();
         if (!canManageAll)
@@ -79,29 +70,26 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
         }
 
         RemoveEmployeeNavigationValidationErrors();
-        if (await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == model.EmployeeId, cancellationToken))
-            ModelState.AddModelError(nameof(model.EmployeeId), "This employee already has profile information. Open it to edit.");
-
-        if (!await dbContext.Employees.AnyAsync(employee => employee.Id == model.EmployeeId && !employee.EmpIsDeleted, cancellationToken))
-            ModelState.AddModelError(nameof(model.EmployeeId), "Select a valid employee.");
-
         if (!ModelState.IsValid)
         {
-            if (canManageAll)
-                await LoadEmployeesAsync(model.EmployeeId, cancellationToken);
-            ViewBag.CanChooseEmployee = canManageAll;
-            ViewBag.ReturnToProfile = returnToProfile;
-            ViewData["Title"] = "Create profile information";
+            await PrepareCreateViewAsync(model.EmployeeId, canManageAll, returnToProfile, returnToEditProfile, cancellationToken);
             return View(model);
         }
 
-        dbContext.EmployeeProfiles.Add(model);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var result = await profileService.CreateAsync(model, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(nameof(model.EmployeeId), result.Error!);
+            await PrepareCreateViewAsync(model.EmployeeId, canManageAll, returnToProfile, returnToEditProfile, cancellationToken);
+            return View(model);
+        }
+
         TempData["Success"] = "Employee profile information was created.";
+        if (returnToEditProfile) return RedirectToAction("EditProfile", "Account", new { section = "profile" });
         return returnToProfile ? RedirectToAction("Profile", "Account") : RedirectToAction(nameof(Details), new { employeeId = model.EmployeeId });
     }
 
-    public async Task<IActionResult> Edit(int employeeId, CancellationToken cancellationToken, string section = "profile", bool returnToProfile = false)
+    public async Task<IActionResult> Edit(int employeeId, CancellationToken cancellationToken, string section = "profile", bool returnToProfile = false, bool returnToEditProfile = false)
     {
         if (!await CanEditProfileAsync(employeeId, cancellationToken))
             return Forbid();
@@ -109,21 +97,20 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
         if (editSection is null)
             return BadRequest();
 
-        var profile = await dbContext.EmployeeProfiles
-            .Include(item => item.Employee)
-            .FirstOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
+        var profile = await profileService.GetByEmployeeIdAsync(employeeId, cancellationToken: cancellationToken);
         if (profile is null)
             return NotFound();
 
         ViewBag.EditSection = editSection;
         ViewBag.ReturnToProfile = returnToProfile;
-        ViewData["Title"] = editSection switch { "emergency" => "Edit emergency contact", "address" => "Edit address information", _ => "Edit profile information" };
+        ViewBag.ReturnToEditProfile = returnToEditProfile;
+        ViewData["Title"] = GetEditTitle(editSection);
         return View(profile);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int employeeId, string section, EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false)
+    public async Task<IActionResult> Edit(int employeeId, string section, EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
     {
         if (!await CanEditProfileAsync(employeeId, cancellationToken))
             return Forbid();
@@ -133,57 +120,27 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
         if (editSection is null)
             return BadRequest();
 
-        var profile = await dbContext.EmployeeProfiles
-            .FirstOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
-        if (profile is null)
-            return NotFound();
-
         RemoveEmployeeNavigationValidationErrors();
         if (!ModelState.IsValid)
         {
-            model.Employee = await dbContext.Employees.FirstAsync(employee => employee.Id == employeeId, cancellationToken);
+            model.Employee = await profileService.GetEmployeeByIdAsync(employeeId, cancellationToken) ?? null!;
             ViewBag.EditSection = editSection;
             ViewBag.ReturnToProfile = returnToProfile;
-            ViewData["Title"] = editSection switch { "emergency" => "Edit emergency contact", "address" => "Edit address information", _ => "Edit profile information" };
+            ViewBag.ReturnToEditProfile = returnToEditProfile;
+            ViewData["Title"] = GetEditTitle(editSection);
             return View(model);
         }
 
-        if (editSection == "emergency")
-        {
-            profile.EmergencyContactName = model.EmergencyContactName;
-            profile.EmergencyContactRelationship = model.EmergencyContactRelationship;
-            profile.EmergencyContactPhone = model.EmergencyContactPhone;
-        }
-        else if (editSection == "address")
-        {
-            profile.PermanentAddressLine1 = model.PermanentAddressLine1;
-            profile.PermanentAddressLine2 = model.PermanentAddressLine2;
-            profile.PermanentCountry = model.PermanentCountry;
-            profile.PermanentState = model.PermanentState;
-            profile.PermanentCity = model.PermanentCity;
-            profile.PermanentPincode = model.PermanentPincode;
-            profile.CurrentAddressLine1 = model.CurrentAddressLine1;
-            profile.CurrentAddressLine2 = model.CurrentAddressLine2;
-            profile.CurrentCountry = model.CurrentCountry;
-            profile.CurrentState = model.CurrentState;
-            profile.CurrentCity = model.CurrentCity;
-            profile.CurrentPincode = model.CurrentPincode;
-        }
-        else
-        {
-            profile.Gender = model.Gender;
-            profile.MaritalStatus = model.MaritalStatus;
-            profile.DOB = model.DOB;
-            profile.BloodGroup = model.BloodGroup;
-            profile.PhoneNumber = model.PhoneNumber;
-        }
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (!await profileService.UpdateSectionAsync(employeeId, model, editSection, cancellationToken))
+            return NotFound();
+
         TempData["Success"] = editSection switch
         {
             "emergency" => "Emergency contact information was updated.",
             "address" => "Address information was updated.",
             _ => "Employee profile information was updated."
         };
+        if (returnToEditProfile) return RedirectToAction("EditProfile", "Account", new { section = editSection == "address" ? "address" : "profile" });
         return returnToProfile
             ? RedirectToAction("Profile", "Account")
             : RedirectToAction(nameof(Details), new { employeeId });
@@ -192,10 +149,7 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     public async Task<IActionResult> Delete(int employeeId, CancellationToken cancellationToken)
     {
-        var profile = await dbContext.EmployeeProfiles
-            .AsNoTracking()
-            .Include(item => item.Employee)
-            .FirstOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
+        var profile = await profileService.GetByEmployeeIdAsync(employeeId, asNoTracking: true, cancellationToken);
         if (profile is null)
             return NotFound();
 
@@ -208,14 +162,21 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int employeeId, CancellationToken cancellationToken)
     {
-        var profile = await dbContext.EmployeeProfiles.FirstOrDefaultAsync(item => item.EmployeeId == employeeId, cancellationToken);
-        if (profile is null)
+        if (!await profileService.DeleteAsync(employeeId, cancellationToken))
             return NotFound();
 
-        dbContext.EmployeeProfiles.Remove(profile);
-        await dbContext.SaveChangesAsync(cancellationToken);
         TempData["Success"] = "Employee profile information was deleted.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task PrepareCreateViewAsync(int? selectedId, bool canManageAll, bool returnToProfile, bool returnToEditProfile, CancellationToken cancellationToken)
+    {
+        if (canManageAll)
+            await LoadEmployeesAsync(selectedId, cancellationToken);
+        ViewBag.CanChooseEmployee = canManageAll && !selectedId.HasValue;
+        ViewBag.ReturnToProfile = returnToProfile;
+        ViewBag.ReturnToEditProfile = returnToEditProfile;
+        ViewData["Title"] = "Create profile information";
     }
 
     private void RemoveEmployeeNavigationValidationErrors()
@@ -229,6 +190,13 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
         string.Equals(section, "profile", StringComparison.OrdinalIgnoreCase) ? "profile" :
         string.Equals(section, "address", StringComparison.OrdinalIgnoreCase) ? "address" : null;
 
+    private static string GetEditTitle(string section) => section switch
+    {
+        "emergency" => "Edit emergency contact",
+        "address" => "Edit address information",
+        _ => "Edit profile information"
+    };
+
     private bool CanManageAllProfiles() =>
         User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr) || User.IsInRole(RoleNames.Manager);
 
@@ -236,42 +204,29 @@ public sealed class EmployeeProfileController(ApplicationDbContext dbContext) : 
     {
         if (CanManageAllProfiles())
             return true;
-
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return !string.IsNullOrWhiteSpace(identityUserId) && await dbContext.EmployeeProfiles
-            .AnyAsync(profile => profile.EmployeeId == employeeId && profile.Employee.IdentityUserId == identityUserId, cancellationToken);
+        return !string.IsNullOrWhiteSpace(identityUserId) &&
+               await profileService.CanEditAsync(employeeId, identityUserId, cancellationToken);
     }
 
-    private Task<int?> GetOwnEmployeeIdAsync(CancellationToken cancellationToken)
+    private async Task<int?> GetOwnEmployeeIdAsync(CancellationToken cancellationToken)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return string.IsNullOrWhiteSpace(identityUserId)
-            ? Task.FromResult<int?>(null)
-            : dbContext.Employees.Where(employee => employee.IdentityUserId == identityUserId && !employee.EmpIsDeleted)
-                .Select(employee => (int?)employee.Id)
-                .FirstOrDefaultAsync(cancellationToken);
+            ? null
+            : await profileService.GetOwnEmployeeIdAsync(identityUserId, cancellationToken);
     }
 
     private async Task LoadEmployeesAsync(int? selectedId, CancellationToken cancellationToken)
     {
-        ViewBag.Employees = await dbContext.Employees
-            .AsNoTracking()
-            .Where(employee => !employee.EmpIsDeleted)
-            .OrderBy(employee => employee.LastName)
-            .ThenBy(employee => employee.FirstName)
+        ViewBag.Employees = (await profileService.GetActiveEmployeesAsync(cancellationToken))
             .Select(employee => new { employee.Id, Name = employee.FirstName + " " + employee.LastName, employee.Email })
-            .ToListAsync(cancellationToken);
+            .ToList();
         ViewBag.SelectedEmployeeId = selectedId;
     }
+
+
+
 }
-
-
-
-
-
-
-
-
-
 
 

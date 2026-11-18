@@ -56,6 +56,9 @@ public class EmployeeDto
     [StringLength(100)]
     public string? Designation { get; set; }
 
+    [Required(ErrorMessage = "Designation is required.")]
+    public int? DesignationId { get; set; }
+
     public Gender? Gender { get; set; }
     [StringLength(30)]
     public string? MaritalStatus { get; set; }

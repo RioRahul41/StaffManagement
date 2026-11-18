@@ -22,7 +22,8 @@ public sealed class EmployeeController(
     IProjectService projectService,
     UserManager<ApplicationIdentity> userManager,
     IWebHostEnvironment environment,
-    ApplicationDbContext dbContext) : Controller
+    ApplicationDbContext dbContext,
+    IEmployeeExperienceService employeeExperienceService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -105,6 +106,7 @@ public sealed class EmployeeController(
         if (employee is null)
             return NotFound();
         ViewBag.HasProfileInformation = await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == id, cancellationToken);
+        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(id, cancellationToken);
         return View(employee);
     }
 
@@ -167,11 +169,32 @@ public sealed class EmployeeController(
                 model.ReportingPersonId = creator.Id;
         }
 
+        if (model.DepartmentId.HasValue)
+        {
+            var selectedDepartment = await departmentService.GetByIdAsync(model.DepartmentId.Value);
+            if (selectedDepartment is null)
+                ModelState.AddModelError(nameof(model.DepartmentId), "Select a valid department.");
+            else
+                model.Department = selectedDepartment.DepartmentName;
+        }
         var reportingPersons = await LoadReportingPersonsAsync(model.ReportingPersonId);
         if (string.Equals(model.Role, RoleNames.User, StringComparison.OrdinalIgnoreCase) && !model.ReportingPersonId.HasValue)
             ModelState.AddModelError(nameof(model.ReportingPersonId), "Assign a reporting person to this employee.");
         else if (model.ReportingPersonId.HasValue && !reportingPersons.Any(person => person.Id == model.ReportingPersonId.Value))
             ModelState.AddModelError(nameof(model.ReportingPersonId), "Select an active employee with the Admin, HR, or Manager role.");
+
+        if (model.DesignationId.HasValue)
+        {
+            var selectedDesignation = await designationService.GetByIdAsync(model.DesignationId.Value);
+            if (selectedDesignation is null || selectedDesignation.DepartmentId != model.DepartmentId)
+                ModelState.AddModelError(nameof(model.DesignationId), "Select a designation assigned to the selected department.");
+            else
+                model.Designation = selectedDesignation.DesignationName;
+        }
+        else
+        {
+            model.Designation = null;
+        }
 
         if (!ModelState.IsValid)
         {
@@ -223,9 +246,6 @@ public sealed class EmployeeController(
         model.DOB = existingEmployee.DOB;
         model.MaritalStatus = existingEmployee.MaritalStatus;
         model.BloodGroup = existingEmployee.BloodGroup;
-        model.EmergencyContactName = existingEmployee.EmergencyContactName;
-        model.EmergencyContactRelationship = existingEmployee.EmergencyContactRelationship;
-        model.EmergencyContactPhone = existingEmployee.EmergencyContactPhone;
         model.SickLeaveAllowance = existingEmployee.SickLeaveAllowance;
         model.CasualLeaveAllowance = existingEmployee.CasualLeaveAllowance;
         ModelState.Remove(nameof(EmployeeDto.PersonalEmail));
@@ -280,6 +300,19 @@ public sealed class EmployeeController(
                 return NotFound();
 
             model.ProjectIds = existing.ProjectIds;
+        }
+
+                if (model.DesignationId.HasValue)
+        {
+            var selectedDesignation = await designationService.GetByIdAsync(model.DesignationId.Value);
+            if (selectedDesignation is null || selectedDesignation.DepartmentId != model.DepartmentId)
+                ModelState.AddModelError(nameof(model.DesignationId), "Select a designation assigned to the selected department.");
+            else
+                model.Designation = selectedDesignation.DesignationName;
+        }
+        else
+        {
+            model.Designation = null;
         }
 
         if (!ModelState.IsValid)
@@ -360,6 +393,7 @@ public sealed class EmployeeController(
         if (employee is null)
             return NotFound();
         ViewBag.HasProfileInformation = await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == id, cancellationToken);
+        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(id, cancellationToken);
         return View(employee);
     }
 
@@ -458,6 +492,8 @@ public sealed class EmployeeController(
         return roles.FirstOrDefault(role => RoleNames.All.Contains(role, StringComparer.OrdinalIgnoreCase));
     }
 }
+
+
 
 
 

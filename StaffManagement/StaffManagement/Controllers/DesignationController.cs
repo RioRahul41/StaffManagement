@@ -7,7 +7,7 @@ using StaffManagement.Model.Entities;
 namespace StaffManagement.Web.Controllers;
 
 [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr)]
-public class DesignationController(IDesignationService designationService) : Controller
+public class DesignationController(IDesignationService designationService, IDepartmentService departmentService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -21,8 +21,9 @@ public class DesignationController(IDesignationService designationService) : Con
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        await LoadDepartmentsAsync();
         return View(new Designation());
     }
 
@@ -30,18 +31,20 @@ public class DesignationController(IDesignationService designationService) : Con
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Designation designation)
     {
+        if (!designation.DepartmentId.HasValue)
+            ModelState.AddModelError(nameof(designation.DepartmentId), "Select a department.");
+
         if (!ModelState.IsValid)
         {
+            await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }
 
         var result = await designationService.CreateAsync(designation);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(
-                nameof(Designation.DesignationName),
-                result.Error!);
-
+            ModelState.AddModelError(nameof(Designation.DesignationName), result.Error!);
+            await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }
 
@@ -53,7 +56,9 @@ public class DesignationController(IDesignationService designationService) : Con
     public async Task<IActionResult> Edit(int id)
     {
         var designation = await designationService.GetByIdAsync(id);
-        return designation is null ? NotFound() : View(designation);
+        if (designation is null) return NotFound();
+        await LoadDepartmentsAsync(designation.DepartmentId);
+        return View(designation);
     }
 
     [HttpPost]
@@ -65,8 +70,12 @@ public class DesignationController(IDesignationService designationService) : Con
             return BadRequest();
         }
 
+        if (!designation.DepartmentId.HasValue)
+            ModelState.AddModelError(nameof(designation.DepartmentId), "Select a department.");
+
         if (!ModelState.IsValid)
         {
+            await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }
 
@@ -78,15 +87,14 @@ public class DesignationController(IDesignationService designationService) : Con
 
         existingDesignation.DesignationName = designation.DesignationName;
         existingDesignation.Description = designation.Description;
+        existingDesignation.DepartmentId = designation.DepartmentId;
         existingDesignation.IsActive = designation.IsActive;
 
         var result = await designationService.UpdateAsync(existingDesignation);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(
-                nameof(Designation.DesignationName),
-                result.Error!);
-
+            ModelState.AddModelError(nameof(Designation.DesignationName), result.Error!);
+            await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }
 
@@ -112,5 +120,10 @@ public class DesignationController(IDesignationService designationService) : Con
 
         TempData["SuccessMessage"] = "Designation deleted successfully.";
         return RedirectToAction(nameof(Index));
+    }
+    private async Task LoadDepartmentsAsync(int? selectedId = null)
+    {
+        ViewBag.Departments = await departmentService.GetAllForSelectionAsync();
+        ViewBag.SelectedDepartmentId = selectedId;
     }
 }

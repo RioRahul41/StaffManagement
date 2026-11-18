@@ -78,12 +78,6 @@ namespace StaffManagement.Model.Entities
         public string? MaritalStatus { get; set; }
         [StringLength(5)]
         public string? BloodGroup { get; set; }
-        [StringLength(100)]
-        public string? EmergencyContactName { get; set; }
-        [StringLength(50)]
-        public string? EmergencyContactRelationship { get; set; }
-        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Emergency contact phone number must contain exactly 10 digits.")]
-        public string? EmergencyContactPhone { get; set; }
 
         // Identity User relationship
         public string? IdentityUserId { get; set; }
@@ -95,6 +89,9 @@ namespace StaffManagement.Model.Entities
         [StringLength(100)]
         public string? Designation { get; set; }
 
+        public int? DesignationId { get; set; }
+
+        public Designation? DesignationRecord { get; set; }
         public ApplicationIdentity IdentityUser { get; set; } = null!;
 
 

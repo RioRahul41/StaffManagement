@@ -34,15 +34,15 @@
         <span asp-validation-for="DepartmentId" class="text-danger"></span>
     </div>
     <div class="col-md-6">
-        <label asp-for="Designation" class="form-label"></label>
-        <select asp-for="Designation" class="form-select">
+        <label asp-for="DesignationId" class="form-label">Designation</label>
+        <select asp-for="DesignationId" class="form-select" data-department-designation>
             <option value="">Select designation</option>
             @foreach (var designation in ViewBag.Designations as IReadOnlyList<StaffManagement.Model.Entities.Designation> ?? [])
             {
-                <option value="@designation.DesignationName">@designation.DesignationName</option>
+                <option value="@designation.DesignationId" data-department-id="@designation.DepartmentId">@designation.DesignationName</option>
             }
         </select>
-        <span asp-validation-for="Designation" class="text-danger"></span>
+        <span asp-validation-for="DesignationId" class="text-danger"></span>
     </div>
     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
     {
@@ -99,6 +99,19 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        const department = document.getElementById('@Html.IdFor(model => model.DepartmentId)');
+        const designationSelect = document.querySelector('[data-department-designation]');
+        const updateDesignations = () => {
+            Array.from(designationSelect.options).forEach(option => {
+                if (!option.value) return;
+                const allowed = option.dataset.departmentId === department.value;
+                option.hidden = !allowed;
+                option.disabled = !allowed;
+                if (!allowed && option.selected) designationSelect.value = '';
+            });
+        };
+        department.addEventListener('change', updateDesignations);
+        updateDesignations();
         const reportingPerson = document.getElementById('@Html.IdFor(model => model.ReportingPersonId)');
         if (reportingPerson) {
             const allowedByRole = { 'HR': ['Admin'], 'Manager': ['Admin'], 'User': ['HR', 'Manager'], 'Technical Support': ['Admin'] };

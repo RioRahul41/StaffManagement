@@ -13,18 +13,19 @@ namespace StaffManagement.Controllers;
 public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext, IWebHostEnvironment environment) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Create(int employeeId, bool returnToProfile = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(int employeeId, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
     {
         if (!await CanManageEmployeeAsync(employeeId, cancellationToken))
             return Forbid();
         ViewBag.ReturnToProfile = returnToProfile;
+        ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Add document detail";
         return View(new EmployeeOtherDetail { EmployeeId = employeeId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeOtherDetail model, IFormFile? documentFile, bool returnToProfile = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(EmployeeOtherDetail model, IFormFile? documentFile, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
     {
         if (!await CanManageEmployeeAsync(model.EmployeeId, cancellationToken))
             return Forbid();
@@ -45,6 +46,7 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         if (!ModelState.IsValid)
         {
             ViewBag.ReturnToProfile = returnToProfile;
+        ViewBag.ReturnToEditProfile = returnToEditProfile;
             ViewData["Title"] = "Add document detail";
             return View(model);
         }
@@ -73,6 +75,7 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         }
 
         TempData["Success"] = "Document detail was added.";
+        if (returnToEditProfile) return RedirectToAction("EditProfile", "Account", new { section = "other" });
         return returnToProfile
             ? RedirectToAction("Profile", "Account")
             : RedirectToAction("Details", "EmployeeProfile", new { employeeId = model.EmployeeId });
@@ -135,3 +138,5 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
             ModelState.Remove(key);
     }
 }
+
+

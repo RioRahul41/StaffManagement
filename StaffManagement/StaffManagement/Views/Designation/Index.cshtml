@@ -59,6 +59,7 @@
                         <tr>
                             <th class="text-center">S.No.</th>
                             <th>Designation Name</th>
+                            <th>Department</th>
                             <th>Description</th>
                             <th>Created Date</th>
                             <th>Status</th>
@@ -71,6 +72,7 @@
                             <tr>
                                 <td class="text-center"></td>
                                 <td class="fw-semibold">@designation.Item.DesignationName</td>
+                                <td>@(designation.Item.Department?.DepartmentName ?? "Not assigned")</td>
                                 <td>@(string.IsNullOrWhiteSpace(designation.Item.Description) ? "—" : designation.Item.Description)</td>
                                 <td>@designation.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
                                 <td>
@@ -117,7 +119,7 @@
                         : new DataTable(tableElement, {
                             pageLength: 10,
                             columnDefs: [
-                                { targets: [0, 5], orderable: false, searchable: false }
+                                { targets: [0, 6], orderable: false, searchable: false }
                             ],
                             drawCallback: function () {
                                 const info = this.api().page.info();
@@ -141,7 +143,7 @@
                     if (statusFilter) {
                         statusFilter.addEventListener('change', function () {
                             const val = this.value;
-                            table.column(4).search(val ? '^\\s*' + DataTable.util.escapeRegex(val) + '\\s*$' : '', true, false).draw();
+                            table.column(5).search(val ? '^\\s*' + DataTable.util.escapeRegex(val) + '\\s*$' : '', true, false).draw();
                         });
                     }
 

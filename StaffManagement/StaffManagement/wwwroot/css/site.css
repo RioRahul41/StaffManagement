@@ -536,3 +536,30 @@ body.dark-mode .celebration-person small, body.dark-mode .celebration-empty { co
     display: inline-block;
     vertical-align: middle;
 }
+
+/* Edit Profile stepper and profile section navigation */
+.profile-stepper .profile-card { max-width: none; }
+.profile-stepper .card-header { background: #f7f3ff !important; color: #263653; }
+.profile-section-menu .nav-link { display: flex; align-items: center; gap: .15rem; color: #344563; border-radius: .65rem; padding: .8rem .75rem; margin-bottom: .35rem; }
+.profile-section-menu .nav-link:hover { background: #f7f3ff; color: #6d3ee0; }
+.profile-section-menu .nav-link.active { background: #f4edff; color: #5e35b1; }
+.profile-section-menu .nav-link .bg-light { background: #f0e8ff !important; color: #7143d6 !important; flex: 0 0 28px; }
+.profile-section-menu .nav-link.active .bg-light { background: #7c4dff !important; color: #fff !important; }
+
+.profile-view-page .profile-card { max-width: none; }
+.profile-info-grid { margin-top: .25rem; }
+.profile-info-item { height: 100%; min-height: 76px; padding: .85rem 1rem; border: 1px solid #e7ebf2; border-radius: .7rem; background: #fbfcff; }
+.profile-info-label { margin-bottom: .35rem; color: #68758a; font-size: .78rem; font-weight: 700; letter-spacing: .025em; }
+.profile-info-value { color: #17233b; font-weight: 500; overflow-wrap: anywhere; }
+body.dark-mode .profile-info-item { background: #202b40; border-color: #46536a; }
+body.dark-mode .profile-info-value { color: #e5e7eb; }
+
+
+.profile-bank-card { width: 100%; max-width: none; }
+
+.profile-experience-card { width: 100%; max-width: none; }
+
+.profile-qualification-card { width: 100%; max-width: none; }
+.qualification-table-wrap { min-height: 300px; border: 1px solid #dee2e6; border-radius: .25rem; }
+.qualification-table-wrap thead th { color: #7143d6; background: #eef0f4; font-weight: 600; }
+.qualification-action-button { color: #344563; letter-spacing: .08em; }

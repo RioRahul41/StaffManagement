@@ -1,192 +1,210 @@
 @model StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto
-
+@using StaffManagement.Model.Entities
 @{
-    ViewData["Title"] = "Edit my details";
-
-    var activeSkills = ViewBag.ActiveSkills as IReadOnlyList<StaffManagement.Model.Entities.SkillSet>
-                      ?? [];
-
+    ViewData["Title"] = "Edit my profile";
+    var activeSkills = ViewBag.ActiveSkills as IReadOnlyList<StaffManagement.Model.Entities.SkillSet> ?? [];
     var savedSkills = (Model.Skills ?? string.Empty)
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var qualifications = ViewBag.EmployeeQualifications as IReadOnlyList<EmployeeQualification> ?? Array.Empty<EmployeeQualification>();
+    var experiences = ViewBag.EmployeeExperiences as IReadOnlyList<EmployeeExperience> ?? Array.Empty<EmployeeExperience>();
+    var profile = ViewBag.ProfileInformation as EmployeeProfile;
+    var otherDetails = ViewBag.OtherDetails as IReadOnlyList<EmployeeOtherDetail> ?? Array.Empty<EmployeeOtherDetail>();
+    var bankDetails = ViewBag.BankDetails as EmployeeBankDetail;
+    var activeSection = Context.Request.Query["section"].ToString();
+    if (string.IsNullOrWhiteSpace(activeSection)) activeSection = "intro";
 }
-
 <div class="mb-4">
-    <h1 class="mb-1">Edit my details</h1>
-    <p class="text-muted mb-0">
-        Update the personal information shown on your profile.
-    </p>
-</div>
-
-<form asp-action="EditProfile"
-      method="post"
-      enctype="multipart/form-data"
-      class="card profile-card">
-
-    @Html.AntiForgeryToken()
-
-    <div class="card-body row g-3">
-
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-        <!-- First Name -->
-        <div class="col-md-6">
-            <label asp-for="FirstName" class="form-label"></label>
-            <span class="text-danger">*</span>
-
-            <input asp-for="FirstName" class="form-control" />
-
-            <span asp-validation-for="FirstName" class="text-danger"></span>
-        </div>
-
-        <!-- Last Name -->
-        <div class="col-md-6">
-            <label asp-for="LastName" class="form-label"></label>
-            <span class="text-danger">*</span>
-
-            <input asp-for="LastName" class="form-control" />
-
-            <span asp-validation-for="LastName" class="text-danger"></span>
-        </div>
-
-        <!-- Office Email -->
-        <div class="col-md-6">
-            <label asp-for="Email" class="form-label">Office email</label>
-
-            <input asp-for="Email" class="form-control" readonly />
-
-            <div class="form-text">
-                Your office email is managed by your organization.
-            </div>
-        </div>
-
-        <!-- Personal Email -->
-        <div class="col-md-6">
-            <label asp-for="PersonalEmail" class="form-label">Personal email</label>
-
-            <input asp-for="PersonalEmail" type="email" class="form-control" />
-
-            <span asp-validation-for="PersonalEmail" class="text-danger"></span>
-        </div>
-
-        <!-- Skills Multi Select -->
-        <div class="col-md-6">
-            <label for="selectedSkillNames" class="form-label">Skills</label>
-
-            <select id="selectedSkillNames"
-                    name="selectedSkillNames"
-                    class="form-select"
-                    multiple="multiple"
-                    aria-describedby="skills-help">
-
-                @foreach (var skill in activeSkills)
-                {
-                    <option value="@skill.SkillName"
-                            selected="@(savedSkills.Contains(skill.SkillName))">
-                        @skill.SkillName
-                    </option>
+    @if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
+    <h1 class="mb-1">Edit my profile</h1><p class="text-muted mb-0">Update your information and supporting details.</p>
+<div class="row g-4 profile-stepper">
+    <aside class="col-lg-3 col-xl-2"><nav class="nav nav-pills flex-column profile-section-menu" aria-label="Edit profile sections">
+        <button class="nav-link text-start @(activeSection == "intro" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#intro" role="tab" aria-controls="intro" aria-selected="@(activeSection == "intro" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">1</span><span><strong>Intro</strong><small class="d-block">Edit details</small></span></button>
+        <button class="nav-link text-start @(activeSection == "profile" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#profile" role="tab" aria-controls="profile" aria-selected="@(activeSection == "profile" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">2</span><span><strong>Profile Information</strong><small class="d-block">Profile</small></span></button>
+        <button class="nav-link text-start @(activeSection == "address" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#address" role="tab" aria-controls="address" aria-selected="@(activeSection == "address" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">3</span><span><strong>Address Information</strong><small class="d-block">Address</small></span></button>
+        <button class="nav-link text-start @(activeSection == "other" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#other" role="tab" aria-controls="other" aria-selected="@(activeSection == "other" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">4</span><span><strong>Other Details</strong><small class="d-block">Documents</small></span></button>
+        <button class="nav-link text-start @(activeSection == "qualification" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#qualification" role="tab" aria-controls="qualification" aria-selected="@(activeSection == "qualification" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">5</span><span><strong>Qualification Information</strong><small class="d-block">Qualification</small></span></button>
+        <button class="nav-link text-start @(activeSection == "experience" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#experience" role="tab" aria-controls="experience" aria-selected="@(activeSection == "experience" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">6</span><span><strong>Experience Information</strong><small class="d-block">Experience</small></span></button>
+        <button class="nav-link text-start @(activeSection == "bank" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#bank" role="tab" aria-controls="bank" aria-selected="@(activeSection == "bank" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">7</span><span><strong>Bank Details</strong><small class="d-block">Bank</small></span></button>
+    </nav></aside>
+    <main class="col-lg-9 col-xl-10"><div class="tab-content">
+        <section class="tab-pane fade @(activeSection == "intro" ? "show active" : "")" id="intro" role="tabpanel"><div class="card profile-card"><div class="card-header bg-light fw-semibold">Intro · Edit Details</div><div class="card-body"><form asp-action="EditProfile" method="post" enctype="multipart/form-data"><div class="row g-3">
+            <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="Email" class="form-label">Office email</label><input asp-for="Email" class="form-control" readonly /><div class="form-text">Managed by your organization.</div></div>
+            <div class="col-md-6"><label asp-for="PersonalEmail" class="form-label">Personal email</label><input asp-for="PersonalEmail" type="email" class="form-control" /><span asp-validation-for="PersonalEmail" class="text-danger"></span></div>
+            <div class="col-md-6"><label for="selectedSkillNames" class="form-label">Skills</label><select id="selectedSkillNames" name="selectedSkillNames" class="form-select" multiple="multiple" aria-describedby="skills-help">@foreach (var skill in activeSkills) { <option value="@skill.SkillName" selected="@(savedSkills.Contains(skill.SkillName))">@skill.SkillName</option> }</select><div id="skills-help" class="form-text">Search and select one or more skills.</div><span asp-validation-for="Skills" class="text-danger"></span></div>
+            <div class="col-md-6"><label for="profilePhoto" class="form-label">Profile photo</label>@if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath)) { <div class="mb-2"><img src="@Url.Action("ProfilePhoto")" alt="Current profile photo" class="profile-avatar" style="width:72px;height:72px;object-fit:cover" /></div> }<input id="profilePhoto" name="profilePhoto" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" /><div class="form-text">JPG, PNG, or WebP; up to 5 MB. Leave empty to keep the current photo.</div><span class="text-danger">@Html.ValidationMessage("profilePhoto")</span></div>
+            <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number class="form-control" /><div class="form-text">Optional. If entered, use exactly 10 digits.</div><span asp-validation-for="Phone" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
+            <div class="col-12"><button type="submit" class="btn btn-primary">Save details</button> <a asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div>
+        </div></form></div></div></section>
+        <section class="tab-pane fade @(activeSection == "profile" ? "show active" : "")" id="profile" role="tabpanel">
+            <div class="card profile-card profile-qualification-card mb-4"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4"><h2 class="h4 mb-0">Profile Information</h2>@if (profile is null) { <a asp-controller="EmployeeProfile" asp-action="Create" asp-route-employeeId="@Model.Id" asp-route-returnToEditProfile="true" class="btn btn-primary">Add Profile Information</a> } else { <a asp-controller="EmployeeProfile" asp-action="Edit" asp-route-employeeId="@Model.Id" asp-route-section="profile" asp-route-returnToEditProfile="true" class="btn btn-outline-primary">Edit</a> }</div>
+                @if (profile is null) { <p class="text-muted mb-0">No profile information has been added.</p> } else {
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 profile-info-grid">
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Gender</div><div class="profile-info-value">@(profile.Gender?.ToString() ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Marital status</div><div class="profile-info-value">@(profile.MaritalStatus ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Date of birth</div><div class="profile-info-value">@(profile.DOB?.ToString("d") ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Blood group</div><div class="profile-info-value">@(profile.BloodGroup ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Phone</div><div class="profile-info-value">@(profile.PhoneNumber ?? "Not provided")</div></div></div>
+                    </div>
                 }
-            </select>
-
-            <div id="skills-help" class="form-text">
-                Search and select one or more skills.
-            </div>
-
-            <span asp-validation-for="Skills" class="text-danger"></span>
-        </div>
-
-        <!-- Profile Photo -->
-        <div class="col-md-6">
-            <label for="profilePhoto" class="form-label">Profile photo</label>
-
-            @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath))
-            {
-                <div class="mb-2">
-                    <img src="@Url.Action("ProfilePhoto")"
-                         alt="Current profile photo"
-                         class="profile-avatar"
-                         style="width: 72px; height: 72px; object-fit: cover;" />
+            </div></div>
+            <div class="card profile-card profile-qualification-card"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4"><h2 class="h4 mb-0">Emergency Contact Person</h2>@if (profile is null) { <a asp-controller="EmployeeProfile" asp-action="Create" asp-route-employeeId="@Model.Id" asp-route-returnToEditProfile="true" class="btn btn-primary">Add Emergency Contact</a> } else { <a asp-controller="EmployeeProfile" asp-action="Edit" asp-route-employeeId="@Model.Id" asp-route-section="emergency" asp-route-returnToEditProfile="true" class="btn btn-outline-primary">Edit</a> }</div>
+                @if (profile is null) { <p class="text-muted mb-0">No emergency contact has been added.</p> } else {
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 profile-info-grid">
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Name</div><div class="profile-info-value">@(profile.EmergencyContactName ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Relationship</div><div class="profile-info-value">@(profile.EmergencyContactRelationship ?? "Not provided")</div></div></div>
+                        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Phone number</div><div class="profile-info-value">@(profile.EmergencyContactPhone ?? "Not provided")</div></div></div>
+                    </div>
+                }
+            </div></div>
+        </section>
+        <section class="tab-pane fade @(activeSection == "address" ? "show active" : "")" id="address" role="tabpanel"><div class="card profile-card"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-4"><h2 class="h4 mb-0">Address Information</h2>@if (profile is null) { <a asp-controller="EmployeeProfile" asp-action="Create" asp-route-employeeId="@Model.Id" asp-route-returnToEditProfile="true" class="btn btn-primary">Add Address Information</a> } else { <a asp-controller="EmployeeProfile" asp-action="Edit" asp-route-employeeId="@Model.Id" asp-route-section="address" asp-route-returnToEditProfile="true" class="btn btn-outline-primary">Edit</a> }</div>@if (profile is null) { <p class="text-muted">No address information has been added.</p> } else { <div class="row g-4 profile-info-grid"><div class="col-md-6"><h3 class="h6 mb-3">Permanent address</h3><div class="row row-cols-1 row-cols-sm-2 g-3"><div class="col"><div class="profile-info-item"><div class="profile-info-label">Address line 1</div><div class="profile-info-value">@(profile.PermanentAddressLine1 ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Address line 2</div><div class="profile-info-value">@(profile.PermanentAddressLine2 ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(profile.PermanentCountry ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(profile.PermanentState ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(profile.PermanentCity ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin code</div><div class="profile-info-value">@(profile.PermanentPincode ?? "Not provided")</div></div></div></div></div><div class="col-md-6"><h3 class="h6 mb-3">Current address</h3><div class="row row-cols-1 row-cols-sm-2 g-3"><div class="col"><div class="profile-info-item"><div class="profile-info-label">Address line 1</div><div class="profile-info-value">@(profile.CurrentAddressLine1 ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Address line 2</div><div class="profile-info-value">@(profile.CurrentAddressLine2 ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(profile.CurrentCountry ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(profile.CurrentState ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(profile.CurrentCity ?? "Not provided")</div></div></div><div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin code</div><div class="profile-info-value">@(profile.CurrentPincode ?? "Not provided")</div></div></div></div></div></div> }</div></div></section>
+        <section class="tab-pane fade @(activeSection == "other" ? "show active" : "")" id="other" role="tabpanel">
+            <div class="card profile-card profile-qualification-card mb-4"><div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center"><span>Other Details</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#otherEntryForm" aria-expanded="false" aria-controls="otherEntryForm">Add Document</button></div><div class="card-body">
+                @if (otherDetails.Count == 0) { <div class="qualification-table-wrap d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No documents have been added.</p></div> } else {
+                    <div class="qualification-table-wrap table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Document Type</th><th>Document Number</th><th>Valid From</th><th>Valid To</th><th class="text-center">Action</th></tr></thead><tbody>
+                    @foreach (var item in otherDetails) { <tr><td>@item.DocumentType</td><td>@item.DocumentNumber</td><td>@(item.ValidFrom?.ToString("d") ?? "Not provided")</td><td>@(item.ValidTo?.ToString("d") ?? "Not provided")</td><td class="text-center"><div class="dropdown"><button class="btn btn-sm btn-link text-decoration-none qualification-action-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.DocumentType">•••</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-controller="EmployeeOtherDetail" asp-action="Download" asp-route-id="@item.EmployeeOtherDetailId">Download</a></li></ul></div></td></tr> }
+                    </tbody></table></div>
+                }
+            </div></div>
+            <div class="collapse" id="otherEntryForm"><div class="card profile-card profile-qualification-card"><div class="card-body"><form asp-controller="EmployeeOtherDetail" asp-action="Create" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="EmployeeId" value="@Model.Id" /><input type="hidden" name="returnToEditProfile" value="true" />
+                <div class="row g-4">
+                    <div class="col-md-6"><label for="DocumentType" class="form-label">Document Type<span class="text-danger">*</span></label><input id="DocumentType" name="DocumentType" class="form-control" required maxlength="100" data-val="true" data-val-required="Document Type is required." data-val-length="Document Type cannot exceed 100 characters." data-val-length-max="100" /><span class="text-danger field-validation-valid" data-valmsg-for="DocumentType" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-6"><label for="DocumentNumber" class="form-label">Document Number<span class="text-danger">*</span></label><input id="DocumentNumber" name="DocumentNumber" class="form-control" required maxlength="100" data-val="true" data-val-required="Document Number is required." data-val-length="Document Number cannot exceed 100 characters." data-val-length-max="100" /><span class="text-danger field-validation-valid" data-valmsg-for="DocumentNumber" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-6"><label for="ValidFrom" class="form-label">Valid From</label><input id="ValidFrom" name="ValidFrom" type="date" class="form-control" /><span class="text-danger field-validation-valid" data-valmsg-for="ValidFrom" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-6"><label for="ValidTo" class="form-label">Valid To</label><input id="ValidTo" name="ValidTo" type="date" class="form-control" /><span id="validToValidation" class="text-danger field-validation-valid" data-valmsg-for="ValidTo" data-valmsg-replace="true"></span></div>
+                    <div class="col-12"><label for="documentFile" class="form-label">Document file<span class="text-danger">*</span></label><input id="documentFile" name="documentFile" type="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png" data-val="true" data-val-required="Choose a document file to upload." /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div><span class="text-danger field-validation-valid" data-valmsg-for="documentFile" data-valmsg-replace="true"></span></div>
+                </div><div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#otherEntryForm">Cancel</button><button type="submit" class="btn btn-primary">Add</button></div>
+            </form></div></div></div>
+            <div class="d-flex justify-content-end mt-3"><a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div>
+        </section>
+        <section class="tab-pane fade @(activeSection == "qualification" ? "show active" : "")" id="qualification" role="tabpanel">
+            <div class="card profile-card profile-qualification-card mb-4">
+                <div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center"><span>Qualification Information</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#qualificationEntryForm" aria-expanded="false" aria-controls="qualificationEntryForm">Add Qualification</button></div>
+                <div class="card-body">
+                    @if (qualifications.Count == 0)
+                    {
+                        <div class="qualification-table-wrap d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No qualifications have been added.</p></div>
+                    }
+                    else
+                    {
+                        <div class="qualification-table-wrap table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead><tr><th>Qualification</th><th>Institution Name</th><th>Percentage</th><th>Year Of Passing</th><th class="text-center">Action</th></tr></thead>
+                                <tbody>
+                                @foreach (var item in qualifications)
+                                {
+                                    <tr>
+                                        <td>@item.Qualification</td><td>@item.InstitutionName</td><td>@item.Percentage.ToString("0.##") %</td><td>@item.YearOfPassing</td>
+                                        <td class="text-center"><div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-decoration-none qualification-action-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.Qualification">•••</button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" asp-controller="EmployeeQualification" asp-action="Edit" asp-route-id="@item.EmployeeQualificationId" asp-route-returnToProfile="true">Edit</a></li>
+                                                <li><a class="dropdown-item" asp-controller="EmployeeQualification" asp-action="Download" asp-route-id="@item.EmployeeQualificationId">Download</a></li>
+                                            </ul>
+                                        </div></td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
-            }
-
-            <input id="profilePhoto"
-                   name="profilePhoto"
-                   type="file"
-                   accept=".jpg,.jpeg,.png,.webp"
-                   class="form-control" />
-
-            <div class="form-text">
-                JPG, PNG, or WebP; maximum 5 MB.
-                Leave empty to keep the current photo.
             </div>
+            <div class="collapse" id="qualificationEntryForm"><div class="card profile-card profile-qualification-card">
+                <div class="card-body">
+                    <form asp-controller="EmployeeQualification" asp-action="Create" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="EmployeeId" value="@Model.Id" />
+                        <input type="hidden" name="returnToEditProfile" value="true" />
+                        <div class="row g-4">
+                            <div class="col-md-6"><label for="Qualification" class="form-label">Qualification<span class="text-danger">*</span></label><input id="Qualification" name="Qualification" class="form-control" required maxlength="150" data-val="true" data-val-required="The Qualification field is required." data-val-length="Qualification cannot exceed 150 characters." data-val-length-max="150" /><span class="text-danger field-validation-valid" data-valmsg-for="Qualification" data-valmsg-replace="true"></span></div>
+                            <div class="col-md-6"><label for="InstitutionName" class="form-label">Institution Name<span class="text-danger">*</span></label><input id="InstitutionName" name="InstitutionName" class="form-control" required maxlength="200" data-val="true" data-val-required="The Institution Name field is required." data-val-length="Institution Name cannot exceed 200 characters." data-val-length-max="200" /><span class="text-danger field-validation-valid" data-valmsg-for="InstitutionName" data-valmsg-replace="true"></span></div>
+                            <div class="col-md-3"><label for="Percentage" class="form-label">Percentage<span class="text-danger">*</span></label><input id="Percentage" name="Percentage" type="number" min="0" max="100" step="0.01" class="form-control" required data-val="true" data-val-required="Percentage is required." data-val-range="Percentage must be between 0 and 100." data-val-range-min="0" data-val-range-max="100" /><span class="text-danger field-validation-valid" data-valmsg-for="Percentage" data-valmsg-replace="true"></span></div>
+                            <div class="col-md-3"><label for="YearOfPassing" class="form-label">Year Of Passing<span class="text-danger">*</span></label><input id="YearOfPassing" name="YearOfPassing" type="number" min="1900" max="2100" class="form-control" required data-val="true" data-val-required="Year of passing is required." data-val-range="Enter a year between 1900 and 2100." data-val-range-min="1900" data-val-range-max="2100" /><span class="text-danger field-validation-valid" data-valmsg-for="YearOfPassing" data-valmsg-replace="true"></span></div>
+                            <div class="col-md-6"><label for="qualificationFile" class="form-label">Document<span class="text-danger">*</span></label><input id="qualificationFile" name="qualificationFile" type="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png" data-val="true" data-val-required="Choose a qualification document to upload." /><div class="form-text">Allowed formats: PDF, JPG, JPEG, PNG; maximum 10 MB.</div><span class="text-danger field-validation-valid" data-valmsg-for="qualificationFile" data-valmsg-replace="true"></span></div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#qualificationEntryForm">Cancel</button><button type="submit" class="btn btn-primary">Add</button></div>
+                    </form>
+                </div>
+            </div></div>
+            <div class="d-flex justify-content-end mt-3"><a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div>
+        </section>
+        <section class="tab-pane fade @(activeSection == "experience" ? "show active" : "")" id="experience" role="tabpanel">
+            <div class="card profile-card profile-qualification-card mb-4"><div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center"><span>Experience Information</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#experienceEntryForm" aria-expanded="false" aria-controls="experienceEntryForm">Add Experience</button></div><div class="card-body">
+                @if (experiences.Count == 0) { <div class="qualification-table-wrap d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No experience information has been added.</p></div> } else {
+                    <div class="qualification-table-wrap table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Previous Company</th><th>Date of Joining</th><th>Date of Relieving</th><th class="text-center">Action</th></tr></thead><tbody>
+                    @foreach (var item in experiences) { <tr><td>@item.PreviousCompany</td><td>@item.DateOfJoining?.ToString("d")</td><td>@item.DateOfRelieving?.ToString("d")</td><td class="text-center"><div class="dropdown"><button class="btn btn-sm btn-link text-decoration-none qualification-action-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.PreviousCompany">•••</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-controller="EmployeeExperience" asp-action="Details" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEditProfile="true">View</a></li><li><a class="dropdown-item" asp-controller="EmployeeExperience" asp-action="Edit" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEditProfile="true">Edit</a></li><li><form asp-controller="EmployeeExperience" asp-action="Delete" asp-route-id="@item.EmployeeExperienceId" asp-route-returnToEditProfile="true" method="post"><button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this experience record?');">Delete</button></form></li></ul></div></td></tr> }
+                    </tbody></table></div>
+                }
+            </div></div>
+            <div class="collapse" id="experienceEntryForm"><div class="card profile-card profile-qualification-card"><div class="card-body"><form asp-controller="EmployeeExperience" asp-action="Create" method="post">
+                <input type="hidden" name="EmployeeId" value="@Model.Id" /><input type="hidden" name="returnToEditProfile" value="true" />
+                <div class="row g-4">
+                    <div class="col-md-4"><label for="PreviousCompany" class="form-label">Previous Company<span class="text-danger">*</span></label><input id="PreviousCompany" name="PreviousCompany" class="form-control" required maxlength="200" data-val="true" data-val-required="Previous company is required." data-val-length="Previous company cannot exceed 200 characters." data-val-length-max="200" /><span class="text-danger field-validation-valid" data-valmsg-for="PreviousCompany" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-4"><label for="DateOfJoining" class="form-label">Date of Joining<span class="text-danger">*</span></label><input id="DateOfJoining" name="DateOfJoining" type="date" class="form-control" required data-val="true" data-val-required="Date of joining is required." /><span class="text-danger field-validation-valid" data-valmsg-for="DateOfJoining" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-4"><label for="DateOfRelieving" class="form-label">Date of Relieving<span class="text-danger">*</span></label><input id="DateOfRelieving" name="DateOfRelieving" type="date" class="form-control" required data-val="true" data-val-required="Date of relieving is required." /><span id="dateOfRelievingValidation" class="text-danger field-validation-valid" data-valmsg-for="DateOfRelieving" data-valmsg-replace="true"></span></div>
+                </div><div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#experienceEntryForm">Cancel</button><button type="submit" class="btn btn-primary">Add</button></div>
+            </form></div></div></div>
+            <div class="d-flex justify-content-end mt-3"><a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div>
+        </section>
+        <section class="tab-pane fade @(activeSection == "bank" ? "show active" : "")" id="bank" role="tabpanel"><div class="card profile-card"><div class="card-header bg-light fw-semibold">Bank Details</div><div class="card-body"><form asp-controller="EmployeeBankDetail" asp-action="@(bankDetails is null ? "Create" : "Edit")" method="post"><input type="hidden" name="EmployeeId" value="@Model.Id" /><input type="hidden" name="returnToEditProfile" value="true" />@if (bankDetails is not null) { <input type="hidden" name="EmployeeBankDetailId" value="@bankDetails.EmployeeBankDetailId" /> }
+            <div class="row g-4 profile-stepper"><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountHolderName">Account Holder Name<span class="text-danger">*</span></label><input id="AccountHolderName" name="AccountHolderName" value="@bankDetails?.AccountHolderName" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="AccountHolderName"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountNumber">Account Number<span class="text-danger">*</span></label><input id="AccountNumber" name="AccountNumber" value="@bankDetails?.AccountNumber" class="form-control" required minlength="6" maxlength="34" pattern="[0-9]{6,34}" inputmode="numeric" /><span class="text-danger" data-valmsg-for="AccountNumber"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountName">Bank Name<span class="text-danger">*</span></label><input id="AccountName" name="AccountName" value="@bankDetails?.AccountName" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="AccountName"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="IFSCCode">IFSC Code<span class="text-danger">*</span></label><input id="IFSCCode" name="IFSCCode" value="@bankDetails?.IFSCCode" class="form-control text-uppercase" required minlength="11" maxlength="11" pattern="[A-Za-z]{4}0[A-Za-z0-9]{6}" autocomplete="off" /><span class="text-danger" data-valmsg-for="IFSCCode"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="Branch">Branch Name<span class="text-danger">*</span></label><input id="Branch" name="Branch" value="@bankDetails?.Branch" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="Branch"></span></div></div>
+            <div class="d-flex justify-content-between mt-4"><button type="submit" class="btn btn-primary">Save</button></div></form></div></div></section>
+    </div></main>
+</div>
+@section Styles { <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" /> }
+@section Scripts { <partial name="_ValidationScriptsPartial" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>$(function () { $('#selectedSkillNames').select2({ placeholder: "Search and select skills", allowClear: true, width: "100%", closeOnSelect: false }); });</script>
+<script id="experienceValidationScript">
+(() => {
+    const form = document.querySelector('#experience form');
+    if (!form) return;
+    const joining = form.querySelector('#DateOfJoining');
+    const relieving = form.querySelector('#DateOfRelieving');
+    const message = form.querySelector('#dateOfRelievingValidation');
+    const validateDates = () => {
+        const invalid = joining.value && relieving.value && relieving.value < joining.value;
+        const error = 'Date of relieving must be on or after the date of joining.';
+        relieving.setCustomValidity(invalid ? error : '');
+        message.textContent = invalid ? error : '';
+        message.classList.toggle('field-validation-error', Boolean(invalid));
+        message.classList.toggle('field-validation-valid', !invalid);
+        return !invalid;
+    };
+    joining.addEventListener('change', validateDates);
+    relieving.addEventListener('change', validateDates);
+    form.addEventListener('submit', event => {
+        if (!validateDates()) event.preventDefault();
+    });
+})();
+</script>
+<script id="otherDetailsValidationScript">
+(() => {
+    const form = document.querySelector('#other form');
+    if (!form) return;
+    const from = form.querySelector('#ValidFrom');
+    const to = form.querySelector('#ValidTo');
+    const message = form.querySelector('#validToValidation');
+    const validateDates = () => {
+        const invalid = from.value && to.value && to.value < from.value;
+        to.setCustomValidity(invalid ? 'Valid To must be on or after Valid From.' : '');
+        message.textContent = invalid ? 'Valid To must be on or after Valid From.' : '';
+        message.classList.toggle('field-validation-error', Boolean(invalid));
+        message.classList.toggle('field-validation-valid', !invalid);
+    };
+    from.addEventListener('change', validateDates);
+    to.addEventListener('change', validateDates);
+    form.addEventListener('submit', validateDates);
+})();
+</script> }
 
-            <span class="text-danger">
-                @Html.ValidationMessage("profilePhoto")
-            </span>
-        </div>
 
-        <!-- Phone -->
-        <div class="col-md-6">
-            <label asp-for="Phone" class="form-label"></label>
 
-            <input asp-for="Phone"
-                   type="tel"
-                   inputmode="numeric"
-                   autocomplete="tel"
-                   maxlength="10"
-                   pattern="[0-9]{10}"
-                   data-phone-number
-                   placeholder="10-digit number"
-                   aria-describedby="Phone-hint"
-                   class="form-control" />
 
-            <div id="Phone-hint" class="form-text">
-                Optional. If entered, use exactly 10 digits.
-            </div>
-
-            <span asp-validation-for="Phone" class="text-danger"></span>
-        </div>
-
-        <!-- Location -->
-        <div class="col-md-6">
-            <label asp-for="Location" class="form-label"></label>
-            <span class="text-danger">*</span>
-
-            <input asp-for="Location" class="form-control" />
-
-            <span asp-validation-for="Location" class="text-danger"></span>
-        </div>
-
-        <!-- Buttons -->
-        <div class="col-12 mt-4">
-            <button type="submit" class="btn btn-primary">
-                Save changes
-            </button>
-
-            <a asp-action="Profile" class="btn btn-secondary">
-                Cancel
-            </a>
-        </div>
-
-    </div>
-</form>
-
-@section Scripts {
-
-    <partial name="_ValidationScriptsPartial" />
-
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-
-            $('#selectedSkillNames').select2({
-                placeholder: "Search and select skills",
-                allowClear: true,
-                width: '100%',
-                closeOnSelect: false
-            });
-
-        });
-    </script>
-}

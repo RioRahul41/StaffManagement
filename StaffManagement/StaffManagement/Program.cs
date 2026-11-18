@@ -38,6 +38,14 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IEmployeeProfileRepository, EmployeeProfileRepository>();
+builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
+builder.Services.AddScoped<IEmployeeQualificationRepository, EmployeeQualificationRepository>();
+builder.Services.AddScoped<IEmployeeQualificationService, EmployeeQualificationService>();
+builder.Services.AddScoped<IEmployeeExperienceRepository, EmployeeExperienceRepository>();
+builder.Services.AddScoped<IEmployeeExperienceService, EmployeeExperienceService>();
+builder.Services.AddScoped<IEmployeeBankDetailRepository, EmployeeBankDetailRepository>();
+builder.Services.AddScoped<IEmployeeBankDetailService, EmployeeBankDetailService>();
 builder.Services.AddScoped<ITimesheetRepository, TimesheetRepository>();
 builder.Services.AddScoped<ITimesheetService, TimesheetService>();
 builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository>();
@@ -107,5 +115,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+
+
+
 
 

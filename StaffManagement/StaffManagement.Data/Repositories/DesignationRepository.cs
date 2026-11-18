@@ -11,16 +11,18 @@ public sealed class DesignationRepository(ApplicationDbContext context) : IDesig
     {
         return await context.Designations
             .AsNoTracking()
-            .Where(designation => designation.IsActive || !designation.IsActive)
+            .Include(designation => designation.Department)
             .OrderBy(designation => !designation.IsActive)
+            .ThenBy(designation => designation.DesignationName)
             .ToListAsync();
     }
 
     public Task<Designation?> GetByIdAsync(int designationId)
     {
         return context.Designations
+            .Include(designation => designation.Department)
             .FirstOrDefaultAsync(designation =>
-                designation.DesignationId == designationId && designation.IsActive || !designation.IsActive);
+                designation.DesignationId == designationId);
     }
 
     public Task<bool> ExistsByNameAsync(string designationName, int? excludedId = null)

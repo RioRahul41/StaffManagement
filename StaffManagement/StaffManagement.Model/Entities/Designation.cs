@@ -11,6 +11,10 @@ public class Designation
     [StringLength(100, ErrorMessage = "Designation name cannot exceed 100 characters.")]
     public string DesignationName { get; set; } = string.Empty;
 
+    public int? DepartmentId { get; set; }
+
+    public Department? Department { get; set; }
+
     [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
     public string? Description { get; set; }
 

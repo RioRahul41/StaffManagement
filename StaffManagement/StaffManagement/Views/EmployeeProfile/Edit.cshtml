@@ -9,7 +9,7 @@
 <p class="text-muted">@Model.Employee?.FirstName @Model.Employee?.LastName</p>
 <form asp-action="Edit" asp-route-employeeId="@Model.EmployeeId" asp-route-section="@editSection" method="post" class="card profile-card">
     <input asp-for="EmployeeId" type="hidden" />
-    <input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" />
+    <input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" /><input type="hidden" name="returnToEditProfile" value="@(ViewBag.ReturnToEditProfile is true ? "true" : "false")" />
     <div class="card-body row g-3">
         <div asp-validation-summary="All" class="text-danger"></div>
         @if (isEmergency)
@@ -46,8 +46,9 @@
             <div class="col-md-6"><label asp-for="BloodGroup" class="form-label"></label><select asp-for="BloodGroup" class="form-select"><option value="">Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select><span asp-validation-for="BloodGroup" class="text-danger"></span></div>
             <div class="col-md-6"><label asp-for="PhoneNumber" class="form-label">Phone number</label><input asp-for="PhoneNumber" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" class="form-control" /><span asp-validation-for="PhoneNumber" class="text-danger"></span></div>
         }
-        <div class="col-12 mt-3"><button type="submit" class="btn btn-primary">Save changes</button> @if (ViewBag.ReturnToProfile is true) { <a asp-controller="Account" asp-action="Profile" class="btn btn-secondary">Cancel</a> } else { <a asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-secondary">Cancel</a> }</div>
+        <div class="col-12 mt-3"><button type="submit" class="btn btn-primary">Save changes</button> @if (ViewBag.ReturnToEditProfile is true) { <a asp-controller="Account" asp-action="EditProfile" asp-route-section="@(isAddress ? "address" : "profile")" class="btn btn-secondary">Cancel</a> } else if (ViewBag.ReturnToProfile is true) { <a asp-controller="Account" asp-action="Profile" class="btn btn-secondary">Cancel</a> } else { <a asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-secondary">Cancel</a> }</div>
     </div>
 </form>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
 

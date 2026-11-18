@@ -1,17 +1,21 @@
 @model StaffManagement.Model.Entities.EmployeeOtherDetail
-@{ ViewData["Title"] = "Add document detail"; var returnToProfile = ViewBag.ReturnToProfile is true; }
-<div class="mb-4"><h1 class="h2">Add Document</h1><p class="text-muted mb-0">Enter document details and upload a PDF or image.</p></div>
+@{ ViewData["Title"] = "Add document detail"; var returnToProfile = ViewBag.ReturnToProfile is true; var returnToEditProfile = ViewBag.ReturnToEditProfile is true; }
+<div class="mb-4"><h1 class="h2">Add Document</h1><div class="small text-muted"><span class="text-danger">*</span> Required field</div><p class="text-muted mb-0">Enter document details and upload a PDF or image.</p></div>
 <div class="card profile-card"><div class="card-body">
 <form asp-action="Create" method="post" enctype="multipart/form-data">
 <input asp-for="EmployeeId" type="hidden" />
-    <input type="hidden" name="returnToProfile" value="@returnToProfile.ToString().ToLowerInvariant()" />
+    <input type="hidden" name="returnToProfile" value="@returnToProfile.ToString().ToLowerInvariant()" /><input type="hidden" name="returnToEditProfile" value="@returnToEditProfile.ToString().ToLowerInvariant()" />
     <div class="row g-3">
-        <div class="col-md-6"><label asp-for="DocumentType" class="form-label">Document Type</label><input asp-for="DocumentType" class="form-control" /><span asp-validation-for="DocumentType" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="DocumentNumber" class="form-label">Document Number</label><input asp-for="DocumentNumber" class="form-control" /><span asp-validation-for="DocumentNumber" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="DocumentType" class="form-label">Document Type <span class="text-danger" aria-label="required">*</span></label><input asp-for="DocumentType" class="form-control" /><span asp-validation-for="DocumentType" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="DocumentNumber" class="form-label">Document Number <span class="text-danger" aria-label="required">*</span></label><input asp-for="DocumentNumber" class="form-control" /><span asp-validation-for="DocumentNumber" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="ValidFrom" class="form-label">Valid From</label><input asp-for="ValidFrom" type="date" class="form-control" /><span asp-validation-for="ValidFrom" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="ValidTo" class="form-label">Valid To</label><input asp-for="ValidTo" type="date" class="form-control" /><span asp-validation-for="ValidTo" class="text-danger"></span></div>
-        <div class="col-12"><label for="documentFile" class="form-label">Document file</label><input id="documentFile" name="documentFile" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>@Html.ValidationMessage("documentFile", new { @class = "text-danger" })</div>
+        <div class="col-12"><label for="documentFile" class="form-label">Document file <span class="text-danger" aria-label="required">*</span></label><input id="documentFile" name="documentFile" type="file" required class="form-control" accept=".pdf,.jpg,.jpeg,.png" /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>@Html.ValidationMessage("documentFile", new { @class = "text-danger" })</div>
     </div>
-    <div class="d-flex gap-2 mt-4"><button type="submit" class="btn btn-primary">Save Document</button>@if (returnToProfile) { <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a> } else { <a asp-controller="EmployeeProfile" asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary">Cancel</a> }</div>
+    <div class="d-flex gap-2 mt-4"><button type="submit" class="btn btn-primary">Save Document</button>@if (returnToEditProfile) { <a asp-controller="Account" asp-action="EditProfile" asp-route-section="other" class="btn btn-outline-secondary">Cancel</a> } else if (returnToProfile) { <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a> } else { <a asp-controller="EmployeeProfile" asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary">Cancel</a> }</div>
 </form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
 </div></div>
+
