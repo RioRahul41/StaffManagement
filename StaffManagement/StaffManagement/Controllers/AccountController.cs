@@ -19,6 +19,7 @@ public sealed class AccountController(
     IDesignationService designationService,
     IDepartmentService departmentService,
     IEmployeeService employeeService,
+    IEmployeeCelebrationService employeeCelebrationService,
     IWebHostEnvironment environment,
     ApplicationDbContext dbContext) : Controller
 {
@@ -54,9 +55,12 @@ public sealed class AccountController(
 
         if (result.Succeeded)
         {
-            var celebration = await employeeCelebrationService.GetAndRecordTodayGreetingAsync(
+            var getcel = employeeCelebrationService.GetAndRecordTodayGreetingAsync(
                 user.Id,
                 HttpContext.RequestAborted);
+            var celebration = await getcel;
+
+
             if (celebration is not null)
                 return View("~/Views/Celebration/Index.cshtml", celebration);
 

@@ -20,6 +20,7 @@ public sealed class EmployeeController(
     IDesignationService designationService,
     IDepartmentService departmentService,
     IProjectService projectService,
+    IEmployeeCelebrationService employeeCelebrationService,
     UserManager<ApplicationIdentity> userManager,
     IWebHostEnvironment environment,
     ApplicationDbContext dbContext) : Controller

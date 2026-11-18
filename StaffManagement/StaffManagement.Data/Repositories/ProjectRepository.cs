@@ -10,7 +10,6 @@ public class ProjectRepository(ApplicationDbContext context) : IProjectRepositor
     public async Task<IReadOnlyList<Project>> GetAllAsync()
     {
         return await context.Projects.AsNoTracking()
-            .Where(project => project.IsActive)
             .OrderBy(project => project.ProjectName)
             .ToListAsync();
     }
@@ -18,7 +17,7 @@ public class ProjectRepository(ApplicationDbContext context) : IProjectRepositor
     public Task<Project?> GetByIdAsync(int projectId)
     {
         return context.Projects.FirstOrDefaultAsync(project =>
-            project.ProjectId == projectId && project.IsActive);
+            project.ProjectId == projectId);
     }
 
     public async Task<IReadOnlyList<Project>> GetActiveByIdsAsync(IEnumerable<int> projectIds)
