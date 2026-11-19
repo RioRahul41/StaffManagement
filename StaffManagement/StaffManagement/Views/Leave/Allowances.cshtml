@@ -12,54 +12,77 @@
     <a asp-action="Index" class="btn btn-outline-secondary">Back to leave requests</a>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white">
-        <h2 class="h5 mb-0">Annual allowances</h2>
-        <small class="text-muted">Pending requests reserve days. Approved requests count as used. Allowances can be set from 0 to 365 days.</small>
+<section aria-labelledby="allowances-heading">
+    <div class="mb-3">
+        <h2 id="allowances-heading" class="h5 mb-1">Annual allowances</h2>
+        <p class="text-muted mb-0">
+            Set each allowance from 0 to 365 days. Pending requests reserve days; approved requests count as used.
+        </p>
     </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Employee</th>
-                    <th>Sick allowance</th>
-                    <th>Sick used / pending / available</th>
-                    <th>Casual allowance</th>
-                    <th>Casual used / pending / available</th>
-                    <th><span class="visually-hidden">Save changes</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var balance in Model)
-                {
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <caption class="visually-hidden">Employee sick and casual leave allowances and usage</caption>
+                <thead class="table-light">
                     <tr>
-                        <td><strong>@balance.EmployeeName</strong><div class="small text-muted">@balance.Email</div></td>
-                        <td>
-                            <label class="visually-hidden" for="sick-@balance.EmployeeId">Sick leave allowance</label>
-                            <input form="allowances-@balance.EmployeeId" id="sick-@balance.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balance.SickAllowance" class="form-control form-control-sm" />
-                        </td>
-                        <td>@balance.SickUsed used · @balance.SickPending pending · @balance.SickAvailable available</td>
-                        <td>
-                            <label class="visually-hidden" for="casual-@balance.EmployeeId">Casual leave allowance</label>
-                            <input form="allowances-@balance.EmployeeId" id="casual-@balance.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balance.CasualAllowance" class="form-control form-control-sm" />
-                        </td>
-                        <td>@balance.CasualUsed used · @balance.CasualPending pending · @balance.CasualAvailable available</td>
-                        <td>
-                            <form id="allowances-@balance.EmployeeId" asp-action="UpdateAllowances" method="post">
-                                <input type="hidden" name="employeeId" value="@balance.EmployeeId" />
-                                <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
-                            </form>
-                        </td>
+                        <th scope="col" class="px-3">Employee</th>
+                        <th scope="col">Sick allowance</th>
+                        <th scope="col">Sick leave balance</th>
+                        <th scope="col">Casual allowance</th>
+                        <th scope="col">Casual leave balance</th>
+                        <th scope="col" class="text-end px-3"><span class="visually-hidden">Actions</span></th>
                     </tr>
-                }
-                @if (Model.Count == 0)
-                {
-                    <tr><td colspan="6" class="text-center text-muted py-4">No employees found.</td></tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var balance in Model)
+                    {
+                        <tr>
+                            <th scope="row" class="px-3">
+                                <div class="fw-semibold">@balance.EmployeeName</div>
+                                <div class="small text-muted">@balance.Email</div>
+                            </th>
+                            <td>
+                                <label class="visually-hidden" for="sick-@balance.EmployeeId">Sick leave allowance in days</label>
+                                <div class="input-group input-group-sm" style="min-width: 115px; max-width: 150px;">
+                                    <input form="allowances-@balance.EmployeeId" id="sick-@balance.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balance.SickAllowance" class="form-control" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small text-nowrap"><span class="fw-semibold">@balance.SickUsed</span> used</div>
+                                <div class="small text-muted text-nowrap">@balance.SickPending pending · @balance.SickAvailable available</div>
+                            </td>
+                            <td>
+                                <label class="visually-hidden" for="casual-@balance.EmployeeId">Casual leave allowance in days</label>
+                                <div class="input-group input-group-sm" style="min-width: 115px; max-width: 150px;">
+                                    <input form="allowances-@balance.EmployeeId" id="casual-@balance.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balance.CasualAllowance" class="form-control" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small text-nowrap"><span class="fw-semibold">@balance.CasualUsed</span> used</div>
+                                <div class="small text-muted text-nowrap">@balance.CasualPending pending · @balance.CasualAvailable available</div>
+                            </td>
+                            <td class="text-end px-3">
+                                <form id="allowances-@balance.EmployeeId" asp-action="UpdateAllowances" method="post">
+                                    <input type="hidden" name="employeeId" value="@balance.EmployeeId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No employees found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
