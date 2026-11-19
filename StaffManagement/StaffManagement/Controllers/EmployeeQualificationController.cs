@@ -2,9 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
-using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Controllers;
 
@@ -42,12 +42,12 @@ public sealed class EmployeeQualificationController(
         ViewBag.ReturnToProfile = returnToProfile;
         ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Add qualification";
-        return View(new EmployeeQualification { EmployeeId = employeeId });
+        return View(new EmployeeQualificationDto { EmployeeId = employeeId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeQualification model, IFormFile? qualificationFile, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(EmployeeQualificationDto model, IFormFile? qualificationFile, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
     {
         if (!await CanAccessEmployeeAsync(model.EmployeeId, cancellationToken))
             return Forbid();
@@ -108,7 +108,7 @@ public sealed class EmployeeQualificationController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(EmployeeQualification model, IFormFile? qualificationFile, bool returnToProfile = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(EmployeeQualificationDto model, IFormFile? qualificationFile, bool returnToProfile = false, CancellationToken cancellationToken = default)
     {
         var existing = await qualificationService.GetByIdAsync(model.EmployeeQualificationId, cancellationToken);
         if (existing is null || existing.EmployeeId != model.EmployeeId || !await CanAccessEmployeeAsync(model.EmployeeId, cancellationToken))
@@ -189,7 +189,7 @@ public sealed class EmployeeQualificationController(
                await profileService.CanEditAsync(employeeId, identityUserId, cancellationToken);
     }
 
-    private void PrepareForm(Employee employee, bool returnToProfile)
+    private void PrepareForm(EmployeeDto employee, bool returnToProfile)
     {
         ViewBag.EmployeeName = employee.FirstName + " " + employee.LastName;
         ViewBag.ReturnToProfile = returnToProfile;
@@ -199,10 +199,9 @@ public sealed class EmployeeQualificationController(
     {
         foreach (var key in new[]
         {
-            nameof(EmployeeQualification.Employee),
-            nameof(EmployeeQualification.OriginalFileName),
-            nameof(EmployeeQualification.StoredFileName),
-            nameof(EmployeeQualification.ContentType)
+            nameof(EmployeeQualificationDto.OriginalFileName),
+            nameof(EmployeeQualificationDto.StoredFileName),
+            nameof(EmployeeQualificationDto.ContentType)
         })
             ModelState.Remove(key);
     }

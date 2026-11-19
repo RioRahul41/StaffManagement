@@ -26,7 +26,7 @@
         <span class="text-danger" aria-hidden="true">*</span>
         <select asp-for="DepartmentId" class="form-select">
             <option value="">Select department</option>
-            @foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Model.Entities.Department> ?? [])
+            @foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto> ?? [])
             {
                 <option value="@department.DepartmentId">@department.DepartmentName</option>
             }
@@ -37,7 +37,7 @@
         <label asp-for="DesignationId" class="form-label">Designation</label>
         <select asp-for="DesignationId" class="form-select" data-department-designation>
             <option value="">Select designation</option>
-            @foreach (var designation in ViewBag.Designations as IReadOnlyList<StaffManagement.Model.Entities.Designation> ?? [])
+            @foreach (var designation in ViewBag.Designations as IReadOnlyList<StaffManagement.Core.DTOs.DesignationModel.DesignationDto> ?? [])
             {
                 <option value="@designation.DesignationId" data-department-id="@designation.DepartmentId">@designation.DesignationName</option>
             }

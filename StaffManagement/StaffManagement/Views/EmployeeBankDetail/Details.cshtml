@@ -1,4 +1,4 @@
-@model StaffManagement.Model.Entities.EmployeeBankDetail
+@model StaffManagement.Core.DTOs.ProfileModel.BankDetailsDto
 @{ ViewData["Title"] = "Bank details"; }
 <div class="card profile-card"><div class="card-body"><h1 class="h3 mb-4">Bank Details</h1><dl class="row mb-0"><dt class="col-sm-4">Account holder name</dt><dd class="col-sm-8">@Model.AccountHolderName</dd><dt class="col-sm-4">Account name</dt><dd class="col-sm-8">@Model.AccountName</dd><dt class="col-sm-4">IFSC code</dt><dd class="col-sm-8">@Model.IFSCCode</dd><dt class="col-sm-4">Branch</dt><dd class="col-sm-8">@Model.Branch</dd><dt class="col-sm-4">Account number</dt><dd class="col-sm-8">@Model.AccountNumber</dd></dl><div class="mt-4">@if (ViewBag.ReturnToEmployeeDetails is true) { <a asp-controller="Employee" asp-action="Details" asp-route-id="@Model.EmployeeId" class="btn btn-secondary">Back</a> } else { <a asp-controller="Account" asp-action="@(ViewBag.ReturnToEditProfile is true ? "EditProfile" : "Profile")" class="btn btn-secondary">Back</a> }</div></div></div>
 

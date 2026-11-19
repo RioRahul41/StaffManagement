@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StaffManagement.Core.DTOs.ProfileModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
 using StaffManagement.Model.Entities;
@@ -53,12 +54,21 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
         ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Create profile information";
         var employee = employeeId.HasValue ? await profileService.GetEmployeeByIdAsync(employeeId.Value, cancellationToken) : null;
-        return View(new EmployeeProfile { EmployeeId = employeeId ?? 0, DOB = employee?.DOB });
+        return View(new EmployeeProfileDto
+        {
+            EmployeeId = employeeId ?? 0,
+            ProfileInformation = new ProfileInformationDto
+            {
+                EmployeeId = employeeId ?? 0,
+                DOB = employee?.DOB
+            },
+            AddressInformation = new AddressInformationDto { EmployeeId = employeeId ?? 0 }
+        });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
+    public async Task<IActionResult> Create(EmployeeProfileDto model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
     {
         var canManageAll = CanManageAllProfiles();
         if (!canManageAll)
@@ -97,7 +107,7 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
         if (editSection is null)
             return BadRequest();
 
-        var profile = await profileService.GetByEmployeeIdAsync(employeeId, cancellationToken: cancellationToken);
+        var profile = await profileService.GetFormByEmployeeIdAsync(employeeId, cancellationToken);
         if (profile is null)
             return NotFound();
 
@@ -110,7 +120,7 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int employeeId, string section, EmployeeProfile model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
+    public async Task<IActionResult> Edit(int employeeId, string section, EmployeeProfileDto model, CancellationToken cancellationToken, bool returnToProfile = false, bool returnToEditProfile = false)
     {
         if (!await CanEditProfileAsync(employeeId, cancellationToken))
             return Forbid();
@@ -124,20 +134,21 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
         RemoveUneditedSectionValidationErrors(editSection);
         if (editSection == "profile")
         {
-            if (!model.Gender.HasValue)
-                ModelState.AddModelError(nameof(model.Gender), "Select a gender.");
-            if (string.IsNullOrWhiteSpace(model.MaritalStatus))
-                ModelState.AddModelError(nameof(model.MaritalStatus), "Select a marital status.");
-            if (!model.DOB.HasValue)
-                ModelState.AddModelError(nameof(model.DOB), "Date of birth is required.");
-            if (string.IsNullOrWhiteSpace(model.BloodGroup))
-                ModelState.AddModelError(nameof(model.BloodGroup), "Select a blood group.");
-            if (string.IsNullOrWhiteSpace(model.PhoneNumber))
-                ModelState.AddModelError(nameof(model.PhoneNumber), "Phone number is required.");
+            if (!model.ProfileInformation.Gender.HasValue)
+                ModelState.AddModelError("ProfileInformation.Gender", "Select a gender.");
+            if (string.IsNullOrWhiteSpace(model.ProfileInformation.MaritalStatus))
+                ModelState.AddModelError("ProfileInformation.MaritalStatus", "Select a marital status.");
+            if (!model.ProfileInformation.DOB.HasValue)
+                ModelState.AddModelError("ProfileInformation.DOB", "Date of birth is required.");
+            if (string.IsNullOrWhiteSpace(model.ProfileInformation.BloodGroup))
+                ModelState.AddModelError("ProfileInformation.BloodGroup", "Select a blood group.");
+            if (string.IsNullOrWhiteSpace(model.ProfileInformation.PhoneNumber))
+                ModelState.AddModelError("ProfileInformation.PhoneNumber", "Phone number is required.");
         }
         if (!ModelState.IsValid)
         {
-            model.Employee = await profileService.GetEmployeeByIdAsync(employeeId, cancellationToken) ?? null!;
+            var employee = await profileService.GetEmployeeByIdAsync(employeeId, cancellationToken);
+            model.EmployeeName = employee is null ? null : $"{employee.FirstName} {employee.LastName}";
             ViewBag.EditSection = editSection;
             ViewBag.ReturnToProfile = returnToProfile;
             ViewBag.ReturnToEditProfile = returnToEditProfile;
@@ -203,24 +214,24 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
     {
         var profileFields = new[]
         {
-            nameof(EmployeeProfile.Gender), nameof(EmployeeProfile.MaritalStatus),
-            nameof(EmployeeProfile.DOB), nameof(EmployeeProfile.BloodGroup),
-            nameof(EmployeeProfile.PhoneNumber)
+            "ProfileInformation.Gender", "ProfileInformation.MaritalStatus",
+            "ProfileInformation.DOB", "ProfileInformation.BloodGroup",
+            "ProfileInformation.PhoneNumber"
         };
         var emergencyFields = new[]
         {
-            nameof(EmployeeProfile.EmergencyContactName),
-            nameof(EmployeeProfile.EmergencyContactRelationship),
-            nameof(EmployeeProfile.EmergencyContactPhone)
+            "ProfileInformation.EmergencyContactName",
+            "ProfileInformation.EmergencyContactRelationship",
+            "ProfileInformation.EmergencyContactPhone"
         };
         var addressFields = new[]
         {
-            nameof(EmployeeProfile.PermanentAddressLine1), nameof(EmployeeProfile.PermanentAddressLine2),
-            nameof(EmployeeProfile.PermanentCountry), nameof(EmployeeProfile.PermanentState),
-            nameof(EmployeeProfile.PermanentCity), nameof(EmployeeProfile.PermanentPincode),
-            nameof(EmployeeProfile.CurrentAddressLine1), nameof(EmployeeProfile.CurrentAddressLine2),
-            nameof(EmployeeProfile.CurrentCountry), nameof(EmployeeProfile.CurrentState),
-            nameof(EmployeeProfile.CurrentCity), nameof(EmployeeProfile.CurrentPincode)
+            "AddressInformation.PermanentAddressLine1", "AddressInformation.PermanentAddressLine2",
+            "AddressInformation.PermanentCountry", "AddressInformation.PermanentState",
+            "AddressInformation.PermanentCity", "AddressInformation.PermanentPincode",
+            "AddressInformation.CurrentAddressLine1", "AddressInformation.CurrentAddressLine2",
+            "AddressInformation.CurrentCountry", "AddressInformation.CurrentState",
+            "AddressInformation.CurrentCity", "AddressInformation.CurrentPincode"
         };
 
         var fieldsToValidate = editSection switch
@@ -277,6 +288,7 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
             .ToList();
         ViewBag.SelectedEmployeeId = selectedId;
     }
+
 
 
 

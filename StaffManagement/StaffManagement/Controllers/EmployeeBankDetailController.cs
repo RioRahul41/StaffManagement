@@ -1,9 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.DTOs.ProfileModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
-using StaffManagement.Model.Entities;
 namespace StaffManagement.Controllers;
 [Authorize]
 public sealed class EmployeeBankDetailController(IEmployeeBankDetailService bankService, IEmployeeProfileService profileService) : Controller
@@ -17,22 +18,27 @@ public sealed class EmployeeBankDetailController(IEmployeeBankDetailService bank
         var existing = await bankService.GetByEmployeeIdAsync(employeeId, cancellationToken);
         if (existing is not null) return RedirectToAction(nameof(Edit), new { employeeId, returnToEditProfile, returnToEmployeeDetails });
         Prepare(employee, returnToEditProfile, returnToEmployeeDetails);
-        return View(new EmployeeBankDetail { EmployeeId = employeeId });
+        return View(new BankDetailsDto { EmployeeId = employeeId });
     }
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeBankDetail model, bool returnToEditProfile = false, bool returnToEmployeeDetails = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(BankDetailsDto model, bool returnToEditProfile = false, bool returnToEmployeeDetails = false, CancellationToken cancellationToken = default)
     {
         if (!await CanEditAsync(model.EmployeeId, cancellationToken)) return Forbid();
         var employee = await bankService.GetEmployeeByIdAsync(model.EmployeeId, cancellationToken);
         if (employee is null) return NotFound();
-        model.IFSCCode = model.IFSCCode?.Trim().ToUpperInvariant() ?? string.Empty;
-        ModelState.Remove(nameof(EmployeeBankDetail.Employee));
+        model.IFSCCode = model.IFSCCode.Trim().ToUpperInvariant();
         if (!ModelState.IsValid)
         {
             Prepare(employee, returnToEditProfile, returnToEmployeeDetails);
             return View(model);
         }
-        if (!await bankService.SaveAsync(model, cancellationToken)) return NotFound();
+        var result = await bankService.CreateAsync(model, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Bank details could not be saved.");
+            Prepare(employee, returnToEditProfile, returnToEmployeeDetails);
+            return View(model);
+        }
         TempData["Success"] = "Bank details were saved.";
         return ReturnToEmployee(model.EmployeeId, returnToEditProfile, returnToEmployeeDetails);
     }
@@ -48,19 +54,24 @@ public sealed class EmployeeBankDetailController(IEmployeeBankDetailService bank
         return View(existing);
     }
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(EmployeeBankDetail model, bool returnToEditProfile = false, bool returnToEmployeeDetails = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(BankDetailsDto model, bool returnToEditProfile = false, bool returnToEmployeeDetails = false, CancellationToken cancellationToken = default)
     {
         if (!await CanEditAsync(model.EmployeeId, cancellationToken)) return Forbid();
         var employee = await bankService.GetEmployeeByIdAsync(model.EmployeeId, cancellationToken);
         if (employee is null) return NotFound();
-        model.IFSCCode = model.IFSCCode?.Trim().ToUpperInvariant() ?? string.Empty;
-        ModelState.Remove(nameof(EmployeeBankDetail.Employee));
+        model.IFSCCode = model.IFSCCode.Trim().ToUpperInvariant();
         if (!ModelState.IsValid)
         {
             Prepare(employee, returnToEditProfile, returnToEmployeeDetails);
             return View(model);
         }
-        if (!await bankService.SaveAsync(model, cancellationToken)) return NotFound();
+        var result = await bankService.UpdateAsync(model, cancellationToken);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, result.Error ?? "Bank details could not be updated.");
+            Prepare(employee, returnToEditProfile, returnToEmployeeDetails);
+            return View(model);
+        }
         TempData["Success"] = "Bank details were updated.";
         return ReturnToEmployee(model.EmployeeId, returnToEditProfile, returnToEmployeeDetails);
     }
@@ -74,7 +85,7 @@ public sealed class EmployeeBankDetailController(IEmployeeBankDetailService bank
         ViewBag.ReturnToEmployeeDetails = returnToEmployeeDetails;
         return View(detail);
     }
-    private void Prepare(Employee employee, bool returnToEditProfile, bool returnToEmployeeDetails)
+    private void Prepare(EmployeeDto employee, bool returnToEditProfile, bool returnToEmployeeDetails)
     {
         ViewBag.EmployeeName = $"{employee.FirstName} {employee.LastName}";
         ViewBag.ReturnToEditProfile = returnToEditProfile;

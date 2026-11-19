@@ -1,6 +1,5 @@
-@model StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto
-@using StaffManagement.Model.Entities
-@{ ViewData["Title"] = "My profile"; var profile = ViewBag.ProfileInformation as EmployeeProfile; var otherDetails = ViewBag.OtherDetails as IReadOnlyList<EmployeeOtherDetail> ?? Array.Empty<EmployeeOtherDetail>(); var qualifications = ViewBag.EmployeeQualifications as IReadOnlyList<EmployeeQualification> ?? Array.Empty<EmployeeQualification>(); var experiences = ViewBag.EmployeeExperiences as IReadOnlyList<EmployeeExperience> ?? Array.Empty<EmployeeExperience>(); var bankDetails = ViewBag.BankDetails as EmployeeBankDetail; }
+@model StaffManagement.Core.DTOs.ProfileModel.EmployeeProfilePageDto
+@{ ViewData["Title"] = "My profile"; var personalInformation = Model.PersonalInformation; var profile = Model.ProfileInformation; var address = Model.AddressInformation; var otherDetails = Model.OtherDetails; var qualifications = Model.Qualifications; var experiences = Model.Experiences; var bankDetails = Model.BankDetails; }
 <div class="mb-4"><h1 class="mb-1">My profile</h1><p class="text-muted mb-0">View and update your employee information.</p></div>
 @if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
 <div class="row g-4 profile-view-page">
@@ -16,21 +15,21 @@
     <main class="col-lg-9 col-xl-10"><div class="tab-content">
         <section class="tab-pane fade show active" id="personal-information" role="tabpanel"><div class="card profile-card"><div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-4"><div class="profile-heading">
-                @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath)) { <img src="@Url.Action("ProfilePhoto")" alt="Profile photo" class="profile-avatar profile-avatar-lg" style="object-fit: cover;" /> }
-                else { <div class="profile-avatar profile-avatar-lg">@Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()</div> }
-                <div><h2 class="h4 mb-1">Personal Information</h2><div class="text-muted">@Model.FirstName @Model.LastName</div></div>
+                @if (!string.IsNullOrWhiteSpace(personalInformation.ProfilePhotoPath)) { <img src="@Url.Action("ProfilePhoto")" alt="Profile photo" class="profile-avatar profile-avatar-lg" style="object-fit: cover;" /> }
+                else { <div class="profile-avatar profile-avatar-lg">@personalInformation.FirstName.FirstOrDefault()@personalInformation.LastName.FirstOrDefault()</div> }
+                <div><h2 class="h4 mb-1">Personal Information</h2><div class="text-muted">@personalInformation.FirstName @personalInformation.LastName</div></div>
             </div></div>
                         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 profile-info-grid">
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">First name</div><div class="profile-info-value">@Model.FirstName</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Last name</div><div class="profile-info-value">@Model.LastName</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Office email</div><div class="profile-info-value">@Model.Email</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Personal email</div><div class="profile-info-value">@(Model.PersonalEmail ?? "Not provided")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Designation</div><div class="profile-info-value">@(Model.Designation ?? "Not assigned")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Department</div><div class="profile-info-value">@(Model.Department ?? "Not assigned")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Skills</div><div class="profile-info-value">@(Model.Skills ?? "Not provided")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Reporting person</div><div class="profile-info-value">@(Model.ReportingPersonName ?? "Not assigned")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Phone</div><div class="profile-info-value">@(Model.Phone ?? "Not provided")</div></div></div>
-                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Location</div><div class="profile-info-value">@Model.Location</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">First name</div><div class="profile-info-value">@personalInformation.FirstName</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Last name</div><div class="profile-info-value">@personalInformation.LastName</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Office email</div><div class="profile-info-value">@personalInformation.Email</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Personal email</div><div class="profile-info-value">@(personalInformation.PersonalEmail ?? "Not provided")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Designation</div><div class="profile-info-value">@(personalInformation.Designation ?? "Not assigned")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Department</div><div class="profile-info-value">@(personalInformation.Department ?? "Not assigned")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Skills</div><div class="profile-info-value">@(personalInformation.Skills ?? "Not provided")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Reporting person</div><div class="profile-info-value">@(personalInformation.ReportingPersonName ?? "Not assigned")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Phone</div><div class="profile-info-value">@(personalInformation.Phone ?? "Not provided")</div></div></div>
+                <div class="col"><div class="profile-info-item"><div class="profile-info-label">Location</div><div class="profile-info-value">@personalInformation.Location</div></div></div>
             </div>
         </div></div></section>
         <section class="tab-pane fade" id="profile-information" role="tabpanel">
@@ -39,20 +38,20 @@
         </section>
         <section class="tab-pane fade" id="address-information" role="tabpanel"><div class="card profile-card"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-4"><h2 class="h4 mb-0">Address Information</h2>@if (profile is null) { <a asp-controller="EmployeeProfile" asp-action="Create" asp-route-employeeId="@Model.Id" asp-route-returnToProfile="true" class="btn btn-primary">Add</a> }</div>@if (profile is null) { <p class="text-muted mb-0">No address information has been added yet.</p> } else { <div class="row g-4 profile-view-page">
     <div class="col-md-6"><h3 class="h5 mb-3">Permanent Address</h3><div class="row row-cols-1 row-cols-sm-2 g-3">
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 1</div><div class="profile-info-value">@(profile.PermanentAddressLine1 ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 2</div><div class="profile-info-value">@(profile.PermanentAddressLine2 ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(profile.PermanentCountry ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(profile.PermanentState ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(profile.PermanentCity ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin Code</div><div class="profile-info-value">@(profile.PermanentPincode ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 1</div><div class="profile-info-value">@(address.PermanentAddressLine1 ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 2</div><div class="profile-info-value">@(address.PermanentAddressLine2 ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(address.PermanentCountry ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(address.PermanentState ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(address.PermanentCity ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin Code</div><div class="profile-info-value">@(address.PermanentPincode ?? "Not provided")</div></div></div>
     </div></div>
     <div class="col-md-6"><h3 class="h5 mb-3">Current Address</h3><div class="row row-cols-1 row-cols-sm-2 g-3">
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 1</div><div class="profile-info-value">@(profile.CurrentAddressLine1 ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 2</div><div class="profile-info-value">@(profile.CurrentAddressLine2 ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(profile.CurrentCountry ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(profile.CurrentState ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(profile.CurrentCity ?? "Not provided")</div></div></div>
-        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin Code</div><div class="profile-info-value">@(profile.CurrentPincode ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 1</div><div class="profile-info-value">@(address.CurrentAddressLine1 ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Address Line 2</div><div class="profile-info-value">@(address.CurrentAddressLine2 ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Country</div><div class="profile-info-value">@(address.CurrentCountry ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">State</div><div class="profile-info-value">@(address.CurrentState ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">City</div><div class="profile-info-value">@(address.CurrentCity ?? "Not provided")</div></div></div>
+        <div class="col"><div class="profile-info-item"><div class="profile-info-label">Pin Code</div><div class="profile-info-value">@(address.CurrentPincode ?? "Not provided")</div></div></div>
     </div></div>
 </div> }</div></div></section>
         <section class="tab-pane fade" id="other-details" role="tabpanel">

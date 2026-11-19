@@ -1,13 +1,14 @@
 using StaffManagement.Core.DTOs.EmployeeModel;
-using StaffManagement.Model.Entities;
+using StaffManagement.Core.DTOs.DepartmentModel;
+using StaffManagement.Core.DTOs.DesignationModel;
 
 namespace StaffManagement.Models;
 
 public sealed class EmployeeListViewModel
 {
     public IReadOnlyList<EmployeeDto> Employees { get; init; } = [];
-    public IReadOnlyList<Department> Departments { get; init; } = [];
-    public IReadOnlyList<Designation> Designations { get; init; } = [];
+    public IReadOnlyList<DepartmentDto> Departments { get; init; } = [];
+    public IReadOnlyList<DesignationDto> Designations { get; init; } = [];
     public string? SearchTerm { get; init; }
     public int? DepartmentId { get; init; }
     public string? Designation { get; init; }

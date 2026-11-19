@@ -1,4 +1,4 @@
-@model IReadOnlyList<StaffManagement.Model.Entities.Designation>
+@model IReadOnlyList<StaffManagement.Core.DTOs.DesignationModel.DesignationDto>
 
 @{
     ViewData["Title"] = "Designations";
@@ -72,7 +72,7 @@
                             <tr>
                                 <td class="text-center"></td>
                                 <td class="fw-semibold">@designation.Item.DesignationName</td>
-                                <td>@(designation.Item.Department?.DepartmentName ?? "Not assigned")</td>
+                                <td>@(designation.Item.DepartmentName ?? "Not assigned")</td>
                                 <td>@(string.IsNullOrWhiteSpace(designation.Item.Description) ? "—" : designation.Item.Description)</td>
                                 <td>@designation.Item.CreatedDate.ToString("MMM dd, yyyy")</td>
                                 <td>

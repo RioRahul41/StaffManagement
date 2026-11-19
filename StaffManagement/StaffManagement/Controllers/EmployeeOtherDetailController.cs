@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
 using StaffManagement.Data.DbContext;
 using StaffManagement.Model.Entities;
@@ -10,7 +12,7 @@ using StaffManagement.Model.Entities;
 namespace StaffManagement.Controllers;
 
 [Authorize]
-public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext, IWebHostEnvironment environment) : Controller
+public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext, IWebHostEnvironment environment, IEmployeeOtherDetailService detailService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Create(int employeeId, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
@@ -20,12 +22,12 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         ViewBag.ReturnToProfile = returnToProfile;
         ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Add document detail";
-        return View(new EmployeeOtherDetail { EmployeeId = employeeId });
+        return View(new EmployeeOtherDetailDto { EmployeeId = employeeId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(EmployeeOtherDetail model, IFormFile? documentFile, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(EmployeeOtherDetailDto model, IFormFile? documentFile, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
     {
         if (!await CanManageEmployeeAsync(model.EmployeeId, cancellationToken))
             return Forbid();
@@ -62,10 +64,19 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         model.OriginalFileName = Path.GetFileName(file.FileName);
         model.StoredFileName = storedFileName;
         model.ContentType = fileInfo.ContentType!;
-        dbContext.EmployeeOtherDetails.Add(model);
         try
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
+            var result = await detailService.CreateAsync(model, cancellationToken);
+            if (!result.Succeeded)
+            {
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+                ModelState.AddModelError(string.Empty, result.Error ?? "Document details could not be saved.");
+                ViewBag.ReturnToProfile = returnToProfile;
+                ViewBag.ReturnToEditProfile = returnToEditProfile;
+                ViewData["Title"] = "Add document detail";
+                return View(model);
+            }
         }
         catch
         {
@@ -131,11 +142,9 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
 
     private void RemoveEmployeeValidationErrors()
     {
-        ModelState.Remove(nameof(EmployeeOtherDetail.OriginalFileName));
-        ModelState.Remove(nameof(EmployeeOtherDetail.StoredFileName));
-        ModelState.Remove(nameof(EmployeeOtherDetail.ContentType));
-        foreach (var key in ModelState.Keys.Where(key => key == nameof(EmployeeOtherDetail.Employee) || key.StartsWith(nameof(EmployeeOtherDetail.Employee) + ".", StringComparison.Ordinal)).ToList())
-            ModelState.Remove(key);
+        ModelState.Remove(nameof(EmployeeOtherDetailDto.OriginalFileName));
+        ModelState.Remove(nameof(EmployeeOtherDetailDto.StoredFileName));
+        ModelState.Remove(nameof(EmployeeOtherDetailDto.ContentType));
     }
 }
 

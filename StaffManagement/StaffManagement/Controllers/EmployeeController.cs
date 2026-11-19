@@ -420,7 +420,7 @@ public sealed class EmployeeController(
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
     {
         ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
-            ?? Array.Empty<Department>();
+            ?? Array.Empty<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto>();
         ViewBag.SelectedDepartmentId = selectedDepartmentId;
     }
 

@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StaffManagement.Core.DTOs.DesignationModel;
+using StaffManagement.Core.DTOs.DepartmentModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
-using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Web.Controllers;
 
@@ -24,12 +25,12 @@ public class DesignationController(IDesignationService designationService, IDepa
     public async Task<IActionResult> Create()
     {
         await LoadDepartmentsAsync();
-        return View(new Designation());
+        return View(new DesignationDto());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Designation designation)
+    public async Task<IActionResult> Create(DesignationDto designation)
     {
         if (!designation.DepartmentId.HasValue)
             ModelState.AddModelError(nameof(designation.DepartmentId), "Select a department.");
@@ -43,7 +44,7 @@ public class DesignationController(IDesignationService designationService, IDepa
         var result = await designationService.CreateAsync(designation);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(nameof(Designation.DesignationName), result.Error!);
+            ModelState.AddModelError(nameof(DesignationDto.DesignationName), result.Error!);
             await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }
@@ -63,7 +64,7 @@ public class DesignationController(IDesignationService designationService, IDepa
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Designation designation)
+    public async Task<IActionResult> Edit(int id, DesignationDto designation)
     {
         if (id != designation.DesignationId)
         {
@@ -93,7 +94,7 @@ public class DesignationController(IDesignationService designationService, IDepa
         var result = await designationService.UpdateAsync(existingDesignation);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(nameof(Designation.DesignationName), result.Error!);
+            ModelState.AddModelError(nameof(DesignationDto.DesignationName), result.Error!);
             await LoadDepartmentsAsync(designation.DepartmentId);
             return View(designation);
         }

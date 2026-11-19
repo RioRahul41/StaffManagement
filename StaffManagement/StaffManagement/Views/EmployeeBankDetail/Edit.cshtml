@@ -1,4 +1,4 @@
-@model StaffManagement.Model.Entities.EmployeeBankDetail
+@model StaffManagement.Core.DTOs.ProfileModel.BankDetailsDto
 @{ ViewData["Title"] = "Edit bank details"; }
 <div class="mb-4"><h1 class="h2">Edit Bank Details</h1><div class="small text-muted"><span class="text-danger">*</span> Required field</div><p class="text-muted mb-0">@ViewBag.EmployeeName</p></div>
 <div class="card profile-card"><div class="card-body"><form asp-action="Edit" method="post"><input asp-for="EmployeeBankDetailId" type="hidden" /><input asp-for="EmployeeId" type="hidden" /><input type="hidden" name="returnToEditProfile" value="@(ViewBag.ReturnToEditProfile is true ? "true" : "false")" /><input type="hidden" name="returnToEmployeeDetails" value="@(ViewBag.ReturnToEmployeeDetails is true ? "true" : "false")" />

@@ -1,5 +1,5 @@
-@model IReadOnlyList<StaffManagement.Model.Entities.EmployeeQualification>
-@{ var employee = ViewBag.Employee as StaffManagement.Model.Entities.Employee; ViewData["Title"] = "Qualification Information"; }
+@model IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeQualificationDto>
+@{ var employee = ViewBag.Employee as StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto; ViewData["Title"] = "Qualification Information"; }
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div><h1 class="mb-1">Qualification Information</h1><p class="text-muted mb-0">@(employee?.FirstName) @(employee?.LastName)</p></div>
     @if (ViewBag.CanAddQualification is true) { <a asp-action="Create" asp-route-employeeId="@employee?.Id" class="btn btn-primary">Add Qualification</a> }

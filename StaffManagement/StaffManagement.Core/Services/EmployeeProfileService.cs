@@ -1,5 +1,6 @@
 using StaffManagement.Core.IRepositories;
 using StaffManagement.Core.Iservices;
+using StaffManagement.Core.DTOs.ProfileModel;
 using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Core.Services;
@@ -18,6 +19,47 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         var address = await repository.GetAddressInformationByEmployeeIdAsync(employeeId, asNoTracking, cancellationToken);
         CopyAddressToProfile(address, profile);
         return profile;
+    }
+
+    public async Task<EmployeeProfileDto?> GetFormByEmployeeIdAsync(int employeeId, CancellationToken cancellationToken = default)
+    {
+        var profile = await GetByEmployeeIdAsync(employeeId, asNoTracking: true, cancellationToken);
+        if (profile is null)
+            return null;
+
+        return new EmployeeProfileDto
+        {
+            EmployeeId = profile.EmployeeId,
+            EmployeeName = profile.Employee is null ? null : $"{profile.Employee.FirstName} {profile.Employee.LastName}",
+            ProfileInformation = new ProfileInformationDto
+            {
+                EmployeeId = profile.EmployeeId,
+                Gender = profile.Gender,
+                MaritalStatus = profile.MaritalStatus,
+                DOB = profile.DOB,
+                BloodGroup = profile.BloodGroup,
+                PhoneNumber = profile.PhoneNumber,
+                EmergencyContactName = profile.EmergencyContactName,
+                EmergencyContactRelationship = profile.EmergencyContactRelationship,
+                EmergencyContactPhone = profile.EmergencyContactPhone
+            },
+            AddressInformation = new AddressInformationDto
+            {
+                EmployeeId = profile.EmployeeId,
+                PermanentAddressLine1 = profile.PermanentAddressLine1,
+                PermanentAddressLine2 = profile.PermanentAddressLine2,
+                PermanentCountry = profile.PermanentCountry,
+                PermanentState = profile.PermanentState,
+                PermanentCity = profile.PermanentCity,
+                PermanentPincode = profile.PermanentPincode,
+                CurrentAddressLine1 = profile.CurrentAddressLine1,
+                CurrentAddressLine2 = profile.CurrentAddressLine2,
+                CurrentCountry = profile.CurrentCountry,
+                CurrentState = profile.CurrentState,
+                CurrentCity = profile.CurrentCity,
+                CurrentPincode = profile.CurrentPincode
+            }
+        };
     }
 
     public Task<IReadOnlyList<EmployeeOtherDetail>> GetOtherDetailsAsync(int employeeId, CancellationToken cancellationToken = default) =>
@@ -41,14 +83,15 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
     public Task<bool> CanEditAsync(int employeeId, string identityUserId, CancellationToken cancellationToken = default) =>
         repository.EmployeeBelongsToIdentityUserAsync(employeeId, identityUserId, cancellationToken);
 
-    public async Task<(bool Succeeded, string? Error)> CreateAsync(EmployeeProfile profile, CancellationToken cancellationToken = default)
+    public async Task<(bool Succeeded, string? Error)> CreateAsync(EmployeeProfileDto model, CancellationToken cancellationToken = default)
     {
-        var employee = await repository.GetEmployeeByIdAsync(profile.EmployeeId, cancellationToken);
+        var employee = await repository.GetEmployeeByIdAsync(model.EmployeeId, cancellationToken);
         if (employee is null)
             return (false, "Select a valid employee.");
-        if (await repository.EmployeeHasProfileAsync(profile.EmployeeId, cancellationToken))
+        if (await repository.EmployeeHasProfileAsync(model.EmployeeId, cancellationToken))
             return (false, "This employee already has profile information. Open it to edit.");
 
+        var profile = ToEntity(model);
         profile.Gender ??= employee.Gender;
         profile.MaritalStatus ??= employee.MaritalStatus;
         profile.DOB ??= employee.DOB;
@@ -68,7 +111,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         return (true, null);
     }
 
-    public async Task<bool> UpdateSectionAsync(int employeeId, EmployeeProfile submitted, string section, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateSectionAsync(int employeeId, EmployeeProfileDto submitted, string section, CancellationToken cancellationToken = default)
     {
         var profile = await repository.GetByEmployeeIdAsync(employeeId, cancellationToken: cancellationToken);
         if (profile is null)
@@ -76,9 +119,9 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
 
         if (section == "emergency")
         {
-            profile.EmergencyContactName = submitted.EmergencyContactName;
-            profile.EmergencyContactRelationship = submitted.EmergencyContactRelationship;
-            profile.EmergencyContactPhone = submitted.EmergencyContactPhone;
+            profile.EmergencyContactName = submitted.ProfileInformation.EmergencyContactName;
+            profile.EmergencyContactRelationship = submitted.ProfileInformation.EmergencyContactRelationship;
+            profile.EmergencyContactPhone = submitted.ProfileInformation.EmergencyContactPhone;
             CopyProfileFieldsToEmployee(profile, profile.Employee);
         }
         else if (section == "address")
@@ -89,15 +132,15 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
                 address = new EmployeeAddressInformation { EmployeeId = employeeId, EmployeeProfile = profile };
                 await repository.AddAddressInformationAsync(address, cancellationToken);
             }
-            CopyAddressToEntity(submitted, address);
+            CopyAddressToEntity(submitted.AddressInformation, address);
         }
         else if (section == "profile")
         {
-            profile.Gender = submitted.Gender;
-            profile.MaritalStatus = submitted.MaritalStatus;
-            profile.DOB = submitted.DOB;
-            profile.BloodGroup = submitted.BloodGroup;
-            profile.PhoneNumber = submitted.PhoneNumber;
+            profile.Gender = submitted.ProfileInformation.Gender;
+            profile.MaritalStatus = submitted.ProfileInformation.MaritalStatus;
+            profile.DOB = submitted.ProfileInformation.DOB;
+            profile.BloodGroup = submitted.ProfileInformation.BloodGroup;
+            profile.PhoneNumber = submitted.ProfileInformation.PhoneNumber;
             CopyProfileFieldsToEmployee(profile, profile.Employee);
         }
         else
@@ -149,6 +192,22 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         target.CurrentPincode = source.CurrentPincode;
     }
 
+    private static void CopyAddressToEntity(AddressInformationDto source, EmployeeAddressInformation target)
+    {
+        target.PermanentAddressLine1 = source.PermanentAddressLine1;
+        target.PermanentAddressLine2 = source.PermanentAddressLine2;
+        target.PermanentCountry = source.PermanentCountry;
+        target.PermanentState = source.PermanentState;
+        target.PermanentCity = source.PermanentCity;
+        target.PermanentPincode = source.PermanentPincode;
+        target.CurrentAddressLine1 = source.CurrentAddressLine1;
+        target.CurrentAddressLine2 = source.CurrentAddressLine2;
+        target.CurrentCountry = source.CurrentCountry;
+        target.CurrentState = source.CurrentState;
+        target.CurrentCity = source.CurrentCity;
+        target.CurrentPincode = source.CurrentPincode;
+    }
+
     private static void CopyAddressToProfile(EmployeeAddressInformation? source, EmployeeProfile target)
     {
         target.PermanentAddressLine1 = source?.PermanentAddressLine1;
@@ -173,4 +232,29 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         employee.BloodGroup = profile.BloodGroup;
         employee.Phone = profile.PhoneNumber;
     }
+
+    private static EmployeeProfile ToEntity(EmployeeProfileDto source) => new()
+    {
+        EmployeeId = source.EmployeeId,
+        Gender = source.ProfileInformation.Gender,
+        MaritalStatus = source.ProfileInformation.MaritalStatus,
+        DOB = source.ProfileInformation.DOB,
+        BloodGroup = source.ProfileInformation.BloodGroup,
+        PhoneNumber = source.ProfileInformation.PhoneNumber,
+        EmergencyContactName = source.ProfileInformation.EmergencyContactName,
+        EmergencyContactRelationship = source.ProfileInformation.EmergencyContactRelationship,
+        EmergencyContactPhone = source.ProfileInformation.EmergencyContactPhone,
+        PermanentAddressLine1 = source.AddressInformation.PermanentAddressLine1,
+        PermanentAddressLine2 = source.AddressInformation.PermanentAddressLine2,
+        PermanentCountry = source.AddressInformation.PermanentCountry,
+        PermanentState = source.AddressInformation.PermanentState,
+        PermanentCity = source.AddressInformation.PermanentCity,
+        PermanentPincode = source.AddressInformation.PermanentPincode,
+        CurrentAddressLine1 = source.AddressInformation.CurrentAddressLine1,
+        CurrentAddressLine2 = source.AddressInformation.CurrentAddressLine2,
+        CurrentCountry = source.AddressInformation.CurrentCountry,
+        CurrentState = source.AddressInformation.CurrentState,
+        CurrentCity = source.AddressInformation.CurrentCity,
+        CurrentPincode = source.AddressInformation.CurrentPincode
+    };
 }

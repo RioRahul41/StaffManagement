@@ -5,8 +5,8 @@
 @{
     ViewData["Title"] = "Create employee account";
     var roles = ViewBag.Roles as IReadOnlyList<string> ?? [];
-    var designations = ViewBag.Designations as IReadOnlyList<StaffManagement.Model.Entities.Designation> ?? [];
-    var departments = ViewBag.Departments as IEnumerable<StaffManagement.Model.Entities.Department> ?? [];
+    var designations = ViewBag.Designations as IReadOnlyList<StaffManagement.Core.DTOs.DesignationModel.DesignationDto> ?? [];
+    var departments = ViewBag.Departments as IEnumerable<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto> ?? [];
     var managers = ViewBag.Managers as IReadOnlyList<StaffManagement.Core.DTOs.EmployeeModel.EmployeeDto> ?? [];
     var reportingPersonRoles = ViewBag.ReportingPersonRoles as IReadOnlyDictionary<int, string> ?? new Dictionary<int, string>();
 }

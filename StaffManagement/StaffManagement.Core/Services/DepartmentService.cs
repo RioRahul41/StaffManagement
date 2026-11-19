@@ -1,53 +1,63 @@
 using StaffManagement.Core.IRepositories;
 using StaffManagement.Core.Iservices;
+using StaffManagement.Core.DTOs.DepartmentModel;
 using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Core.Services;
 
 public class DepartmentService(IDepartmentRepository departmentRepository) : IDepartmentService
 {
-    public Task<IReadOnlyList<Department>> GetAllAsync()
+    public async Task<IReadOnlyList<DepartmentDto>> GetAllAsync() =>
+        (await departmentRepository.GetAllAsync()).Select(ToDto).ToList();
+
+    public async Task<IReadOnlyList<DepartmentDto>> GetAllForSelectionAsync() =>
+        (await departmentRepository.GetAllForSelectionAsync()).Select(ToDto).ToList();
+
+    public async Task<DepartmentDto?> GetByIdAsync(int departmentId)
     {
-        return departmentRepository.GetAllAsync();
+        var department = await departmentRepository.GetByIdAsync(departmentId);
+        return department is null ? null : ToDto(department);
     }
 
-    public Task<IReadOnlyList<Department>> GetAllForSelectionAsync()
+    public async Task<(bool Succeeded, string? Error)> CreateAsync(DepartmentDto model)
     {
-        return departmentRepository.GetAllForSelectionAsync();
-    }
+        model.DepartmentName = model.DepartmentName.Trim();
 
-    public Task<Department?> GetByIdAsync(int departmentId)
-    {
-        return departmentRepository.GetByIdAsync(departmentId);
-    }
-
-    public async Task<(bool Succeeded, string? Error)> CreateAsync(Department department)
-    {
-        department.DepartmentName = department.DepartmentName.Trim();
-
-        if (await departmentRepository.ExistsByNameAsync(department.DepartmentName))
+        if (await departmentRepository.ExistsByNameAsync(model.DepartmentName))
         {
             return (false, "A department with this name already exists.");
         }
 
-        department.CreatedDate = DateTime.Now;
-        department.UpdatedDate = null;
-        department.IsActive = true;
+        var department = new Department
+        {
+            DepartmentName = model.DepartmentName,
+            Description = model.Description,
+            CreatedDate = DateTime.Now,
+            UpdatedDate = null,
+            IsActive = true
+        };
 
         await departmentRepository.AddAsync(department);
         return (true, null);
     }
 
-    public async Task<(bool Succeeded, string? Error)> UpdateAsync(Department department)
+    public async Task<(bool Succeeded, string? Error)> UpdateAsync(DepartmentDto model)
     {
-        department.DepartmentName = department.DepartmentName.Trim();
+        model.DepartmentName = model.DepartmentName.Trim();
 
         if (await departmentRepository.ExistsByNameAsync(
-                department.DepartmentName, department.DepartmentId))
+                model.DepartmentName, model.DepartmentId))
         {
             return (false, "A department with this name already exists.");
         }
 
+        var department = await departmentRepository.GetByIdAsync(model.DepartmentId);
+        if (department is null)
+            return (false, "Department was not found.");
+
+        department.DepartmentName = model.DepartmentName;
+        department.Description = model.Description;
+        department.IsActive = model.IsActive;
         department.UpdatedDate = DateTime.Now;
         await departmentRepository.UpdateAsync(department);
         return (true, null);
@@ -64,4 +74,14 @@ public class DepartmentService(IDepartmentRepository departmentRepository) : IDe
         await departmentRepository.DeleteAsync(department);
         return true;
     }
+
+    private static DepartmentDto ToDto(Department department) => new()
+    {
+        DepartmentId = department.DepartmentId,
+        DepartmentName = department.DepartmentName,
+        Description = department.Description,
+        CreatedDate = department.CreatedDate,
+        UpdatedDate = department.UpdatedDate,
+        IsActive = department.IsActive
+    };
 }

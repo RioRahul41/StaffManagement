@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StaffManagement.Core.DTOs.EmployeeModel;
+using StaffManagement.Core.DTOs.ProfileModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Security;
@@ -22,10 +23,7 @@ public sealed class AccountController(
     ISkillService skillService,
     IEmployeeCelebrationService employeeCelebrationService,
     IWebHostEnvironment environment,
-    IEmployeeProfileService employeeProfileService,
-    IEmployeeQualificationService employeeQualificationService,
-    IEmployeeExperienceService employeeExperienceService,
-    IEmployeeBankDetailService employeeBankDetailService) : Controller
+    IEmployeeProfilePageService employeeProfilePageService) : Controller
 {
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
@@ -90,15 +88,7 @@ public sealed class AccountController(
         var employee = await GetCurrentEmployeeAsync(cancellationToken);
         if (employee is null)
             return NotFound();
-        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employee.Id, asNoTracking: true, cancellationToken);
-        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employee.Id, cancellationToken);
-        ViewBag.EmployeeQualifications = await employeeQualificationService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
-        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
-        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employee.Id, asNoTracking: true, cancellationToken);
-        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employee.Id, cancellationToken);
-        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
-        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employee.Id, cancellationToken);
-        return View(employee);
+        return View(await employeeProfilePageService.BuildAsync(employee, cancellationToken));
     }
 
     [Authorize]
@@ -137,9 +127,7 @@ public sealed class AccountController(
             return NotFound();
 
         await LoadActiveSkillsAsync(cancellationToken);
-        await LoadQualificationRowsAsync(employee.Id, cancellationToken);
-
-        return View(employee);
+        return View(await employeeProfilePageService.BuildAsync(employee, cancellationToken));
     }
 
     [Authorize]
@@ -154,8 +142,6 @@ public sealed class AccountController(
         var currentEmployee = await GetCurrentEmployeeAsync(cancellationToken);
         if (currentEmployee is null)
             return NotFound();
-        await LoadQualificationRowsAsync(currentEmployee.Id, cancellationToken);
-
         model.Id = currentEmployee.Id;
         model.IdentityUserId = currentEmployee.IdentityUserId;
         model.Email = currentEmployee.Email;
@@ -232,7 +218,7 @@ public sealed class AccountController(
         if (!ModelState.IsValid)
         {
             ViewBag.ActiveSkills = activeSkills;
-            return View(model);
+            return View(await employeeProfilePageService.BuildAsync(model, cancellationToken));
         }
 
         string? newProfilePhotoPath = null;
@@ -243,7 +229,7 @@ public sealed class AccountController(
             {
                 ModelState.AddModelError(nameof(profilePhoto), savedPhoto.Error);
                 ViewBag.ActiveSkills = activeSkills;
-                return View(model);
+                return View(await employeeProfilePageService.BuildAsync(model, cancellationToken));
             }
             newProfilePhotoPath = savedPhoto.FileName;
             model.ProfilePhotoPath = newProfilePhotoPath;
@@ -255,7 +241,7 @@ public sealed class AccountController(
             DeleteProfilePhoto(newProfilePhotoPath);
             ModelState.AddModelError(string.Empty, result.Error!);
             ViewBag.ActiveSkills = activeSkills;
-            return View(model);
+            return View(await employeeProfilePageService.BuildAsync(model, cancellationToken));
         }
 
         var user = await userManager.GetUserAsync(User);
@@ -280,7 +266,7 @@ public sealed class AccountController(
                 }
 
                 ViewBag.ActiveSkills = activeSkills;
-                return View(model);
+                return View(await employeeProfilePageService.BuildAsync(model, cancellationToken));
             }
 
             await signInManager.RefreshSignInAsync(user);
@@ -428,7 +414,7 @@ public sealed class AccountController(
     private async Task LoadDepartmentsAsync(int? selectedDepartmentId = null)
     {
         ViewBag.Departments = await departmentService.GetAllForSelectionAsync()
-            ?? Array.Empty<Department>();
+            ?? Array.Empty<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto>();
         ViewBag.SelectedDepartmentId = selectedDepartmentId;
     }
 
@@ -486,15 +472,6 @@ public sealed class AccountController(
 
     private Task<EmployeeDto?> GetCurrentEmployeeAsync(CancellationToken cancellationToken) =>
         employeeService.GetByIdentityUserIdAsync(userManager.GetUserId(User)!, cancellationToken);
-    private async Task LoadQualificationRowsAsync(int employeeId, CancellationToken cancellationToken)
-    {
-        ViewBag.EmployeeQualifications = await employeeQualificationService.GetByEmployeeIdAsync(employeeId, cancellationToken);
-        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(employeeId, cancellationToken);
-        ViewBag.ProfileInformation = await employeeProfileService.GetByEmployeeIdAsync(employeeId, asNoTracking: true, cancellationToken);
-        ViewBag.OtherDetails = await employeeProfileService.GetOtherDetailsAsync(employeeId, cancellationToken);
-        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employeeId, cancellationToken);
-        ViewBag.BankDetails = await employeeBankDetailService.GetByEmployeeIdAsync(employeeId, cancellationToken);
-    }
 }
 
 

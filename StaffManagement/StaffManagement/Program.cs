@@ -38,6 +38,7 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IEmployeeProfilePageService, EmployeeProfilePageService>();
 builder.Services.AddScoped<IEmployeeProfileRepository, EmployeeProfileRepository>();
 builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
 builder.Services.AddScoped<IEmployeeQualificationRepository, EmployeeQualificationRepository>();
@@ -46,6 +47,8 @@ builder.Services.AddScoped<IEmployeeExperienceRepository, EmployeeExperienceRepo
 builder.Services.AddScoped<IEmployeeExperienceService, EmployeeExperienceService>();
 builder.Services.AddScoped<IEmployeeBankDetailRepository, EmployeeBankDetailRepository>();
 builder.Services.AddScoped<IEmployeeBankDetailService, EmployeeBankDetailService>();
+builder.Services.AddScoped<IEmployeeOtherDetailRepository, EmployeeOtherDetailRepository>();
+builder.Services.AddScoped<IEmployeeOtherDetailService, EmployeeOtherDetailService>();
 builder.Services.AddScoped<ITimesheetRepository, TimesheetRepository>();
 builder.Services.AddScoped<ITimesheetService, TimesheetService>();
 builder.Services.AddScoped<IEmployeeExpenseRepository, EmployeeExpenseRepository>();

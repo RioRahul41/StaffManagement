@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StaffManagement.Core.DTOs.DepartmentModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
-using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Web.Controllers;
 
@@ -23,12 +23,12 @@ public class DepartmentController(IDepartmentService departmentService) : Contro
     [HttpGet]
     public IActionResult Create()
     {
-        return View(new Department());
+        return View(new DepartmentDto());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Department department)
+    public async Task<IActionResult> Create(DepartmentDto department)
     {
         if (!ModelState.IsValid)
         {
@@ -38,7 +38,7 @@ public class DepartmentController(IDepartmentService departmentService) : Contro
         var result = await departmentService.CreateAsync(department);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(nameof(Department.DepartmentName), result.Error!);
+            ModelState.AddModelError(nameof(DepartmentDto.DepartmentName), result.Error!);
             return View(department);
         }
 
@@ -55,7 +55,7 @@ public class DepartmentController(IDepartmentService departmentService) : Contro
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Department department)
+    public async Task<IActionResult> Edit(int id, DepartmentDto department)
     {
         if (id != department.DepartmentId)
         {
@@ -80,7 +80,7 @@ public class DepartmentController(IDepartmentService departmentService) : Contro
         var result = await departmentService.UpdateAsync(existingDepartment);
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(nameof(Department.DepartmentName), result.Error!);
+            ModelState.AddModelError(nameof(DepartmentDto.DepartmentName), result.Error!);
             return View(department);
         }
 
