@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Employees";
     var canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
-    var canDelete = User.IsInRole("Admin");
+    var canDelete = User.IsInRole("Admin") || User.IsInRole("HR") || User.IsInRole("Manager");
     var canCreate = User.IsInRole("Admin") || User.IsInRole("HR") || User.IsInRole("Manager");
 }
 

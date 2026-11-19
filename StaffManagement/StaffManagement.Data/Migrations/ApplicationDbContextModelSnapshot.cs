@@ -378,6 +378,15 @@ namespace StaffManagement.Data.Migrations
                     b.Property<DateTime?>("DOB")
                         .HasColumnType("date");
 
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Department")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -439,6 +448,9 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(260)
                         .HasColumnType("nvarchar(260)");
 
+                    b.Property<int?>("RelievingTypeId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("ReportingPersonId")
                         .HasColumnType("int");
 
@@ -470,6 +482,8 @@ namespace StaffManagement.Data.Migrations
                     b.HasIndex("DesignationId");
 
                     b.HasIndex("IdentityUserId");
+
+                    b.HasIndex("RelievingTypeId");
 
                     b.HasIndex("ReportingPersonId");
 
@@ -1110,6 +1124,41 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.RelievingType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RelievingTypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RelievingTypes");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.SkillSet", b =>
                 {
                     b.Property<int>("Id")
@@ -1280,6 +1329,11 @@ namespace StaffManagement.Data.Migrations
                         .WithMany()
                         .HasForeignKey("IdentityUserId");
 
+                    b.HasOne("StaffManagement.Model.Entities.RelievingType", "RelievingType")
+                        .WithMany("Employees")
+                        .HasForeignKey("RelievingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StaffManagement.Model.Entities.Employee", "ReportingPerson")
                         .WithMany()
                         .HasForeignKey("ReportingPersonId")
@@ -1288,6 +1342,8 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("DesignationRecord");
 
                     b.Navigation("IdentityUser");
+
+                    b.Navigation("RelievingType");
 
                     b.Navigation("ReportingPerson");
                 });
@@ -1455,6 +1511,11 @@ namespace StaffManagement.Data.Migrations
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
                 {
                     b.Navigation("ProjectAssignments");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.RelievingType", b =>
+                {
+                    b.Navigation("Employees");
                 });
 #pragma warning restore 612, 618
         }

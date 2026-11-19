@@ -46,6 +46,8 @@ namespace StaffManagement.Data.DbContext
 
         public DbSet<SkillSet> SkillSets { get; set; } = null!;
 
+        public DbSet<RelievingType> RelievingTypes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -233,6 +235,12 @@ namespace StaffManagement.Data.DbContext
                 .WithMany()
                 .HasForeignKey(notification => notification.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.RelievingType)
+                .WithMany(r => r.Employees)
+                .HasForeignKey(e => e.RelievingTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

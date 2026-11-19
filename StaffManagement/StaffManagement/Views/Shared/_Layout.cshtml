@@ -43,8 +43,19 @@
                                 <a class="sidebar-link @(currentController == "Department" ? "active" : "")" asp-controller="Department" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M9 21V9h6v12M7 8h.01M17 8h.01M7 12h.01M17 12h.01" /></svg><span>Departments</span></a>
                                 <a class="sidebar-link @(currentController == "Designation" ? "active" : "")" asp-controller="Designation" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5ZM5 10v6l7 4 7-4v-6M21 8v8" /></svg><span>Designations</span></a>
                                 <a class="sidebar-link @(currentController == "Skill" ? "active" : "")" asp-controller="Skill" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" /></svg><span>Skills</span></a>
-                                <a class="sidebar-link @(currentController == "DocumentType" ? "active" : "")" asp-controller="DocumentType" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6m-6 4h6" /></svg><span>Document Types</span></a>
-                                @* <a class="sidebar-link @(currentController == "Account" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Account" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>Create account</span></a> *@
+
+<a class="sidebar-link @(currentController == "Relieving" ? "active" : "")"
+   asp-controller="Relieving"
+   asp-action="Index">
+
+    <svg class="sidebar-icon"
+         viewBox="0 0 24 24"
+         aria-hidden="true">
+        <path d="M4 5h16v14H4zM8 9h8M8 13h5" />
+    </svg>
+
+    <span>Relieving Status</span>
+</a>
                                 <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
                             </div>
                         </details>
@@ -55,9 +66,22 @@
                             <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg><span>Team Management</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
                             <div class="sidebar-submenu">
                                 <a class="sidebar-link @(currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" /></svg><span>Team records</span></a>
+                               
                                 <a class="sidebar-link @(currentController == "Employee" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Employee" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>Add employee</span></a>
-                                <a class="sidebar-link @(currentController == "EmployeeProfile" ? "active" : "")" asp-controller="EmployeeProfile" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zM9 7h6m-6 4h6m-6 4h4" /></svg><span>Employee profiles</span></a>
+                                
                                 <a class="sidebar-link @(currentController == "Skill" ? "active" : "")" asp-controller="Skill" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" /></svg><span>Skills</span></a>
+                                <a class="sidebar-link @(currentController == "Relieving" ? "active" : "")"
+   asp-controller="Relieving"
+   asp-action="Index">
+
+    <svg class="sidebar-icon"
+         viewBox="0 0 24 24"
+         aria-hidden="true">
+        <path d="M4 5h16v14H4zM8 9h8M8 13h5" />
+    </svg>
+
+    <span>Relieving Status</span>
+</a>
                                 <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
                             </div>
                         </details>
