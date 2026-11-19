@@ -21,15 +21,15 @@ public class EmployeeDto
     [Required, EmailAddress, StringLength(256)]
     public string Email { get; set; } = string.Empty;
 
-    [EmailAddress, StringLength(256)]
+    [Required(ErrorMessage = "Personal email is required."), EmailAddress, StringLength(256)]
     public string? PersonalEmail { get; set; }
 
-    [StringLength(1000)]
+    [Required(ErrorMessage = "Select at least one skill."), StringLength(1000)]
     public string? Skills { get; set; }
 
     public string? ProfilePhotoPath { get; set; }
 
-    [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
+    [Required(ErrorMessage = "Phone number is required."), RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
     public string? Phone { get; set; }
 
     [Required(ErrorMessage = "Department is required.")]

@@ -121,6 +121,20 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
             return BadRequest();
 
         RemoveEmployeeNavigationValidationErrors();
+        RemoveUneditedSectionValidationErrors(editSection);
+        if (editSection == "profile")
+        {
+            if (!model.Gender.HasValue)
+                ModelState.AddModelError(nameof(model.Gender), "Select a gender.");
+            if (string.IsNullOrWhiteSpace(model.MaritalStatus))
+                ModelState.AddModelError(nameof(model.MaritalStatus), "Select a marital status.");
+            if (!model.DOB.HasValue)
+                ModelState.AddModelError(nameof(model.DOB), "Date of birth is required.");
+            if (string.IsNullOrWhiteSpace(model.BloodGroup))
+                ModelState.AddModelError(nameof(model.BloodGroup), "Select a blood group.");
+            if (string.IsNullOrWhiteSpace(model.PhoneNumber))
+                ModelState.AddModelError(nameof(model.PhoneNumber), "Phone number is required.");
+        }
         if (!ModelState.IsValid)
         {
             model.Employee = await profileService.GetEmployeeByIdAsync(employeeId, cancellationToken) ?? null!;
@@ -183,6 +197,45 @@ public sealed class EmployeeProfileController(IEmployeeProfileService profileSer
     {
         foreach (var key in ModelState.Keys.Where(key => key == nameof(EmployeeProfile.Employee) || key.StartsWith(nameof(EmployeeProfile.Employee) + ".", StringComparison.Ordinal)).ToList())
             ModelState.Remove(key);
+    }
+
+    private void RemoveUneditedSectionValidationErrors(string editSection)
+    {
+        var profileFields = new[]
+        {
+            nameof(EmployeeProfile.Gender), nameof(EmployeeProfile.MaritalStatus),
+            nameof(EmployeeProfile.DOB), nameof(EmployeeProfile.BloodGroup),
+            nameof(EmployeeProfile.PhoneNumber)
+        };
+        var emergencyFields = new[]
+        {
+            nameof(EmployeeProfile.EmergencyContactName),
+            nameof(EmployeeProfile.EmergencyContactRelationship),
+            nameof(EmployeeProfile.EmergencyContactPhone)
+        };
+        var addressFields = new[]
+        {
+            nameof(EmployeeProfile.PermanentAddressLine1), nameof(EmployeeProfile.PermanentAddressLine2),
+            nameof(EmployeeProfile.PermanentCountry), nameof(EmployeeProfile.PermanentState),
+            nameof(EmployeeProfile.PermanentCity), nameof(EmployeeProfile.PermanentPincode),
+            nameof(EmployeeProfile.CurrentAddressLine1), nameof(EmployeeProfile.CurrentAddressLine2),
+            nameof(EmployeeProfile.CurrentCountry), nameof(EmployeeProfile.CurrentState),
+            nameof(EmployeeProfile.CurrentCity), nameof(EmployeeProfile.CurrentPincode)
+        };
+
+        var fieldsToValidate = editSection switch
+        {
+            "profile" => profileFields,
+            "emergency" => emergencyFields,
+            "address" => addressFields,
+            _ => Array.Empty<string>()
+        };
+
+        var fieldsToKeep = fieldsToValidate.ToHashSet(StringComparer.Ordinal);
+        var allFields = profileFields.Concat(emergencyFields).Concat(addressFields);
+
+        foreach (var field in allFields.Where(field => !fieldsToKeep.Contains(field)))
+            ModelState.Remove(field);
     }
 
     private static string? NormalizeSection(string? section) =>

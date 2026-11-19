@@ -11,7 +11,7 @@ public class EmployeeProfile
     public int EmployeeId { get; set; }
 
     public Employee Employee { get; set; } = null!;
-
+    
     public Gender? Gender { get; set; }
 
     [StringLength(30)]
@@ -25,16 +25,16 @@ public class EmployeeProfile
 
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
     public string? PhoneNumber { get; set; }
-    [Required]
+    [Required(ErrorMessage ="Enter valid Name")]
     [StringLength(100)]
     public string? EmergencyContactName { get; set; }
-    [Required]
+    [Required(ErrorMessage ="Must Select Relation")]
     [StringLength(50)]
     public string? EmergencyContactRelationship { get; set; }
-    [Required]
+    [Required(ErrorMessage ="Must Enter Number")]
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Emergency contact phone number must contain exactly 10 digits.")]
     public string? EmergencyContactPhone { get; set; }
-    [StringLength(200)]
+    [Required(ErrorMessage = "Permanent address line 1 is required."), StringLength(200)]
     [NotMapped]
     public string? PermanentAddressLine1 { get; set; }
 
@@ -42,23 +42,23 @@ public class EmployeeProfile
     [NotMapped]
     public string? PermanentAddressLine2 { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Permanent country is required."), StringLength(100)]
     [NotMapped]
     public string? PermanentCountry { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Permanent state is required."), StringLength(100)]
     [NotMapped]
     public string? PermanentState { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Permanent city is required."), StringLength(100)]
     [NotMapped]
     public string? PermanentCity { get; set; }
 
-    [StringLength(20)]
+    [Required(ErrorMessage = "Permanent pin code is required."), StringLength(20)]
     [NotMapped]
     public string? PermanentPincode { get; set; }
 
-    [StringLength(200)]
+    [Required(ErrorMessage = "Current address line 1 is required."), StringLength(200)]
     [NotMapped]
     public string? CurrentAddressLine1 { get; set; }
 
@@ -66,19 +66,19 @@ public class EmployeeProfile
     [NotMapped]
     public string? CurrentAddressLine2 { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Current country is required."), StringLength(100)]
     [NotMapped]
     public string? CurrentCountry { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Current state is required."), StringLength(100)]
     [NotMapped]
     public string? CurrentState { get; set; }
 
-    [StringLength(100)]
+    [Required(ErrorMessage = "Current city is required."), StringLength(100)]
     [NotMapped]
     public string? CurrentCity { get; set; }
 
-    [StringLength(20)]
+    [Required(ErrorMessage = "Current pin code is required."), StringLength(20)]
     [NotMapped]
     public string? CurrentPincode { get; set; }
 }

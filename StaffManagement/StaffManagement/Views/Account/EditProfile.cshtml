@@ -28,15 +28,15 @@
         <button class="nav-link text-start @(activeSection == "bank" ? "active" : "")" type="button" data-bs-toggle="pill" data-bs-target="#bank" role="tab" aria-controls="bank" aria-selected="@(activeSection == "bank" ? "true" : "false")"><span class="d-inline-flex rounded-circle bg-light text-primary align-items-center justify-content-center me-2" style="width:28px;height:28px">7</span><span><strong>Bank Details</strong><small class="d-block">Bank</small></span></button>
     </nav></aside>
     <main class="col-lg-9 col-xl-10"><div class="tab-content">
-        <section class="tab-pane fade @(activeSection == "intro" ? "show active" : "")" id="intro" role="tabpanel"><div class="card profile-card"><div class="card-header bg-light fw-semibold">Intro · Edit Details</div><div class="card-body"><form asp-action="EditProfile" method="post" enctype="multipart/form-data"><div class="row g-3">
-            <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" /><span asp-validation-for="LastName" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="Email" class="form-label">Office email</label><input asp-for="Email" class="form-control" readonly /><div class="form-text">Managed by your organization.</div></div>
-            <div class="col-md-6"><label asp-for="PersonalEmail" class="form-label">Personal email</label><input asp-for="PersonalEmail" type="email" class="form-control" /><span asp-validation-for="PersonalEmail" class="text-danger"></span></div>
-            <div class="col-md-6"><label for="selectedSkillNames" class="form-label">Skills</label><select id="selectedSkillNames" name="selectedSkillNames" class="form-select" multiple="multiple" aria-describedby="skills-help">@foreach (var skill in activeSkills) { <option value="@skill.SkillName" selected="@(savedSkills.Contains(skill.SkillName))">@skill.SkillName</option> }</select><div id="skills-help" class="form-text">Search and select one or more skills.</div><span asp-validation-for="Skills" class="text-danger"></span></div>
+        <section class="tab-pane fade @(activeSection == "intro" ? "show active" : "")" id="intro" role="tabpanel"><div class="card profile-card"><div class="card-header bg-light fw-semibold">Intro · Edit Details</div><div class="card-body"><form asp-action="EditProfile" method="post" enctype="multipart/form-data" novalidate><div class="row g-3">
+            <div class="col-md-6"><label asp-for="FirstName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="FirstName" class="form-control" required aria-required="true" /><span asp-validation-for="FirstName" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="LastName" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="LastName" class="form-control" required aria-required="true" /><span asp-validation-for="LastName" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="Email" class="form-label">Office email</label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Email" type="email" class="form-control" readonly aria-describedby="office-email-help" /><div id="office-email-help" class="form-text">Managed by your organization.</div><span asp-validation-for="Email" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="PersonalEmail" class="form-label">Personal email</label><span class="text-danger" aria-hidden="true">*</span><input asp-for="PersonalEmail" type="email" class="form-control" required aria-required="true" /><span asp-validation-for="PersonalEmail" class="text-danger"></span></div>
+            <div class="col-md-6"><label for="selectedSkillNames" class="form-label">Skills</label><span class="text-danger" aria-hidden="true">*</span><select id="selectedSkillNames" name="selectedSkillNames" class="form-select" multiple="multiple" aria-required="true" aria-describedby="skills-help Skills-error">@foreach (var skill in activeSkills) { <option value="@skill.SkillName" selected="@(savedSkills.Contains(skill.SkillName))">@skill.SkillName</option> }</select><div id="skills-help" class="form-text">Select one or more skills from the available list.</div><span asp-validation-for="Skills" class="text-danger"></span></div>
             <div class="col-md-6"><label for="profilePhoto" class="form-label">Profile photo</label>@if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath)) { <div class="mb-2"><img src="@Url.Action("ProfilePhoto")" alt="Current profile photo" class="profile-avatar" style="width:72px;height:72px;object-fit:cover" /></div> }<input id="profilePhoto" name="profilePhoto" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control" /><div class="form-text">JPG, PNG, or WebP; up to 5 MB. Leave empty to keep the current photo.</div><span class="text-danger">@Html.ValidationMessage("profilePhoto")</span></div>
-            <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number class="form-control" /><div class="form-text">Optional. If entered, use exactly 10 digits.</div><span asp-validation-for="Phone" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" /><span asp-validation-for="Location" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="Phone" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[0-9]{10}" data-phone-number class="form-control" required aria-required="true" /><span asp-validation-for="Phone" class="text-danger"></span></div>
+            <div class="col-md-6"><label asp-for="Location" class="form-label"></label><span class="text-danger" aria-hidden="true">*</span><input asp-for="Location" class="form-control" required aria-required="true" /><span asp-validation-for="Location" class="text-danger"></span></div>
             <div class="col-12 d-flex justify-content-between align-items-center"><a asp-action="Profile" class="btn btn-outline-secondary">Back</a><div><button type="submit" class="btn btn-primary">Save details</button> <a asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div></div>
         </div></form></div></div></section>
         <section class="tab-pane fade @(activeSection == "profile" ? "show active" : "")" id="profile" role="tabpanel">
@@ -154,9 +154,49 @@
             </form></div></div></div>
             <div class="d-flex justify-content-between mt-3"><a asp-controller="Account" asp-action="EditProfile" asp-route-section="qualification" class="btn btn-outline-secondary">Back</a><a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a></div>
         </section>
-        <section class="tab-pane fade @(activeSection == "bank" ? "show active" : "")" id="bank" role="tabpanel"><div class="card profile-card"><div class="card-header bg-light fw-semibold">Bank Details</div><div class="card-body"><form asp-controller="EmployeeBankDetail" asp-action="@(bankDetails is null ? "Create" : "Edit")" method="post"><input type="hidden" name="EmployeeId" value="@Model.Id" /><input type="hidden" name="returnToEditProfile" value="true" />@if (bankDetails is not null) { <input type="hidden" name="EmployeeBankDetailId" value="@bankDetails.EmployeeBankDetailId" /> }
-            <div class="row g-4 profile-stepper"><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountHolderName">Account Holder Name<span class="text-danger">*</span></label><input id="AccountHolderName" name="AccountHolderName" value="@bankDetails?.AccountHolderName" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="AccountHolderName"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountNumber">Account Number<span class="text-danger">*</span></label><input id="AccountNumber" name="AccountNumber" value="@bankDetails?.AccountNumber" class="form-control" required minlength="6" maxlength="34" pattern="[0-9]{6,34}" inputmode="numeric" /><span class="text-danger" data-valmsg-for="AccountNumber"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="AccountName">Bank Name<span class="text-danger">*</span></label><input id="AccountName" name="AccountName" value="@bankDetails?.AccountName" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="AccountName"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="IFSCCode">IFSC Code<span class="text-danger">*</span></label><input id="IFSCCode" name="IFSCCode" value="@bankDetails?.IFSCCode" class="form-control text-uppercase" required minlength="11" maxlength="11" pattern="[A-Za-z]{4}0[A-Za-z0-9]{6}" autocomplete="off" /><span class="text-danger" data-valmsg-for="IFSCCode"></span></div><div class="col-md-6 col-xl-4"><label class="form-label" for="Branch">Branch Name<span class="text-danger">*</span></label><input id="Branch" name="Branch" value="@bankDetails?.Branch" class="form-control" required maxlength="150" /><span class="text-danger" data-valmsg-for="Branch"></span></div></div>
-            <div class="d-flex justify-content-between mt-4"><a asp-controller="Account" asp-action="EditProfile" asp-route-section="experience" class="btn btn-outline-secondary">Back</a><button type="submit" class="btn btn-primary">Save</button></div></form></div></div></section>
+        <section class="tab-pane fade @(activeSection == "bank" ? "show active" : "")" id="bank" role="tabpanel">
+            <div class="card profile-card">
+                <div class="card-header bg-light fw-semibold">Bank Details</div>
+                <div class="card-body">
+                    <form asp-controller="EmployeeBankDetail" asp-action="@(bankDetails is null ? "Create" : "Edit")" method="post" novalidate>
+                        <input type="hidden" name="EmployeeId" value="@Model.Id" />
+                        <input type="hidden" name="returnToEditProfile" value="true" />
+                        @if (bankDetails is not null) { <input type="hidden" name="EmployeeBankDetailId" value="@bankDetails.EmployeeBankDetailId" /> }
+                        <div class="row g-4 profile-stepper">
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-label" for="AccountHolderName">Account Holder Name<span class="text-danger">*</span></label>
+                                <input id="AccountHolderName" name="AccountHolderName" value="@bankDetails?.AccountHolderName" class="form-control" required maxlength="150" data-val="true" data-val-required="Account holder name is required." data-val-length="The account holder name cannot exceed 150 characters." data-val-length-max="150" />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="AccountHolderName" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-label" for="AccountNumber">Account Number<span class="text-danger">*</span></label>
+                                <input id="AccountNumber" name="AccountNumber" value="@bankDetails?.AccountNumber" class="form-control" required minlength="6" maxlength="34" pattern="[0-9]{6,34}" inputmode="numeric" data-val="true" data-val-required="Account number is required." data-val-length="Account number must contain 6 to 34 characters." data-val-length-min="6" data-val-length-max="34" data-val-regex="Account number must contain 6 to 34 digits." data-val-regex-pattern="^[0-9]{6,34}$" />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="AccountNumber" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-label" for="AccountName">Bank Name<span class="text-danger">*</span></label>
+                                <input id="AccountName" name="AccountName" value="@bankDetails?.AccountName" class="form-control" required maxlength="150" data-val="true" data-val-required="Bank name is required." data-val-length="Bank name cannot exceed 150 characters." data-val-length-max="150" />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="AccountName" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-label" for="IFSCCode">IFSC Code<span class="text-danger">*</span></label>
+                                <input id="IFSCCode" name="IFSCCode" value="@bankDetails?.IFSCCode" class="form-control text-uppercase" required minlength="11" maxlength="11" pattern="[A-Za-z]{4}0[A-Za-z0-9]{6}" autocomplete="off" data-val="true" data-val-required="IFSC code is required." data-val-length="IFSC code must contain exactly 11 characters." data-val-length-min="11" data-val-length-max="11" data-val-regex="Enter a valid 11-character IFSC code." data-val-regex-pattern="^[A-Za-z]{4}0[A-Za-z0-9]{6}$" />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="IFSCCode" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="col-md-6 col-xl-4">
+                                <label class="form-label" for="Branch">Branch Name<span class="text-danger">*</span></label>
+                                <input id="Branch" name="Branch" value="@bankDetails?.Branch" class="form-control" required maxlength="150" data-val="true" data-val-required="Branch name is required." data-val-length="Branch name cannot exceed 150 characters." data-val-length-max="150" />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="Branch" data-valmsg-replace="true"></span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-controller="Account" asp-action="EditProfile" asp-route-section="experience" class="btn btn-outline-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
     </div></main>
 </div>
 @section Styles { <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" /> }
@@ -188,7 +228,7 @@
 </script>
 <script id="otherDetailsValidationScript">
 (() => {
-    const form = document.querySelector('#other form');
+    const form = document.querySelector('#otherEntryForm form');
     if (!form) return;
     const from = form.querySelector('#ValidFrom');
     const to = form.querySelector('#ValidTo');
@@ -199,10 +239,16 @@
         message.textContent = invalid ? 'Valid To must be on or after Valid From.' : '';
         message.classList.toggle('field-validation-error', Boolean(invalid));
         message.classList.toggle('field-validation-valid', !invalid);
+        return !invalid;
     };
     from.addEventListener('change', validateDates);
     to.addEventListener('change', validateDates);
-    form.addEventListener('submit', validateDates);
+    form.addEventListener('submit', event => {
+        if (!validateDates()) {
+            event.preventDefault();
+            to.reportValidity();
+        }
+    });
 })();
 </script> }
 

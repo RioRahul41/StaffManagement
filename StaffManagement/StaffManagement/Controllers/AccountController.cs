@@ -185,12 +185,22 @@ public sealed class AccountController(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        // Skills are posted as a separate multi-select, not as EmployeeDto.Skills.
+        ModelState.Remove(nameof(EmployeeDto.Skills));
+        if (selectedSkills.Count == 0)
+            ModelState.AddModelError(nameof(EmployeeDto.Skills), "Select at least one skill.");
+
         if (selectedSkills.Any(skillName => !activeSkillNames.ContainsKey(skillName)))
             ModelState.AddModelError(nameof(EmployeeDto.Skills), "Select skills from the available list.");
 
         model.Skills = selectedSkills.Count == 0
             ? null
-            : string.Join(", ", selectedSkills.Select(skillName => activeSkillNames[skillName]));
+            : string.Join(", ", selectedSkills
+                .Where(activeSkillNames.ContainsKey)
+                .Select(skillName => activeSkillNames[skillName]));
+
+        if (model.Skills?.Length > 1000)
+            ModelState.AddModelError(nameof(EmployeeDto.Skills), "Skills cannot exceed 1000 characters.");
 
         // These employee-management fields are intentionally not editable in the
         // self-service profile form. Their values are restored above, so remove
@@ -213,6 +223,11 @@ public sealed class AccountController(
         ModelState.Remove(nameof(EmployeeDto.EmpIsActive));
         ModelState.Remove(nameof(EmployeeDto.SickLeaveAllowance));
         ModelState.Remove(nameof(EmployeeDto.CasualLeaveAllowance));
+
+        if (string.IsNullOrWhiteSpace(model.Email))
+            ModelState.AddModelError(nameof(EmployeeDto.Email), "Office email is required.");
+        else if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(model.Email))
+            ModelState.AddModelError(nameof(EmployeeDto.Email), "Enter a valid office email address.");
 
         if (!ModelState.IsValid)
         {
@@ -257,7 +272,12 @@ public sealed class AccountController(
             if (!identityResult.Succeeded)
             {
                 foreach (var error in identityResult.Errors)
-                    ModelState.AddModelError(string.Empty, error.Description);
+                {
+                    var key = error.Code is "DuplicateEmail" or "InvalidEmail" or "InvalidUserName"
+                        ? nameof(EmployeeDto.Email)
+                        : string.Empty;
+                    ModelState.AddModelError(key, error.Description);
+                }
 
                 ViewBag.ActiveSkills = activeSkills;
                 return View(model);
