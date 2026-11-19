@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<StaffManagement.Model.Entities.ApplicationIdentity> UserManager
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,151 +22,515 @@
     {
         <div class="app-shell">
             <aside class="app-sidebar">
-                <a class="sidebar-brand" asp-controller="Home" asp-action="Index"><span class="sidebar-brand-mark">S</span><span>Staff Management<small>WORKFORCE PORTAL</small></span></a>
+
+                <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                    <span class="sidebar-brand-mark">S</span>
+                    <span>Staff Management<small>WORKFORCE PORTAL</small></span>
+                </a>
+
                 <div class="sidebar-user">
-                    <span class="badge bg-primary">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("HR") ? "HR" : User.IsInRole("Manager") ? "Manager" : User.IsInRole("Technical Support") ? "Technical Support" : "User")</span>
+                    <span class="badge bg-primary">
+                        @(User.IsInRole("Admin") ? "Admin" :
+                          User.IsInRole("HR") ? "HR" :
+                          User.IsInRole("Manager") ? "Manager" :
+                          User.IsInRole("Technical Support") ? "Technical Support" : "User")
+                    </span>
                     <span class="sidebar-user-name">@User.Identity.Name</span>
                 </div>
-                @{ var currentController = ViewContext.RouteData.Values["controller"]?.ToString(); }
+
+                @{
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                }
+
                 <nav class="sidebar-nav" aria-label="Main navigation">
-                    <a class="sidebar-link @(currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Home" asp-action="Index">
-                        <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" /></svg><span>Dashboard</span>
+
+                    <!-- Dashboard -->
+                    <a class="sidebar-link @(currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+                       asp-controller="Home" asp-action="Index">
+                        <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />
+                        </svg>
+                        <span>Dashboard</span>
                     </a>
+
+                    <!-- Employee Management / Team Management / Organization -->
                     @if (User.IsInRole("Admin") || User.IsInRole("HR"))
                     {
-                        <details class="sidebar-group" open="@(currentController is "Employee" or "Department" or "Designation" or "Skill" or "DocumentType" or "Account" or "Holiday" ? "open" : null)">
+                        <details class="sidebar-group"
+                                 open="@(currentController is "Employee" or "Department" or "Designation" or "Skill" or "DocumentType" or "Account" or "Holiday" ? "open" : null)">
+
                             <summary class="sidebar-group-toggle">
-                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg><span>Employee Management</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span>Employee Management</span>
+                                <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m7 10 5 5 5-5" />
+                                </svg>
                             </summary>
+
                             <div class="sidebar-submenu">
-                                <a class="sidebar-link @(currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" /></svg><span>Employees</span></a>
+
+                                <a class="sidebar-link @(currentController == "Employee" ? "active" : "")"
+                                   asp-controller="Employee" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="9" cy="8" r="4" />
+                                        <path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" />
+                                    </svg>
+                                    <span>Employees</span>
+                                </a>
+
                                 @* <a class="sidebar-link @(currentController == "Account" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Account" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>@(User.IsInRole("Admin") ? "Manage accounts and roles" : "Create user account")</span></a> *@
-                                <a class="sidebar-link @(currentController == "Department" ? "active" : "")" asp-controller="Department" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M9 21V9h6v12M7 8h.01M17 8h.01M7 12h.01M17 12h.01" /></svg><span>Departments</span></a>
-                                <a class="sidebar-link @(currentController == "Designation" ? "active" : "")" asp-controller="Designation" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5ZM5 10v6l7 4 7-4v-6M21 8v8" /></svg><span>Designations</span></a>
-                                <a class="sidebar-link @(currentController == "Skill" ? "active" : "")" asp-controller="Skill" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" /></svg><span>Skills</span></a>
-                                <a class="sidebar-link @(currentController == "DocumentType" ? "active" : "")" asp-controller="DocumentType" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6m-6 4h6" /></svg><span>Document Types</span></a>
+
+                                <a class="sidebar-link @(currentController == "Department" ? "active" : "")"
+                                   asp-controller="Department" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                                        <path d="M9 21V9h6v12M7 8h.01M17 8h.01M7 12h.01M17 12h.01" />
+                                    </svg>
+                                    <span>Departments</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Designation" ? "active" : "")"
+                                   asp-controller="Designation" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 3 3 8l9 5 9-5-9-5ZM5 10v6l7 4 7-4v-6M21 8v8" />
+                                    </svg>
+                                    <span>Designations</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Skill" ? "active" : "")"
+                                   asp-controller="Skill" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" />
+                                    </svg>
+                                    <span>Skills</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "DocumentType" ? "active" : "")"
+                                   asp-controller="DocumentType" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M6 3h8l4 4v14H6z" />
+                                        <path d="M14 3v5h5M9 13h6m-6 4h6" />
+                                    </svg>
+                                    <span>Document Types</span>
+                                </a>
+
                                 @* <a class="sidebar-link @(currentController == "Account" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Account" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>Create account</span></a> *@
-                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
+
+                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")"
+                                   asp-controller="Holiday" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                                        <path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" />
+                                    </svg>
+                                    <span>Holidays</span>
+                                </a>
+
                             </div>
                         </details>
                     }
                     else if (User.IsInRole("Manager"))
                     {
-                        <details class="sidebar-group" open="@(currentController == "Employee" || currentController == "EmployeeProfile" || currentController == "Skill" || currentController == "Holiday" ? "open" : null)">
-                            <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg><span>Team Management</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
+                        <details class="sidebar-group"
+                                 open="@(currentController == "Employee" || currentController == "EmployeeProfile" || currentController == "Skill" || currentController == "Holiday" ? "open" : null)">
+
+                            <summary class="sidebar-group-toggle">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span>Team Management</span>
+                                <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m7 10 5 5 5-5" />
+                                </svg>
+                            </summary>
+
                             <div class="sidebar-submenu">
-                                <a class="sidebar-link @(currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" /></svg><span>Team records</span></a>
-                                <a class="sidebar-link @(currentController == "Employee" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Employee" asp-action="Create"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-7-7h14" /></svg><span>Add employee</span></a>
-                                <a class="sidebar-link @(currentController == "EmployeeProfile" ? "active" : "")" asp-controller="EmployeeProfile" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zM9 7h6m-6 4h6m-6 4h4" /></svg><span>Employee profiles</span></a>
-                                <a class="sidebar-link @(currentController == "Skill" ? "active" : "")" asp-controller="Skill" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" /></svg><span>Skills</span></a>
-                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
+
+                                <a class="sidebar-link @(currentController == "Employee" ? "active" : "")"
+                                   asp-controller="Employee" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="9" cy="8" r="4" />
+                                        <path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" />
+                                    </svg>
+                                    <span>Team records</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Employee" && ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "active" : "")"
+                                   asp-controller="Employee" asp-action="Create">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 5v14m-7-7h14" />
+                                    </svg>
+                                    <span>Add employee</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "EmployeeProfile" ? "active" : "")"
+                                   asp-controller="EmployeeProfile" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M6 3h12v18H6zM9 7h6m-6 4h6m-6 4h4" />
+                                    </svg>
+                                    <span>Employee profiles</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Skill" ? "active" : "")"
+                                   asp-controller="Skill" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" />
+                                    </svg>
+                                    <span>Skills</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")"
+                                   asp-controller="Holiday" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                                        <path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" />
+                                    </svg>
+                                    <span>Holidays</span>
+                                </a>
+
                             </div>
                         </details>
                     }
                     else if (!User.IsInRole("Technical Support"))
                     {
-                        <details class="sidebar-group" open="@(currentController == "Holiday" ? "open" : null)">
-                            <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg><span>Organization</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
+                        <details class="sidebar-group"
+                                 open="@(currentController == "Holiday" ? "open" : null)">
+
+                            <summary class="sidebar-group-toggle">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span>Organization</span>
+                                <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m7 10 5 5 5-5" />
+                                </svg>
+                            </summary>
+
                             <div class="sidebar-submenu">
                                 @* <a class="sidebar-link @(currentController == "Employee" ? "active" : "")" asp-controller="Employee" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="4" /><path d="M2 21a7 7 0 0 1 14 0M19 8v6m3-3h-6" /></svg><span>Staff directory</span></a> *@
-                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")" asp-controller="Holiday" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" /></svg><span>Holidays</span></a>
+
+                                <a class="sidebar-link @(currentController == "Holiday" ? "active" : "")"
+                                   asp-controller="Holiday" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                                        <path d="M16 2v4M8 2v4M3 10h18m3 4h.01M12 14h.01m-3 3h.01m3 0h.01" />
+                                    </svg>
+                                    <span>Holidays</span>
+                                </a>
                             </div>
                         </details>
                     }
+
+                    <!-- Work -->
                     @if (!User.IsInRole("Technical Support"))
                     {
-                    <details class="sidebar-group" open="@(currentController == "Project" || currentController == "Timesheet" ? "open" : null)">
-                        <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 2v4m8-4v4M3 10h18M8 14h2m4 0h2m-8 3h2" /></svg><span>Work</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
+                        <details class="sidebar-group"
+                                 open="@(currentController == "Project" || currentController == "Timesheet" ? "open" : null)">
+
+                            <summary class="sidebar-group-toggle">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                                    <path d="M8 2v4m8-4v4M3 10h18M8 14h2m4 0h2m-8 3h2" />
+                                </svg>
+                                <span>Work</span>
+                                <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m7 10 5 5 5-5" />
+                                </svg>
+                            </summary>
+
                         <div class="sidebar-submenu">
-                            <a class="sidebar-link @(currentController == "Project" ? "active" : "")" asp-controller="Project" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M3 10h18" /></svg><span>@(User.IsInRole("User") ? "My projects" : "Projects")</span></a>
-                            <a class="sidebar-link @(currentController == "Timesheet" ? "active" : "")" asp-controller="Timesheet" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg><span>Timesheets</span></a>
+
+                                <a class="sidebar-link @(currentController == "Project" ? "active" : "")"
+                                   asp-controller="Project" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <path d="M3 10h18" />
+                                    </svg>
+                                    <span>@(User.IsInRole("User") ? "My projects" : "Projects")</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Timesheet" ? "active" : "")"
+                                   asp-controller="Timesheet" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="9" />
+                                        <path d="M12 7v5l3 2" />
+                                    </svg>
+                                    <span>Timesheets</span>
+                                </a>
+
                         </div>
                     </details>
                     }
-                    <details class="sidebar-group" open="@(currentController == "Expense" || currentController == "Leave" || currentController == "LeaveType" || currentController == "HelpDesk" ? "open" : null)">
-                        <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" /><path d="M9 12h6m-3-3v6" /></svg><span>@(User.IsInRole("Technical Support") ? "Support" : "Requests")</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
+
+                    <!-- Requests -->
+                    <details class="sidebar-group"
+                             open="@(currentController == "Expense" || currentController == "Leave" || currentController == "LeaveType" || currentController == "HelpDesk" ? "open" : null)">
+
+                        <summary class="sidebar-group-toggle">
+                            <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+                                <path d="M9 12h6m-3-3v6" />
+                            </svg>
+                            <span>@(User.IsInRole("Technical Support") ? "Support" : "Requests")</span>
+                            <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m7 10 5 5 5-5" />
+                            </svg>
+                        </summary>
+
                         <div class="sidebar-submenu">
+
                             @if (!User.IsInRole("Technical Support"))
                             {
-                                <a class="sidebar-link @(currentController == "Expense" ? "active" : "")" asp-controller="Expense" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20m-15 4h3" /></svg><span>Expenses</span></a>
-                                <a class="sidebar-link @(currentController == "Leave" && ViewContext.RouteData.Values["action"]?.ToString() != "Allowances" ? "active" : "")" asp-controller="Leave" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M16 2v4M8 2v4M3 10h18m-12 4h6m-6 3h4" /></svg><span>Leave requests</span></a>
+                                <a class="sidebar-link @(currentController == "Expense" ? "active" : "")"
+                                   asp-controller="Expense" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                                        <path d="M2 10h20m-15 4h3" />
+                                    </svg>
+                                    <span>Expenses</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Leave" && ViewContext.RouteData.Values["action"]?.ToString() != "Allowances" ? "active" : "")"
+                                   asp-controller="Leave" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="17" rx="2" />
+                                        <path d="M16 2v4M8 2v4M3 10h18m-12 4h6m-6 3h4" />
+                                    </svg>
+                                    <span>Leave requests</span>
+                                </a>
                             }
+
                             @if (User.IsInRole("Admin") || User.IsInRole("HR"))
                             {
-                                <a class="sidebar-link @(currentController == "Leave" && ViewContext.RouteData.Values["action"]?.ToString() == "Allowances" ? "active" : "")" asp-controller="Leave" asp-action="Allowances"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" /></svg><span>Employee leave allowances</span></a>
-                                <a class="sidebar-link @(currentController == "LeaveType" ? "active" : "")" asp-controller="LeaveType" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5" /></svg><span>Leave types</span></a>
+                                <a class="sidebar-link @(currentController == "Leave" && ViewContext.RouteData.Values["action"]?.ToString() == "Allowances" ? "active" : "")"
+                                   asp-controller="Leave" asp-action="Allowances">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h3" />
+                                    </svg>
+                                    <span>Employee leave allowances</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "LeaveType" ? "active" : "")"
+                                   asp-controller="LeaveType" asp-action="Index">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 5h16v14H4zM8 9h8M8 13h5" />
+                                    </svg>
+                                    <span>Leave types</span>
+                                </a>
                             }
-                            <a class="sidebar-link @(currentController == "HelpDesk" ? "active" : "")" asp-controller="HelpDesk" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" /><path d="M8 9h8m-8 4h5" /></svg><span>Help Desk</span></a>
+
+                            <a class="sidebar-link @(currentController == "HelpDesk" ? "active" : "")"
+                               asp-controller="HelpDesk" asp-action="Index">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 5h16v11H8l-4 4z" />
+                                    <path d="M8 9h8m-8 4h5" />
+                                </svg>
+                                <span>Help Desk</span>
+                            </a>
+
                         </div>
                     </details>
-                    <details class="sidebar-group" open="@(currentController == "Policy" || (currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Privacy") ? "open" : null)">
-                        <summary class="sidebar-group-toggle"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01" /></svg><span>Help &amp; information</span><svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg></summary>
+
+                    <!-- Reports - Admin only -->
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <details class="sidebar-group"
+                                 open="@(currentController == "Reports" ? "open" : null)">
+
+                            <summary class="sidebar-group-toggle">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 19V5m0 14h17M8 15l4-4 3 3 5-6" />
+                                </svg>
+                                <span>Reports</span>
+                                <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="m7 10 5 5 5-5" />
+                                </svg>
+                            </summary>
+
                         <div class="sidebar-submenu">
-                            <a class="sidebar-link @(currentController == "Policy" ? "active" : "")" asp-controller="Policy" asp-action="Index"><svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" /><path d="m9 12 2 2 4-4" /></svg><span>Policies</span></a>
+
+                                <a class="sidebar-link @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Employees" ? "active" : "")"
+                                   asp-controller="Reports" asp-action="Employees">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 3h16v18H4zM8 8h8M8 12h8M8 16h5" />
+                                    </svg>
+                                    <span>Employee Reports</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "TimesheetLog" ? "active" : "")"
+                                   asp-controller="Reports" asp-action="TimesheetLog">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h8" />
+                                    </svg>
+                                    <span>Timesheet Log Report</span>
+                                </a>
+
+                                <a class="sidebar-link @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "LeaveReport" ? "active" : "")"
+                                   asp-controller="Reports" asp-action="LeaveReport">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5" />
+                                    </svg>
+                                    <span>Leave Report</span>
+                                </a>
+
                         </div>
                     </details>
+                    }
+
+                    <!-- Help & Information -->
+                    <details class="sidebar-group"
+                             open="@(currentController == "Policy" || (currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Privacy") ? "open" : null)">
+
+                        <summary class="sidebar-group-toggle">
+                            <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01" />
+                            </svg>
+                            <span>Help &amp; information</span>
+                            <svg class="sidebar-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m7 10 5 5 5-5" />
+                            </svg>
+                        </summary>
+
+                        <div class="sidebar-submenu">
+                            <a class="sidebar-link @(currentController == "Policy" ? "active" : "")"
+                               asp-controller="Policy" asp-action="Index">
+                                <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+                                    <path d="m9 12 2 2 4-4" />
+                                </svg>
+                                <span>Policies</span>
+                            </a>
+                        </div>
+                    </details>
+
                 </nav>
+
                 <form asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout">
                     <button type="submit" class="btn btn-outline-light w-100">Logout</button>
                 </form>
+
             </aside>
+
             <main class="app-content">
+
                 <header class="topbar d-flex justify-content-end align-items-center px-4 py-3">
+
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         var currentUser = await UserManager.GetUserAsync(User);
                         var displayName = currentUser is null ? User.Identity.Name : $"{currentUser.FirstName} {currentUser.LastName}";
                         var displayEmail = currentUser?.Email ?? User.Identity.Name;
+
                         var initials = currentUser is null
                             ? (User.Identity.Name is { Length: > 0 } name ? name[..1] : "U")
                             : $"{currentUser.FirstName.FirstOrDefault()}{currentUser.LastName.FirstOrDefault()}";
+
                         <div class="dropdown">
-                            <button class="profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                            <button class="profile-trigger dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+
                                 <span class="profile-avatar">@initials.ToUpperInvariant()</span>
+
                                 <span class="profile-trigger-text d-none d-sm-block text-start">
                                     <strong>@displayName</strong>
                                     <small>@displayEmail</small>
                                 </span>
+
                             </button>
+
                             <ul class="dropdown-menu dropdown-menu-end profile-menu">
+
                                 <li class="px-3 py-2 border-bottom">
                                     <div class="fw-semibold">@displayName</div>
                                     <small class="text-muted">@displayEmail</small>
                                 </li>
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><svg class="profile-menu-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg><span>View profile</span></a></li>
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="EditProfile"><svg class="profile-menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v5" /><circle cx="10.5" cy="10" r="2.5" /><path d="M6.5 16a4 4 0 0 1 8 0m1.5 4.5 1-3.5 4.5-4.5a1.8 1.8 0 0 1 2.5 2.5l-4.5 4.5z" /></svg><span>Edit profile</span></a></li>
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change password</a></li>
-                                <li><button type="button" class="dropdown-item" id="darkModeToggle"><span id="darkModeLabel">Dark mode</span></button></li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                        <svg class="profile-menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                            <circle cx="12" cy="8" r="3.5" />
+                                            <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+                                        </svg>
+                                        <span>View profile</span>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="EditProfile">
+                                        <svg class="profile-menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v5" />
+                                            <circle cx="10.5" cy="10" r="2.5" />
+                                            <path d="M6.5 16a4 4 0 0 1 8 0m1.5 4.5 1-3.5 4.5-4.5a1.8 1.8 0 0 1 2.5 2.5l-4.5 4.5z" />
+                                        </svg>
+                                        <span>Edit profile</span>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                                        Change password
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <button type="button" class="dropdown-item" id="darkModeToggle">
+                                        <span id="darkModeLabel">Dark mode</span>
+                                    </button>
+                                </li>
+
                                 <li><hr class="dropdown-divider" /></li>
+
                                 <li>
                                     <form asp-controller="Account" asp-action="Logout" method="post">
                                         <button type="submit" class="dropdown-item text-danger">Sign out</button>
                                     </form>
                                 </li>
+
                             </ul>
                         </div>
                     }
+
                 </header>
+
                 <div class="container-fluid px-4 pb-4">
+
                     @{
                         var breadcrumbAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
                         var breadcrumbController = currentController ?? "Home";
                         var breadcrumbLabel = ViewData["BreadcrumbTitle"]?.ToString() ?? ViewData["Title"]?.ToString() ?? breadcrumbAction;
                     }
+
                     @if (breadcrumbController == "Leave" && breadcrumbAction is not "Index" and not "Create")
                     {
                         <nav aria-label="Breadcrumb" class="mb-3">
                             <ol class="breadcrumb small mb-0">
-                                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+
+                                <li class="breadcrumb-item">
+                                    <a asp-controller="Home" asp-action="Index">Home</a>
+                                </li>
+
                                 @if (breadcrumbAction != "Index")
                                 {
-                                    <li class="breadcrumb-item"><a asp-controller="Leave" asp-action="Index">Leave management</a></li>
+                                    <li class="breadcrumb-item">
+                                        <a asp-controller="Leave" asp-action="Index">Leave management</a>
+                                    </li>
                                 }
-                                <li class="breadcrumb-item active" aria-current="page">@breadcrumbLabel</li>
+
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    @breadcrumbLabel
+                                </li>
+
                             </ol>
                         </nav>
                     }
+
                     @RenderBody()
+
                 </div>
             </main>
         </div>
@@ -174,10 +539,13 @@
     {
         <header class="border-bottom bg-white">
             <nav class="navbar container">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">Staff Management <span class="text-muted fw-normal">| Workforce Portal</span></a>
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                    Staff Management <span class="text-muted fw-normal">| Workforce Portal</span>
+                </a>
                 <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
             </nav>
         </header>
+
         <main class="container py-4">
             @RenderBody()
         </main>
@@ -187,6 +555,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
 
