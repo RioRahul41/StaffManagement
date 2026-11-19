@@ -1,7 +1,6 @@
 @model StaffManagement.Core.DTOs.ProfileModel.EmployeeProfilePageDto
-@{ ViewData["Title"] = "My profile"; var personalInformation = Model.PersonalInformation; var profile = Model.ProfileInformation; var address = Model.AddressInformation; var otherDetails = Model.OtherDetails; var qualifications = Model.Qualifications; var experiences = Model.Experiences; var bankDetails = Model.BankDetails; }
+@{ ViewData["Title"] = "My profile"; var successMessage = TempData["Success"] as string; var personalInformation = Model.PersonalInformation; var profile = Model.ProfileInformation; var address = Model.AddressInformation; var otherDetails = Model.OtherDetails; var qualifications = Model.Qualifications; var experiences = Model.Experiences; var bankDetails = Model.BankDetails; }
 <div class="mb-4"><h1 class="mb-1">My profile</h1><p class="text-muted mb-0">View and update your employee information.</p></div>
-@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
 <div class="row g-4 profile-view-page">
     <aside class="col-lg-3 col-xl-2"><nav class="nav nav-pills flex-column profile-section-menu" aria-label="Profile information sections">
         <button class="nav-link active text-start" type="button" data-bs-toggle="pill" data-bs-target="#personal-information" role="tab" aria-controls="personal-information" aria-selected="true"><span aria-hidden="true">♙</span> Personal Information <span class="ms-auto">›</span></button>
@@ -84,6 +83,13 @@
             </div></div>
         </section>    </div></main>
 </div>
+@section Scripts {
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>Swal.fire({ icon: 'success', title: 'Saved', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMessage)), timer: 2400, showConfirmButton: false });</script>
+    }
+}
 
 
 

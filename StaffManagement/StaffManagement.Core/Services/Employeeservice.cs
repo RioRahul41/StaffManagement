@@ -112,7 +112,7 @@ namespace StaffManagement.Core.Services
             }
             employee.Department = model.Department;
             employee.Location = model.Location;
-            employee.DOB = model.DOB;
+            employee.DOB = model.DOB?.Date;
             employee.Salary = model.Salary;
             employee.Designation = model.Designation;
             employee.DesignationId = model.DesignationId;
@@ -197,7 +197,7 @@ namespace StaffManagement.Core.Services
             DepartmentId = model.DepartmentId,
             Department = model.Department,
             Location = model.Location,
-            DOB = model.DOB,
+            DOB = model.DOB?.Date,
             Salary = model.Salary,
             Designation = model.Designation,
             DesignationId = model.DesignationId,

@@ -21,6 +21,7 @@ namespace StaffManagement.Data.DbContext
         public DbSet<EmployeeProfile> EmployeeProfiles { get; set; } = null!;
         public DbSet<EmployeeAddressInformation> EmployeeAddressInformations { get; set; } = null!;
         public DbSet<EmployeeOtherDetail> EmployeeOtherDetails { get; set; } = null!;
+        public DbSet<DocumentType> DocumentTypes { get; set; } = null!;
         public DbSet<EmployeeQualification> EmployeeQualifications { get; set; } = null!;
         public DbSet<EmployeeExperience> EmployeeExperiences { get; set; } = null!;
         public DbSet<EmployeeBankDetail> EmployeeBankDetails { get; set; } = null!;
@@ -52,6 +53,14 @@ namespace StaffManagement.Data.DbContext
             modelBuilder.Entity<Employee>()
                 .Property(e => e.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Employee>()
+                .Property(employee => employee.DOB)
+                .HasColumnType("date");
+
+            modelBuilder.Entity<EmployeeProfile>()
+                .Property(profile => profile.DOB)
+                .HasColumnType("date");
 
             modelBuilder.Entity<EmployeeBankDetail>()
                 .HasOne(detail => detail.Employee)
@@ -94,6 +103,16 @@ namespace StaffManagement.Data.DbContext
                 .WithMany()
                 .HasForeignKey(detail => detail.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DocumentType>()
+                .HasIndex(documentType => documentType.DocumentTypeName)
+                .IsUnique();
+
+            modelBuilder.Entity<EmployeeOtherDetail>()
+                .HasOne(detail => detail.DocumentTypeRecord)
+                .WithMany(documentType => documentType.EmployeeOtherDetails)
+                .HasForeignKey(detail => detail.DocumentTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<EmployeeProfile>()
                 .HasOne(profile => profile.Employee)

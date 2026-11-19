@@ -9,8 +9,10 @@ public sealed class EmployeeOtherDetailDto
     [Range(1, int.MaxValue, ErrorMessage = "Select a valid employee.")]
     public int EmployeeId { get; set; }
 
-    [Required, StringLength(100)]
-    public string DocumentType { get; set; } = string.Empty;
+    [Range(1, int.MaxValue, ErrorMessage = "Choose a document type.")]
+    public int DocumentTypeId { get; set; }
+
+    public string? DocumentType { get; set; }
 
     [Required, StringLength(100)]
     public string DocumentNumber { get; set; } = string.Empty;

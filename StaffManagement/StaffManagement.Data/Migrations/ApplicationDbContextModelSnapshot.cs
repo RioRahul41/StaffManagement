@@ -317,6 +317,39 @@ namespace StaffManagement.Data.Migrations
                     b.ToTable("Designations");
                 });
 
+            modelBuilder.Entity("StaffManagement.Model.Entities.DocumentType", b =>
+                {
+                    b.Property<int>("DocumentTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DocumentTypeId"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentTypeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresValidityDates")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("DocumentTypeId");
+
+                    b.HasIndex("DocumentTypeName")
+                        .IsUnique();
+
+                    b.ToTable("DocumentTypes");
+                });
+
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -343,7 +376,7 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DOB")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("date");
 
                     b.Property<string>("Department")
                         .HasMaxLength(100)
@@ -710,6 +743,9 @@ namespace StaffManagement.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("DocumentTypeId")
+                        .HasColumnType("int");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
@@ -731,6 +767,8 @@ namespace StaffManagement.Data.Migrations
 
                     b.HasKey("EmployeeOtherDetailId");
 
+                    b.HasIndex("DocumentTypeId");
+
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("EmployeeOtherDetails");
@@ -749,7 +787,7 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("nvarchar(5)");
 
                     b.Property<DateTime?>("DOB")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("date");
 
                     b.Property<string>("EmergencyContactName")
                         .IsRequired()
@@ -1312,11 +1350,18 @@ namespace StaffManagement.Data.Migrations
 
             modelBuilder.Entity("StaffManagement.Model.Entities.EmployeeOtherDetail", b =>
                 {
+                    b.HasOne("StaffManagement.Model.Entities.DocumentType", "DocumentTypeRecord")
+                        .WithMany("EmployeeOtherDetails")
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StaffManagement.Model.Entities.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DocumentTypeRecord");
 
                     b.Navigation("Employee");
                 });
@@ -1400,6 +1445,11 @@ namespace StaffManagement.Data.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("StaffManagement.Model.Entities.DocumentType", b =>
+                {
+                    b.Navigation("EmployeeOtherDetails");
                 });
 
             modelBuilder.Entity("StaffManagement.Model.Entities.Employee", b =>

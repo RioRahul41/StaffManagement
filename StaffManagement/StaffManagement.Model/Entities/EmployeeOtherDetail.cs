@@ -13,6 +13,9 @@ public class EmployeeOtherDetail
     [Required, StringLength(100)]
     public string DocumentType { get; set; } = string.Empty;
 
+    public int? DocumentTypeId { get; set; }
+    public DocumentType? DocumentTypeRecord { get; set; }
+
     [Required, StringLength(100)]
     public string DocumentNumber { get; set; } = string.Empty;
 

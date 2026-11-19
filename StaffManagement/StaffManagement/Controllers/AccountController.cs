@@ -21,6 +21,7 @@ public sealed class AccountController(
     IDepartmentService departmentService,
     IEmployeeService employeeService,
     ISkillService skillService,
+    IDocumentTypeService documentTypeService,
     IEmployeeCelebrationService employeeCelebrationService,
     IWebHostEnvironment environment,
     IEmployeeProfilePageService employeeProfilePageService) : Controller
@@ -127,6 +128,7 @@ public sealed class AccountController(
             return NotFound();
 
         await LoadActiveSkillsAsync(cancellationToken);
+        await LoadActiveDocumentTypesAsync(cancellationToken);
         return View(await employeeProfilePageService.BuildAsync(employee, cancellationToken));
     }
 
@@ -161,6 +163,7 @@ public sealed class AccountController(
         model.CasualLeaveAllowance = currentEmployee.CasualLeaveAllowance;
 
         var activeSkills = await skillService.GetActiveAsync(cancellationToken);
+        await LoadActiveDocumentTypesAsync(cancellationToken);
         var activeSkillNames = activeSkills.ToDictionary(
             skill => skill.SkillName,
             skill => skill.SkillName,
@@ -468,6 +471,11 @@ public sealed class AccountController(
     private async Task LoadActiveSkillsAsync(CancellationToken cancellationToken)
     {
         ViewBag.ActiveSkills = await skillService.GetActiveAsync(cancellationToken);
+    }
+
+    private async Task LoadActiveDocumentTypesAsync(CancellationToken cancellationToken)
+    {
+        ViewBag.DocumentTypes = await documentTypeService.GetActiveAsync(cancellationToken);
     }
 
     private Task<EmployeeDto?> GetCurrentEmployeeAsync(CancellationToken cancellationToken) =>

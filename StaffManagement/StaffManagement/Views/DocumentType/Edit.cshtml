@@ -1,0 +1,14 @@
+@model StaffManagement.Core.DTOs.DocumentTypeModel.DocumentTypeDto
+@{ ViewData["Title"] = "Edit Document Type"; }
+<div class="mb-4"><h1 class="h2">Edit Document Type</h1><p class="text-muted mb-0">Update the document option and validity date rule.</p></div>
+<div class="card profile-card"><div class="card-body">
+    <form asp-action="Edit" asp-route-id="@Model.DocumentTypeId" method="post">
+        <input asp-for="DocumentTypeId" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3"><label asp-for="DocumentTypeName" class="form-label"></label><span class="text-danger">*</span><input asp-for="DocumentTypeName" class="form-control" maxlength="100" required /><span asp-validation-for="DocumentTypeName" class="text-danger"></span></div>
+        <div class="form-check mb-3"><input asp-for="RequiresValidityDates" class="form-check-input" /><label asp-for="RequiresValidityDates" class="form-check-label"></label><div class="form-text">Turn this off for documents such as Aadhaar that do not have validity dates.</div></div>
+        <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+        <button type="submit" class="btn btn-primary">Save Changes</button> <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

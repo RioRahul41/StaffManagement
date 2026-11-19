@@ -1,7 +1,9 @@
 @model StaffManagement.Core.DTOs.ProfileModel.EmployeeProfilePageDto
 @{
     ViewData["Title"] = "Edit my profile";
+    var profileSuccess = TempData["Success"] as string;
     var activeSkills = ViewBag.ActiveSkills as IReadOnlyList<StaffManagement.Model.Entities.SkillSet> ?? [];
+    var documentTypes = ViewBag.DocumentTypes as IReadOnlyList<StaffManagement.Core.DTOs.DocumentTypeModel.DocumentTypeDto> ?? [];
     var savedSkills = (Model.Skills ?? string.Empty)
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -14,7 +16,6 @@
     if (string.IsNullOrWhiteSpace(activeSection)) activeSection = "intro";
 }
 <div class="mb-4">
-    @if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
     <h1 class="mb-1">Edit my profile</h1><p class="text-muted mb-0">Update your information and supporting details.</p>
 <div class="row g-4 profile-stepper">
     <aside class="col-lg-3 col-xl-2"><nav class="nav nav-pills flex-column profile-section-menu" aria-label="Edit profile sections">
@@ -68,17 +69,17 @@
             <div class="card profile-card profile-qualification-card mb-4"><div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center"><span>Other Details</span><button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#otherEntryForm" aria-expanded="false" aria-controls="otherEntryForm">Add Document</button></div><div class="card-body">
                 @if (otherDetails.Count == 0) { <div class="qualification-table-wrap d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No documents have been added.</p></div> } else {
                     <div class="qualification-table-wrap table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Document Type</th><th>Document Number</th><th>Valid From</th><th>Valid To</th><th class="text-center">Action</th></tr></thead><tbody>
-                    @foreach (var item in otherDetails) { <tr><td>@item.DocumentType</td><td>@item.DocumentNumber</td><td>@(item.ValidFrom?.ToString("d") ?? "Not provided")</td><td>@(item.ValidTo?.ToString("d") ?? "Not provided")</td><td class="text-center"><div class="dropdown"><button class="btn btn-sm btn-link text-decoration-none qualification-action-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.DocumentType">•••</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-controller="EmployeeOtherDetail" asp-action="Download" asp-route-id="@item.EmployeeOtherDetailId">Download</a></li></ul></div></td></tr> }
+                    @foreach (var item in otherDetails) { <tr><td>@item.DocumentType</td><td>@item.DocumentNumber</td><td>@(item.ValidFrom?.ToString("d") ?? "Not provided")</td><td>@(item.ValidTo?.ToString("d") ?? "Not provided")</td><td class="text-center"><div class="dropdown"><button class="btn btn-sm btn-link text-decoration-none qualification-action-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions for @item.DocumentType">•••</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" asp-controller="EmployeeOtherDetail" asp-action="Download" asp-route-id="@item.EmployeeOtherDetailId">Download</a></li><li><form asp-controller="EmployeeOtherDetail" asp-action="Delete" asp-route-id="@item.EmployeeOtherDetailId" method="post" class="document-detail-delete-form"><input type="hidden" name="returnToEditProfile" value="true" /><button type="submit" class="dropdown-item text-danger">Delete</button></form></li></ul></div></td></tr> }
                     </tbody></table></div>
                 }
             </div></div>
-            <div class="collapse" id="otherEntryForm"><div class="card profile-card profile-qualification-card"><div class="card-body"><form asp-controller="EmployeeOtherDetail" asp-action="Create" method="post" enctype="multipart/form-data">
+            <div class="collapse" id="otherEntryForm"><div class="card profile-card profile-qualification-card"><div class="card-body"><form asp-controller="EmployeeOtherDetail" asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="EmployeeId" value="@Model.Id" /><input type="hidden" name="returnToEditProfile" value="true" />
                 <div class="row g-4">
-                    <div class="col-md-6"><label for="DocumentType" class="form-label">Document Type<span class="text-danger">*</span></label><input id="DocumentType" name="DocumentType" class="form-control" required maxlength="100" data-val="true" data-val-required="Document Type is required." data-val-length="Document Type cannot exceed 100 characters." data-val-length-max="100" /><span class="text-danger field-validation-valid" data-valmsg-for="DocumentType" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-6"><label for="DocumentTypeId" class="form-label">Document Type<span class="text-danger">*</span></label><select id="DocumentTypeId" name="DocumentTypeId" class="form-select" required data-val="true" data-val-required="Choose a document type." data-val-range="Choose a document type." data-val-range-min="1" data-val-range-max="2147483647"><option value="">Select document type</option>@foreach (var type in documentTypes) { <option value="@type.DocumentTypeId" data-requires-validity-dates="@type.RequiresValidityDates.ToString().ToLowerInvariant()">@type.DocumentTypeName</option> }</select><span class="text-danger field-validation-valid" data-valmsg-for="DocumentTypeId" data-valmsg-replace="true"></span></div>
                     <div class="col-md-6"><label for="DocumentNumber" class="form-label">Document Number<span class="text-danger">*</span></label><input id="DocumentNumber" name="DocumentNumber" class="form-control" required maxlength="100" data-val="true" data-val-required="Document Number is required." data-val-length="Document Number cannot exceed 100 characters." data-val-length-max="100" /><span class="text-danger field-validation-valid" data-valmsg-for="DocumentNumber" data-valmsg-replace="true"></span></div>
-                    <div class="col-md-6"><label for="ValidFrom" class="form-label">Valid From</label><input id="ValidFrom" name="ValidFrom" type="date" class="form-control" /><span class="text-danger field-validation-valid" data-valmsg-for="ValidFrom" data-valmsg-replace="true"></span></div>
-                    <div class="col-md-6"><label for="ValidTo" class="form-label">Valid To</label><input id="ValidTo" name="ValidTo" type="date" class="form-control" /><span id="validToValidation" class="text-danger field-validation-valid" data-valmsg-for="ValidTo" data-valmsg-replace="true"></span></div>
+                    <div id="validityDateFields" class="row g-4 d-none mx-0 px-0"><div class="col-md-6"><label for="ValidFrom" class="form-label">Valid From <span id="validFromRequired" class="text-danger d-none">*</span></label><input id="ValidFrom" name="ValidFrom" type="date" class="form-control" /><span class="text-danger field-validation-valid" data-valmsg-for="ValidFrom" data-valmsg-replace="true"></span></div>
+                    <div class="col-md-6"><label for="ValidTo" class="form-label">Valid To <span id="validToRequired" class="text-danger d-none">*</span></label><input id="ValidTo" name="ValidTo" type="date" class="form-control" /><span id="validToValidation" class="text-danger field-validation-valid" data-valmsg-for="ValidTo" data-valmsg-replace="true"></span></div></div>
                     <div class="col-12"><label for="documentFile" class="form-label">Document file<span class="text-danger">*</span></label><input id="documentFile" name="documentFile" type="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png" data-val="true" data-val-required="Choose a document file to upload." /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div><span class="text-danger field-validation-valid" data-valmsg-for="documentFile" data-valmsg-replace="true"></span></div>
                 </div><div class="d-flex justify-content-end gap-2 mt-4"><button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#otherEntryForm">Cancel</button><button type="submit" class="btn btn-primary">Add</button></div>
             </form></div></div></div>
@@ -201,7 +202,19 @@
 @section Styles { <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" /> }
 @section Scripts { <partial name="_ValidationScriptsPartial" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if (!string.IsNullOrWhiteSpace(profileSuccess))
+{
+    <script>Swal.fire({ icon: 'success', title: 'Saved', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(profileSuccess)), timer: 2400, showConfirmButton: false });</script>
+}
 <script>$(function () { $('#selectedSkillNames').select2({ placeholder: "Search and select skills", allowClear: true, width: "100%", closeOnSelect: false }); });</script>
+<script>
+document.querySelectorAll('.document-detail-delete-form').forEach(form => form.addEventListener('submit', event => {
+    event.preventDefault();
+    Swal.fire({ title: 'Delete this document?', text: 'The saved document and uploaded file will be deleted.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel' })
+        .then(result => { if (result.isConfirmed) form.submit(); });
+}));
+</script>
 <script id="skillsValidationScript">
 (() => {
     const form = document.querySelector('#intro form');
@@ -254,25 +267,44 @@
 (() => {
     const form = document.querySelector('#otherEntryForm form');
     if (!form) return;
+    const type = form.querySelector('#DocumentTypeId');
+    const fields = form.querySelector('#validityDateFields');
     const from = form.querySelector('#ValidFrom');
     const to = form.querySelector('#ValidTo');
-    const message = form.querySelector('#validToValidation');
-    const validateDates = () => {
-        const invalid = from.value && to.value && to.value < from.value;
-        to.setCustomValidity(invalid ? 'Valid To must be on or after Valid From.' : '');
-        message.textContent = invalid ? 'Valid To must be on or after Valid From.' : '';
-        message.classList.toggle('field-validation-error', Boolean(invalid));
-        message.classList.toggle('field-validation-valid', !invalid);
-        return !invalid;
+    const fromMessage = form.querySelector('[data-valmsg-for="ValidFrom"]');
+    const toMessage = form.querySelector('[data-valmsg-for="ValidTo"]');
+    if (!type || !fields || !from || !to) return;
+    const requiresDates = () => type.selectedOptions[0]?.dataset.requiresValidityDates === 'true';
+    const updateDateFields = () => {
+        const showDates = requiresDates();
+        fields.classList.toggle('d-none', !showDates);
+        from.required = showDates;
+        to.required = showDates;
+        form.querySelector('#validFromRequired')?.classList.toggle('d-none', !showDates);
+        form.querySelector('#validToRequired')?.classList.toggle('d-none', !showDates);
+        if (!showDates) {
+            from.value = '';
+            to.value = '';
+            if (fromMessage) fromMessage.textContent = '';
+            if (toMessage) toMessage.textContent = '';
+            to.removeAttribute('min');
+        }
     };
+    const validateDates = () => {
+        const showDates = requiresDates();
+        const fromMissing = showDates && !from.value;
+        const toMissing = showDates && !to.value;
+        const invalidOrder = showDates && from.value && to.value && to.value < from.value;
+        if (fromMessage) fromMessage.textContent = fromMissing ? 'Valid From is required for this document type.' : '';
+        if (toMessage) toMessage.textContent = toMissing ? 'Valid To is required for this document type.' : invalidOrder ? 'Valid To must be on or after Valid From.' : '';
+        to.min = showDates && from.value ? from.value : '';
+        return !fromMissing && !toMissing && !invalidOrder;
+    };
+    type.addEventListener('change', () => { updateDateFields(); validateDates(); });
     from.addEventListener('change', validateDates);
     to.addEventListener('change', validateDates);
-    form.addEventListener('submit', event => {
-        if (!validateDates()) {
-            event.preventDefault();
-            to.reportValidity();
-        }
-    });
+    form.addEventListener('submit', event => { if (!validateDates()) event.preventDefault(); });
+    updateDateFields();
 })();
 </script> }
 

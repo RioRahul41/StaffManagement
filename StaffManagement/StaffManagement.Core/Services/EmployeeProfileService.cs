@@ -94,7 +94,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         var profile = ToEntity(model);
         profile.Gender ??= employee.Gender;
         profile.MaritalStatus ??= employee.MaritalStatus;
-        profile.DOB ??= employee.DOB;
+        profile.DOB ??= employee.DOB?.Date;
         profile.BloodGroup ??= employee.BloodGroup;
         profile.PhoneNumber = employee.Phone;
         CopyProfileFieldsToEmployee(profile, employee);
@@ -138,7 +138,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         {
             profile.Gender = submitted.ProfileInformation.Gender;
             profile.MaritalStatus = submitted.ProfileInformation.MaritalStatus;
-            profile.DOB = submitted.ProfileInformation.DOB;
+            profile.DOB = submitted.ProfileInformation.DOB?.Date;
             profile.BloodGroup = submitted.ProfileInformation.BloodGroup;
             profile.PhoneNumber = submitted.ProfileInformation.PhoneNumber;
             CopyProfileFieldsToEmployee(profile, profile.Employee);
@@ -228,7 +228,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
     {
         employee.Gender = profile.Gender;
         employee.MaritalStatus = profile.MaritalStatus;
-        employee.DOB = profile.DOB;
+        employee.DOB = profile.DOB?.Date;
         employee.BloodGroup = profile.BloodGroup;
         employee.Phone = profile.PhoneNumber;
     }
@@ -238,7 +238,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         EmployeeId = source.EmployeeId,
         Gender = source.ProfileInformation.Gender,
         MaritalStatus = source.ProfileInformation.MaritalStatus,
-        DOB = source.ProfileInformation.DOB,
+        DOB = source.ProfileInformation.DOB?.Date,
         BloodGroup = source.ProfileInformation.BloodGroup,
         PhoneNumber = source.ProfileInformation.PhoneNumber,
         EmergencyContactName = source.ProfileInformation.EmergencyContactName,

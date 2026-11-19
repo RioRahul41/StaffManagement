@@ -1,21 +1,65 @@
 @model StaffManagement.Core.DTOs.EmployeeModel.EmployeeOtherDetailDto
-@{ ViewData["Title"] = "Add document detail"; var returnToProfile = ViewBag.ReturnToProfile is true; var returnToEditProfile = ViewBag.ReturnToEditProfile is true; }
+@{ ViewData["Title"] = "Add document detail"; var returnToProfile = ViewBag.ReturnToProfile is true; var returnToEditProfile = ViewBag.ReturnToEditProfile is true; var documentTypes = ViewBag.DocumentTypes as IReadOnlyList<StaffManagement.Core.DTOs.DocumentTypeModel.DocumentTypeDto> ?? []; }
 <div class="mb-4"><h1 class="h2">Add Document</h1><div class="small text-muted"><span class="text-danger">*</span> Required field</div><p class="text-muted mb-0">Enter document details and upload a PDF or image.</p></div>
 <div class="card profile-card"><div class="card-body">
-<form asp-action="Create" method="post" enctype="multipart/form-data">
+<form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
 <input asp-for="EmployeeId" type="hidden" />
     <input type="hidden" name="returnToProfile" value="@returnToProfile.ToString().ToLowerInvariant()" /><input type="hidden" name="returnToEditProfile" value="@returnToEditProfile.ToString().ToLowerInvariant()" />
     <div class="row g-3">
-        <div class="col-md-6"><label asp-for="DocumentType" class="form-label">Document Type <span class="text-danger" aria-label="required">*</span></label><input asp-for="DocumentType" class="form-control" /><span asp-validation-for="DocumentType" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="DocumentTypeId" class="form-label">Document Type <span class="text-danger" aria-label="required">*</span></label><select asp-for="DocumentTypeId" class="form-select" required data-val="true" data-val-required="Choose a document type." data-val-range="Choose a document type." data-val-range-min="1" data-val-range-max="2147483647"><option value="">Select document type</option>@foreach (var type in documentTypes) { <option value="@type.DocumentTypeId" data-requires-validity-dates="@type.RequiresValidityDates.ToString().ToLowerInvariant()">@type.DocumentTypeName</option> }</select><span asp-validation-for="DocumentTypeId" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="DocumentNumber" class="form-label">Document Number <span class="text-danger" aria-label="required">*</span></label><input asp-for="DocumentNumber" class="form-control" /><span asp-validation-for="DocumentNumber" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ValidFrom" class="form-label">Valid From</label><input asp-for="ValidFrom" type="date" class="form-control" /><span asp-validation-for="ValidFrom" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="ValidTo" class="form-label">Valid To</label><input asp-for="ValidTo" type="date" class="form-control" /><span asp-validation-for="ValidTo" class="text-danger"></span></div>
-        <div class="col-12"><label for="documentFile" class="form-label">Document file <span class="text-danger" aria-label="required">*</span></label><input id="documentFile" name="documentFile" type="file" required class="form-control" accept=".pdf,.jpg,.jpeg,.png" /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>@Html.ValidationMessage("documentFile", new { @class = "text-danger" })</div>
+        <div id="validityDateFields" class="row g-3 d-none px-0 mx-0"><div class="col-md-6"><label asp-for="ValidFrom" class="form-label">Valid From <span id="validFromRequired" class="text-danger d-none">*</span></label><input asp-for="ValidFrom" type="date" class="form-control" /><span asp-validation-for="ValidFrom" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="ValidTo" class="form-label">Valid To <span id="validToRequired" class="text-danger d-none">*</span></label><input asp-for="ValidTo" type="date" class="form-control" /><span asp-validation-for="ValidTo" class="text-danger"></span></div></div>
+        <div class="col-12"><label for="documentFile" class="form-label">Document file <span class="text-danger" aria-label="required">*</span></label><input id="documentFile" name="documentFile" type="file" required data-val="true" data-val-required="Choose a document file to upload." class="form-control" accept=".pdf,.jpg,.jpeg,.png" /><div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>@Html.ValidationMessage("documentFile", new { @class = "text-danger" })</div>
     </div>
     <div class="d-flex gap-2 mt-4"><button type="submit" class="btn btn-primary">Save Document</button>@if (returnToEditProfile) { <a asp-controller="Account" asp-action="EditProfile" asp-route-section="other" class="btn btn-outline-secondary">Cancel</a> } else if (returnToProfile) { <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary">Cancel</a> } else { <a asp-controller="EmployeeProfile" asp-action="Details" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary">Cancel</a> }</div>
 </form>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+    (() => {
+        const form = document.querySelector('form[asp-action="Create"]') || document.querySelector('form');
+        if (!form) return;
+        const type = form.querySelector('#DocumentTypeId');
+        const fields = form.querySelector('#validityDateFields');
+        const from = form.querySelector('#ValidFrom');
+        const to = form.querySelector('#ValidTo');
+        if (!type || !fields || !from || !to) return;
+        const fromMessage = form.querySelector('[data-valmsg-for="ValidFrom"]');
+        const toMessage = form.querySelector('[data-valmsg-for="ValidTo"]');
+        const required = () => type.selectedOptions[0]?.dataset.requiresValidityDates === 'true';
+        const updateFields = () => {
+            const showDates = required();
+            fields.classList.toggle('d-none', !showDates);
+            from.required = showDates;
+            to.required = showDates;
+            form.querySelector('#validFromRequired')?.classList.toggle('d-none', !showDates);
+            form.querySelector('#validToRequired')?.classList.toggle('d-none', !showDates);
+            if (!showDates) {
+                from.value = '';
+                to.value = '';
+                if (fromMessage) fromMessage.textContent = '';
+                if (toMessage) toMessage.textContent = '';
+                to.removeAttribute('min');
+            }
+        };
+        const validateDates = () => {
+            const showDates = required();
+            const fromMissing = showDates && !from.value;
+            const toMissing = showDates && !to.value;
+            const invalidOrder = showDates && from.value && to.value && to.value < from.value;
+            if (fromMessage) fromMessage.textContent = fromMissing ? 'Valid From is required for this document type.' : '';
+            if (toMessage) toMessage.textContent = toMissing ? 'Valid To is required for this document type.' : invalidOrder ? 'Valid To must be on or after Valid From.' : '';
+            to.min = showDates && from.value ? from.value : '';
+            return !fromMissing && !toMissing && !invalidOrder;
+        };
+        type.addEventListener('change', () => { updateFields(); validateDates(); });
+        from.addEventListener('change', validateDates);
+        to.addEventListener('change', validateDates);
+        form.addEventListener('submit', event => { if (!validateDates()) event.preventDefault(); });
+        updateFields();
+    })();
+    </script>
 }
 </div></div>
 

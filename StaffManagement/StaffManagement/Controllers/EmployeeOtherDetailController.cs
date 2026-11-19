@@ -12,13 +12,14 @@ using StaffManagement.Model.Entities;
 namespace StaffManagement.Controllers;
 
 [Authorize]
-public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext, IWebHostEnvironment environment, IEmployeeOtherDetailService detailService) : Controller
+public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext, IWebHostEnvironment environment, IEmployeeOtherDetailService detailService, IDocumentTypeService documentTypeService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Create(int employeeId, bool returnToProfile = false, bool returnToEditProfile = false, CancellationToken cancellationToken = default)
     {
         if (!await CanManageEmployeeAsync(employeeId, cancellationToken))
             return Forbid();
+        await LoadDocumentTypesAsync(cancellationToken);
         ViewBag.ReturnToProfile = returnToProfile;
         ViewBag.ReturnToEditProfile = returnToEditProfile;
         ViewData["Title"] = "Add document detail";
@@ -36,8 +37,25 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
             return NotFound();
 
         RemoveEmployeeValidationErrors();
-        if (model.ValidFrom.HasValue && model.ValidTo.HasValue && model.ValidFrom.Value.Date > model.ValidTo.Value.Date)
-            ModelState.AddModelError(nameof(model.ValidTo), "Valid To must be on or after Valid From.");
+        var documentType = await documentTypeService.GetByIdAsync(model.DocumentTypeId, cancellationToken);
+        if (documentType is null || !documentType.IsActive)
+            ModelState.AddModelError(nameof(model.DocumentTypeId), "Choose an active document type.");
+        else if (documentType.RequiresValidityDates)
+        {
+            if (!model.ValidFrom.HasValue)
+                ModelState.AddModelError(nameof(model.ValidFrom), "Valid From is required for this document type.");
+            if (!model.ValidTo.HasValue)
+                ModelState.AddModelError(nameof(model.ValidTo), "Valid To is required for this document type.");
+            if (model.ValidFrom.HasValue && model.ValidTo.HasValue && model.ValidFrom.Value.Date > model.ValidTo.Value.Date)
+                ModelState.AddModelError(nameof(model.ValidTo), "Valid To must be on or after Valid From.");
+        }
+        else
+        {
+            model.ValidFrom = null;
+            model.ValidTo = null;
+            ModelState.Remove(nameof(model.ValidFrom));
+            ModelState.Remove(nameof(model.ValidTo));
+        }
         if (documentFile is null || documentFile.Length == 0)
             ModelState.AddModelError(nameof(documentFile), "Choose a document file to upload.");
 
@@ -47,8 +65,9 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
 
         if (!ModelState.IsValid)
         {
+            await LoadDocumentTypesAsync(cancellationToken);
             ViewBag.ReturnToProfile = returnToProfile;
-        ViewBag.ReturnToEditProfile = returnToEditProfile;
+            ViewBag.ReturnToEditProfile = returnToEditProfile;
             ViewData["Title"] = "Add document detail";
             return View(model);
         }
@@ -72,6 +91,7 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
                 if (System.IO.File.Exists(fullPath))
                     System.IO.File.Delete(fullPath);
                 ModelState.AddModelError(string.Empty, result.Error ?? "Document details could not be saved.");
+                await LoadDocumentTypesAsync(cancellationToken);
                 ViewBag.ReturnToProfile = returnToProfile;
                 ViewBag.ReturnToEditProfile = returnToEditProfile;
                 ViewData["Title"] = "Add document detail";
@@ -111,6 +131,28 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         return PhysicalFile(fullPath, detail.ContentType, detail.OriginalFileName);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, bool returnToProfile = false, bool returnToEditProfile = false, bool returnToEmployeeDetails = false, CancellationToken cancellationToken = default)
+    {
+        var detail = await detailService.GetByIdAsync(id, cancellationToken);
+        if (detail is null || !await CanManageEmployeeAsync(detail.EmployeeId, cancellationToken))
+            return NotFound();
+
+        if (!await detailService.DeleteAsync(id, cancellationToken))
+            return NotFound();
+
+        DeleteStoredFile(detail.StoredFileName);
+        TempData["Success"] = "Document detail was deleted.";
+        if (returnToEditProfile)
+            return RedirectToAction("EditProfile", "Account", new { section = "other" });
+        if (returnToProfile)
+            return RedirectToAction("Profile", "Account");
+        if (returnToEmployeeDetails)
+            return RedirectToAction("Details", "Employee", new { id = detail.EmployeeId });
+        return RedirectToAction("Details", "EmployeeProfile", new { employeeId = detail.EmployeeId });
+    }
+
     private (string? ContentType, string? Extension, string? Error) ValidateFile(IFormFile file)
     {
         const long maxSize = 10 * 1024 * 1024;
@@ -145,6 +187,18 @@ public sealed class EmployeeOtherDetailController(ApplicationDbContext dbContext
         ModelState.Remove(nameof(EmployeeOtherDetailDto.OriginalFileName));
         ModelState.Remove(nameof(EmployeeOtherDetailDto.StoredFileName));
         ModelState.Remove(nameof(EmployeeOtherDetailDto.ContentType));
+    }
+
+    private async Task LoadDocumentTypesAsync(CancellationToken cancellationToken) =>
+        ViewBag.DocumentTypes = await documentTypeService.GetActiveAsync(cancellationToken);
+
+    private void DeleteStoredFile(string storedFileName)
+    {
+        var safeName = Path.GetFileName(storedFileName);
+        var directory = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "App_Data", "EmployeeDocuments"));
+        var fullPath = Path.GetFullPath(Path.Combine(directory, safeName));
+        if (fullPath.StartsWith(directory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(fullPath))
+            System.IO.File.Delete(fullPath);
     }
 }
 
