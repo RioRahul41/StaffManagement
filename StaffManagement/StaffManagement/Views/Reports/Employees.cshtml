@@ -1,0 +1,102 @@
+@using StaffManagement.Core.DTOs.EmployeeModel
+@model IReadOnlyList<EmployeeDto>
+@{
+    ViewData["Title"] = "Employee Reports";
+    var usernames = ViewBag.UsernamesByEmployeeId as IReadOnlyDictionary<int, string>
+        ?? new Dictionary<int, string>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/4.1.3/css/buttons.dataTables.min.css" />
+    <style>
+        #employeeReportsTable_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+        #employeeReportsTable_wrapper .dt-button {
+            border: 1px solid #0d6efd;
+            border-radius: .375rem;
+            background: #0d6efd;
+            color: #fff;
+            padding: .375rem .75rem;
+        }
+        #employeeReportsTable_wrapper .dt-button:hover { background: #0b5ed7; color: #fff; }
+    </style>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">REPORTS</p>
+        <h1 class="mb-1">Employee Reports</h1>
+        <p class="text-muted mb-0">Search, review, and export employee contact details.</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="employeeReportsTable" class="table table-hover align-middle w-100">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Username</th>
+                        <th>Office Email</th>
+                        <th>Phone Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var employee in Model)
+                    {
+                        <tr>
+                            <td>@employee.FirstName @employee.LastName</td>
+                            <td>@(usernames.TryGetValue(employee.Id, out var username) ? username : employee.Email)</td>
+                            <td>@employee.Email</td>
+                            <td>@(string.IsNullOrWhiteSpace(employee.Phone) ? "—" : employee.Phone)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/4.1.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/4.1.3/js/buttons.html5.min.js"></script>
+    <script>
+        new DataTable('#employeeReportsTable', {
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[0, 'asc']],
+            layout: {
+                topStart: ['pageLength', {
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Export to Excel',
+                            title: 'Employee Report',
+                            exportOptions: { columns: [0, 1, 2, 3], modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            text: 'Download PDF',
+                            title: 'Employee Report',
+                            orientation: 'landscape',
+                            pageSize: 'A4',
+                            exportOptions: { columns: [0, 1, 2, 3], modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                        }
+                    ]
+                }],
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
+            language: {
+                emptyTable: 'No employee records found.',
+                search: 'Search employees:'
+            }
+        });
+    </script>
+}

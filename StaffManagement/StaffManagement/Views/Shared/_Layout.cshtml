@@ -10,10 +10,8 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
           rel="stylesheet" />
-
     <link rel="stylesheet" href="~/StaffManagement.styles.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -239,7 +237,7 @@
                                 </svg>
                             </summary>
 
-                        <div class="sidebar-submenu">
+                            <div class="sidebar-submenu">
 
                                 <a class="sidebar-link @(currentController == "Project" ? "active" : "")"
                                    asp-controller="Project" asp-action="Index">
@@ -259,8 +257,8 @@
                                     <span>Timesheets</span>
                                 </a>
 
-                        </div>
-                    </details>
+                            </div>
+                        </details>
                     }
 
                     <!-- Requests -->
@@ -348,7 +346,7 @@
                                 </svg>
                             </summary>
 
-                        <div class="sidebar-submenu">
+                            <div class="sidebar-submenu">
 
                                 <a class="sidebar-link @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Employees" ? "active" : "")"
                                    asp-controller="Reports" asp-action="Employees">
@@ -374,8 +372,8 @@
                                     <span>Leave Report</span>
                                 </a>
 
-                        </div>
-                    </details>
+                            </div>
+                        </details>
                     }
 
                     <!-- Help & Information -->
@@ -558,4 +556,3 @@
 
 </body>
 </html>
-
