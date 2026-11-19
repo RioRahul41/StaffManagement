@@ -25,13 +25,13 @@ public class EmployeeProfile
 
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Phone number must contain exactly 10 digits.")]
     public string? PhoneNumber { get; set; }
-
+    [Required]
     [StringLength(100)]
     public string? EmergencyContactName { get; set; }
-
+    [Required]
     [StringLength(50)]
     public string? EmergencyContactRelationship { get; set; }
-
+    [Required]
     [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Emergency contact phone number must contain exactly 10 digits.")]
     public string? EmergencyContactPhone { get; set; }
     [StringLength(200)]

@@ -53,7 +53,7 @@ public sealed class EmployeeProfileService(IEmployeeProfileRepository repository
         profile.MaritalStatus ??= employee.MaritalStatus;
         profile.DOB ??= employee.DOB;
         profile.BloodGroup ??= employee.BloodGroup;
-        profile.PhoneNumber ??= employee.Phone;
+        profile.PhoneNumber = employee.Phone;
         CopyProfileFieldsToEmployee(profile, employee);
 
         await repository.AddAsync(profile, cancellationToken);

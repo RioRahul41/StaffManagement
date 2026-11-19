@@ -752,13 +752,16 @@ namespace StaffManagement.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EmergencyContactName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("EmergencyContactPhone")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmergencyContactRelationship")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 

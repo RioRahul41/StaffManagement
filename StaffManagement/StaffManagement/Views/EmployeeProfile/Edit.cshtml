@@ -11,7 +11,7 @@
     <input asp-for="EmployeeId" type="hidden" />
     <input type="hidden" name="returnToProfile" value="@(ViewBag.ReturnToProfile is true ? "true" : "false")" /><input type="hidden" name="returnToEditProfile" value="@(ViewBag.ReturnToEditProfile is true ? "true" : "false")" />
     <div class="card-body row g-3">
-        <div asp-validation-summary="All" class="text-danger"></div>
+    @*     <div asp-validation-summary="All" class="text-danger"></div> *@
         @if (isEmergency)
         {
             <div class="col-12"><h2 class="h5">Emergency Contact Person</h2></div>
