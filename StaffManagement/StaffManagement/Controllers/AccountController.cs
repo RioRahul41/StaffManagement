@@ -52,7 +52,7 @@ public sealed class AccountController(
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View(model);
         }
-
+        
         var result = await signInManager.PasswordSignInAsync(
             user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: true);
 

@@ -1,0 +1,46 @@
+﻿
+@model StaffManagement.Core.DTOs.ReliveingModel.UpdateRelievingTypeDto
+
+@{
+    ViewData["Title"] = "Edit Relieving Type";
+}
+
+<div class="container mt-4">
+    <h3>Edit Relieving Type</h3>
+
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        <input asp-for="Id" type="hidden" />
+
+        <div class="mb-3">
+            <label asp-for="RelievingTypeName" class="form-label">
+                Relieving Type Name
+            </label>
+
+            <input asp-for="RelievingTypeName" class="form-control" />
+
+            <span asp-validation-for="RelievingTypeName"
+                  class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label">
+                Active
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Update
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Back
+        </a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

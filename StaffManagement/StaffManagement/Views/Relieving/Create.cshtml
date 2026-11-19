@@ -1,0 +1,45 @@
+﻿
+@model StaffManagement.Core.DTOs.ReliveingModel.CreateRelievingTypeDto
+
+@{
+    ViewData["Title"] = "Create Relieving Status";
+}
+
+<div class="container mt-4">
+
+    <h3>Create Relieving Status</h3>
+
+    <form asp-controller="Relieving"
+          asp-action="Create"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="RelievingTypeName" class="form-label">
+                Relieving Status
+            </label>
+
+            <input asp-for="RelievingTypeName"
+                   class="form-control"
+                   placeholder="Enter relieving status" />
+
+            <span asp-validation-for="RelievingTypeName"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Save
+        </button>
+
+        <a asp-action="Index" class="btn btn-secondary">
+            Back
+        </a>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
