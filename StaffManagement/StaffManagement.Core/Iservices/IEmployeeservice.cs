@@ -20,6 +20,11 @@ namespace StaffManagement.Core.Iservices
         Task<EmployeeDto?> GetByIdentityUserIdAsync(string identityUserId, CancellationToken cancellationToken = default);
         Task<(bool Succeeded, string? Error)> CreateAsync(EmployeeDto model, string identityUserId, CancellationToken cancellationToken = default);
         Task<(bool Succeeded, string? Error)> UpdateAsync(EmployeeDto model, CancellationToken cancellationToken = default);
-        Task<(bool Succeeded, string? Error)> DeleteAsync(int id, CancellationToken cancellationToken = default);
+        Task<(bool Succeeded, string? Error)> DeleteAsync(
+            int id,
+            int? relievingTypeId,
+            string? deletedReason,
+            string deletedBy,
+            CancellationToken cancellationToken = default);
     }
 }

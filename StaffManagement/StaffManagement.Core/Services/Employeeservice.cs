@@ -8,7 +8,8 @@ namespace StaffManagement.Core.Services
     public sealed class EmployeeService(
         IEmployeeRepository repository,
         IProjectRepository projectRepository,
-        ILeaveRequestRepository leaveRequestRepository) : IEmployeeService
+        ILeaveRequestRepository leaveRequestRepository,
+         IRelievingTypeRepository relievingTypeRepository) : IEmployeeService
     {
         public async Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             (await repository.GetAllAsync(cancellationToken)).Select(Map).ToList();
@@ -131,16 +132,44 @@ namespace StaffManagement.Core.Services
             return (true, null);
         }
 
-        public async Task<(bool Succeeded, string? Error)> DeleteAsync(int id, CancellationToken cancellationToken = default)
+
+        public async Task<(bool Succeeded, string? Error)> DeleteAsync(
+            int id,
+            int? relievingTypeId,
+            string? deletedReason,
+            string deletedBy,
+            CancellationToken cancellationToken = default)
         {
             var employee = await repository.GetByIdAsync(id, cancellationToken);
+
             if (employee is null)
                 return (false, "Employee was not found.");
 
-            repository.Remove(employee);
+            if (!relievingTypeId.HasValue)
+                return (false, "Please select a relieving type.");
+
+            var relievingType = await relievingTypeRepository.GetByIdAsync(
+                relievingTypeId.Value);
+
+            if (relievingType is null || !relievingType.IsActive)
+                return (false, "Selected relieving type is unavailable.");
+
+            employee.RelievingTypeId = relievingTypeId.Value;
+            employee.DeletedReason = deletedReason?.Trim();
+            employee.DeletedDate = DateTime.UtcNow;
+            employee.DeletedBy = deletedBy;
+
+            // Soft delete: do not permanently remove the employee
+            employee.EmpIsDeleted = true;
+            employee.EmpIsActive = false;
+
+            repository.Update(employee);
+
             await repository.SaveChangesAsync(cancellationToken);
+
             return (true, null);
         }
+
 
         private static EmployeeDto Map(Employee employee) => new()
         {

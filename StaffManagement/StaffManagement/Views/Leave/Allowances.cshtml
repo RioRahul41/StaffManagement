@@ -1,97 +1,356 @@
 @model IReadOnlyList<StaffManagement.Core.DTOs.LeaveModel.LeaveBalanceDto>
+
 @{
     ViewData["Title"] = "Employee leave allowances";
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <div>
-        <p class="text-primary fw-semibold mb-1">LEAVE MANAGEMENT</p>
-        <h1 class="mb-1">Employee leave allowances</h1>
-        <p class="text-muted mb-0">Update annual sick and casual leave limits and review employee usage.</p>
-    </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Back to leave requests</a>
-</div>
+<style>
+    .leave-management .leave-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+    }
 
-<section aria-labelledby="allowances-heading">
-    <div class="mb-3">
-        <h2 id="allowances-heading" class="h5 mb-1">Annual allowances</h2>
-        <p class="text-muted mb-0">
-            Set each allowance from 0 to 365 days. Pending requests reserve days; approved requests count as used.
-        </p>
+    .leave-management .leave-table {
+        width: 100%;
+        min-width: 1050px;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 14px;
+    }
+
+    .leave-management .leave-table th,
+    .leave-management .leave-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-right: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .leave-management .leave-table tr > :last-child {
+        border-right: 0;
+    }
+
+    .leave-management .leave-table tbody tr:last-child > * {
+        border-bottom: 0;
+    }
+
+    .leave-management .leave-table thead th {
+        background-color: #f1f5f9;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .leave-management .leave-table tbody tr > * {
+        background-color: #fff;
+    }
+
+    .leave-management .leave-table tbody tr:nth-child(even) > * {
+        background-color: #f8fafc;
+    }
+
+    .leave-management .leave-table tbody tr:hover > * {
+        background-color: #eef6ff;
+    }
+
+    .leave-management .employee-column {
+        min-width: 230px;
+        font-weight: normal;
+        text-align: left;
+    }
+
+    .leave-management .employee-name {
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .leave-management .employee-email {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .leave-management .allowance-input {
+        min-width: 130px;
+        max-width: 155px;
+    }
+
+    .leave-management .allowance-input input {
+        min-width: 0;
+    }
+
+    .leave-management .balance-column {
+        min-width: 190px;
+    }
+
+    .leave-management .leave-used {
+        color: #334155;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .leave-management .leave-summary {
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .leave-management .leave-available {
+        color: #15803d;
+        font-weight: 600;
+    }
+
+    /* Keep the final Action column visible during horizontal scrolling. */
+    .leave-management .leave-table .action-column {
+        position: sticky;
+        right: 0;
+        z-index: 1;
+        min-width: 110px;
+        width: 110px;
+        text-align: center;
+        border-left: 1px solid #dee2e6;
+    }
+
+    .leave-management .leave-table thead .action-column {
+        z-index: 2;
+        background-color: #f1f5f9;
+    }
+
+    .leave-management .action-column form {
+        margin: 0;
+    }
+
+    .leave-management .save-button {
+        min-width: 65px;
+    }
+</style>
+
+<div class="leave-management">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <p class="text-primary fw-semibold mb-1">
+                LEAVE MANAGEMENT
+            </p>
+
+            <h1 class="mb-1">
+                Employee leave allowances
+            </h1>
+
+            <p class="text-muted mb-0">
+                Update annual sick and casual leave limits and review employee usage.
+            </p>
+        </div>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Back to leave requests
+        </a>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <caption class="visually-hidden">Employee sick and casual leave allowances and usage</caption>
-                <thead class="table-light">
+    <section aria-labelledby="allowances-heading">
+
+        <div class="mb-3">
+            <h2 id="allowances-heading" class="h5 mb-1">
+                Annual allowances
+            </h2>
+
+            <p class="text-muted mb-0">
+                Set each allowance from 0 to 365 days.
+                Pending requests reserve days; approved requests count as used.
+            </p>
+        </div>
+
+        <div class="leave-table-wrapper"
+             role="region"
+             aria-label="Employee leave allowances table"
+             tabindex="0">
+
+            <table class="leave-table">
+
+                <caption class="visually-hidden">
+                    Employee sick and casual leave allowances and usage
+                </caption>
+
+                <thead>
                     <tr>
-                        <th scope="col" class="px-3">Employee</th>
-                        <th scope="col">Sick allowance</th>
-                        <th scope="col">Sick leave balance</th>
-                        <th scope="col">Casual allowance</th>
-                        <th scope="col">Casual leave balance</th>
-                        <th scope="col" class="text-end px-3"><span class="visually-hidden">Actions</span></th>
+                        <th scope="col" class="employee-column">
+                            Employee
+                        </th>
+
+                        <th scope="col">
+                            Sick allowance
+                        </th>
+
+                        <th scope="col" class="balance-column">
+                            Sick leave balance
+                        </th>
+
+                        <th scope="col">
+                            Casual allowance
+                        </th>
+
+                        <th scope="col" class="balance-column">
+                            Casual leave balance
+                        </th>
+
+                        <th scope="col" class="action-column">
+                            Action
+                        </th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @foreach (var balance in Model)
                     {
                         <tr>
-                            <th scope="row" class="px-3">
-                                <div class="fw-semibold">@balance.EmployeeName</div>
-                                <div class="small text-muted">@balance.Email</div>
+                            <th scope="row" class="employee-column">
+                                <div class="employee-name">
+                                    @balance.EmployeeName
+                                </div>
+
+                                <div class="employee-email">
+                                    @balance.Email
+                                </div>
                             </th>
+
                             <td>
-                                <label class="visually-hidden" for="sick-@balance.EmployeeId">Sick leave allowance in days</label>
-                                <div class="input-group input-group-sm" style="min-width: 115px; max-width: 150px;">
-                                    <input form="allowances-@balance.EmployeeId" id="sick-@balance.EmployeeId" name="sickLeaveAllowance" type="number" min="0" max="365" value="@balance.SickAllowance" class="form-control" />
-                                    <span class="input-group-text">days</span>
+                                <label class="visually-hidden"
+                                       for="sick-@balance.EmployeeId">
+                                    Sick leave allowance in days for @balance.EmployeeName
+                                </label>
+
+                                <div class="input-group input-group-sm allowance-input">
+                                    <input form="allowances-@balance.EmployeeId"
+                                           id="sick-@balance.EmployeeId"
+                                           name="sickLeaveAllowance"
+                                           type="number"
+                                           min="0"
+                                           max="365"
+                                           value="@balance.SickAllowance"
+                                           class="form-control" />
+
+                                    <span class="input-group-text">
+                                        days
+                                    </span>
                                 </div>
                             </td>
-                            <td>
-                                <div class="small text-nowrap"><span class="fw-semibold">@balance.SickUsed</span> used</div>
-                                <div class="small text-muted text-nowrap">@balance.SickPending pending · @balance.SickAvailable available</div>
-                            </td>
-                            <td>
-                                <label class="visually-hidden" for="casual-@balance.EmployeeId">Casual leave allowance in days</label>
-                                <div class="input-group input-group-sm" style="min-width: 115px; max-width: 150px;">
-                                    <input form="allowances-@balance.EmployeeId" id="casual-@balance.EmployeeId" name="casualLeaveAllowance" type="number" min="0" max="365" value="@balance.CasualAllowance" class="form-control" />
-                                    <span class="input-group-text">days</span>
+
+                            <td class="balance-column">
+                                <div class="leave-used">
+                                    @balance.SickUsed used
+                                </div>
+
+                                <div class="leave-summary">
+                                    @balance.SickPending pending
+                                    <span aria-hidden="true"> · </span>
+                                    <span class="leave-available">
+                                        @balance.SickAvailable available
+                                    </span>
                                 </div>
                             </td>
+
                             <td>
-                                <div class="small text-nowrap"><span class="fw-semibold">@balance.CasualUsed</span> used</div>
-                                <div class="small text-muted text-nowrap">@balance.CasualPending pending · @balance.CasualAvailable available</div>
+                                <label class="visually-hidden"
+                                       for="casual-@balance.EmployeeId">
+                                    Casual leave allowance in days for @balance.EmployeeName
+                                </label>
+
+                                <div class="input-group input-group-sm allowance-input">
+                                    <input form="allowances-@balance.EmployeeId"
+                                           id="casual-@balance.EmployeeId"
+                                           name="casualLeaveAllowance"
+                                           type="number"
+                                           min="0"
+                                           max="365"
+                                           value="@balance.CasualAllowance"
+                                           class="form-control" />
+
+                                    <span class="input-group-text">
+                                        days
+                                    </span>
+                                </div>
                             </td>
-                            <td class="text-end px-3">
-                                <form id="allowances-@balance.EmployeeId" asp-action="UpdateAllowances" method="post">
-                                    <input type="hidden" name="employeeId" value="@balance.EmployeeId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+
+                            <td class="balance-column">
+                                <div class="leave-used">
+                                    @balance.CasualUsed used
+                                </div>
+
+                                <div class="leave-summary">
+                                    @balance.CasualPending pending
+                                    <span aria-hidden="true"> · </span>
+                                    <span class="leave-available">
+                                        @balance.CasualAvailable available
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="action-column">
+                                <form id="allowances-@balance.EmployeeId"
+                                      asp-action="UpdateAllowances"
+                                      method="post">
+
+                                    <input type="hidden"
+                                           name="employeeId"
+                                           value="@balance.EmployeeId" />
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-primary save-button"
+                                            aria-label="Save leave allowances for @balance.EmployeeName">
+                                        Save
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                     }
+
                     @if (Model.Count == 0)
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No employees found.</td>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No employees found.
+                            </td>
                         </tr>
                     }
                 </tbody>
+
             </table>
         </div>
-    </div>
-</section>
+
+    </section>
+</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @if (TempData["Success"] is string success)
     {
-        <script>Swal.fire({ icon: 'success', title: 'Success', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)), timer: 2200, showConfirmButton: false });</script>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(success)),
+                timer: 2200,
+                showConfirmButton: false
+            });
+        </script>
     }
+
     @if (TempData["Error"] is string error)
     {
-        <script>Swal.fire({ icon: 'error', title: 'Unable to complete action', text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error)) });</script>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Unable to complete action',
+                text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(error))
+            });
+        </script>
     }
 }

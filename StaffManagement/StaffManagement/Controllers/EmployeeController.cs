@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Security;
+using StaffManagement.Core.Services;
 using StaffManagement.Data.DbContext;
-using Microsoft.EntityFrameworkCore;
 using StaffManagement.Model.Entities;
 using StaffManagement.Models;
 
@@ -23,7 +25,8 @@ public sealed class EmployeeController(
     UserManager<ApplicationIdentity> userManager,
     IWebHostEnvironment environment,
     ApplicationDbContext dbContext,
-    IEmployeeExperienceService employeeExperienceService) : Controller
+    IEmployeeExperienceService employeeExperienceService,
+    IRelievingTypeService relievingTypeService) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -66,7 +69,7 @@ public sealed class EmployeeController(
             cancellationToken);
 
         var canEdit = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Manager);
-        var canDelete = User.IsInRole(RoleNames.Admin);
+        var canDelete = User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Hr) || User.IsInRole(RoleNames.Manager);
         var canAssignProjects = canEdit;
 
         return Json(new
@@ -386,25 +389,72 @@ public sealed class EmployeeController(
         return RedirectToAction(nameof(Index));
     }
 
+
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(
+        int id,
+        CancellationToken cancellationToken)
     {
         var employee = await employeeService.GetByIdAsync(id, cancellationToken);
+
         if (employee is null)
             return NotFound();
-        ViewBag.HasProfileInformation = await dbContext.EmployeeProfiles.AnyAsync(profile => profile.EmployeeId == id, cancellationToken);
-        ViewBag.EmployeeExperiences = await employeeExperienceService.GetByEmployeeIdAsync(id, cancellationToken);
-        return View(employee);
+
+        ViewBag.EmployeeName = $"{employee.FirstName} {employee.LastName}";
+        ViewBag.EmployeeEmail = employee.Email;
+
+        ViewBag.HasProfileInformation =
+            await dbContext.EmployeeProfiles.AnyAsync(
+                profile => profile.EmployeeId == id,
+                cancellationToken);
+
+        ViewBag.EmployeeExperiences =
+            await employeeExperienceService.GetByEmployeeIdAsync(
+                id, cancellationToken);
+
+        var relievingTypes = await relievingTypeService.GetActiveAsync();
+
+        ViewBag.RelievingTypes = new SelectList(
+            relievingTypes,
+            "Id",
+            "RelievingTypeName");
+
+        return View(new DeleteEmployeeDto
+        {
+            EmployeeId = id
+        });
     }
+
 
     [HttpPost, ActionName("Delete")]
     [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Hr + "," + RoleNames.Manager)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteConfirmed(
+    DeleteEmployeeDto model,
+    CancellationToken cancellationToken)
     {
-        var result = await employeeService.DeleteAsync(id, cancellationToken);
+        if (!ModelState.IsValid)
+        {
+            return await ReloadDeleteView(
+                model.EmployeeId, cancellationToken, model);
+        }
+
+        var deletedBy = User.Identity?.Name ?? "Unknown";
+
+        var result = await employeeService.DeleteAsync(
+            model.EmployeeId,
+            model.RelievingTypeId,
+            model.DeletedReason,
+            deletedBy,
+            cancellationToken);
+
         if (!result.Succeeded)
+        {
             TempData["Error"] = result.Error;
+            return RedirectToAction(nameof(Delete), new { id = model.EmployeeId });
+        }
+
+        TempData["Success"] = "Employee deleted successfully.";
 
         return RedirectToAction(nameof(Index));
     }
@@ -491,6 +541,47 @@ public sealed class EmployeeController(
         var roles = await userManager.GetRolesAsync(user);
         return roles.FirstOrDefault(role => RoleNames.All.Contains(role, StringComparer.OrdinalIgnoreCase));
     }
+
+    private async Task<IActionResult> ReloadDeleteView(
+        int employeeId,
+        CancellationToken cancellationToken,
+        DeleteEmployeeDto model)
+    {
+        var employee = await employeeService.GetByIdAsync(
+            employeeId, cancellationToken);
+
+        if (employee is null)
+            return NotFound();
+
+        // Employee information
+        ViewBag.EmployeeName =
+            $"{employee.FirstName} {employee.LastName}";
+
+        ViewBag.EmployeeEmail = employee.Email;
+
+        // Existing profile information
+        ViewBag.HasProfileInformation =
+            await dbContext.EmployeeProfiles.AnyAsync(
+                profile => profile.EmployeeId == employeeId,
+                cancellationToken);
+
+        // Existing experience information
+        ViewBag.EmployeeExperiences =
+            await employeeExperienceService.GetByEmployeeIdAsync(
+                employeeId, cancellationToken);
+
+        // Reload active relieving types
+        var relievingTypes = await relievingTypeService.GetActiveAsync();
+
+        ViewBag.RelievingTypes = new SelectList(
+            relievingTypes,
+            "Id",
+            "RelievingTypeName",
+            model.RelievingTypeId);
+
+        return View("Delete", model);
+    }
+
 }
 
 

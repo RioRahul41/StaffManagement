@@ -69,6 +69,8 @@ builder.Services.AddScoped<IEmployeeCelebrationNotificationRepository, EmployeeC
 builder.Services.AddScoped<IEmployeeCelebrationService, EmployeeCelebrationService>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<IRelievingTypeRepository, RelievingTypeRepository>();
+builder.Services.AddScoped<IRelievingTypeService, RelievingTypeService>();
 
 
 

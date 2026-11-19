@@ -94,6 +94,17 @@ namespace StaffManagement.Model.Entities
         public Designation? DesignationRecord { get; set; }
         public ApplicationIdentity IdentityUser { get; set; } = null!;
 
+        //reliving Details 
+        public int? RelievingTypeId { get; set; }
+
+        public string? DeletedReason { get; set; }
+
+        public DateTime? DeletedDate { get; set; }
+
+        public string? DeletedBy { get; set; }
+
+        public RelievingType? RelievingType { get; set; }
+
 
         public static ValidationResult? ValidateDOB(DateTime? dob)
         {
