@@ -566,3 +566,37 @@ body.dark-mode .profile-info-value { color: #e5e7eb; }
 .qualification-table-wrap { min-height: 300px; border: 1px solid #dee2e6; border-radius: .25rem; }
 .qualification-table-wrap thead th { color: #7143d6; background: #eef0f4; font-weight: 600; }
 .qualification-action-button { color: #344563; letter-spacing: .08em; }
+
+#leaveRemainingTable_wrapper .dt-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+#leaveRemainingTable_wrapper .dt-button {
+    border: 1px solid #0d6efd;
+    border-radius: .375rem;
+    background: #0d6efd;
+    color: #fff;
+    padding: .375rem .75rem;
+}
+
+    #leaveRemainingTable_wrapper .dt-button:hover {
+        background: #0b5ed7;
+        color: #fff;
+    }
+
+.report-heading-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    vertical-align: -.15rem;
+    color: #0d6efd;
+}
+/* Hide DataTables export processing spinner */
+.dt-button-processing::after,
+.dt-button-processing::before,
+.dt-button.processing::after,
+.dt-button.processing::before {
+    display: none !important;
+    content: none !important;
+}

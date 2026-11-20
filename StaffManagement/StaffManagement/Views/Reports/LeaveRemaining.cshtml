@@ -12,15 +12,7 @@
 @section Styles {
     <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/4.1.3/css/buttons.dataTables.min.css" />
-    <style>
-        #leaveRemainingTable_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
-        #leaveRemainingTable_wrapper .dt-button {
-            border: 1px solid #0d6efd; border-radius: .375rem; background: #0d6efd;
-            color: #fff; padding: .375rem .75rem;
-        }
-        #leaveRemainingTable_wrapper .dt-button:hover { background: #0b5ed7; color: #fff; }
-        .report-heading-icon { width: 1.2rem; height: 1.2rem; vertical-align: -.15rem; color: #0d6efd; }
-    </style>
+    
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -105,13 +97,16 @@
     </div>
 </div>
 
+
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/4.1.3/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/4.1.3/js/buttons.html5.min.js"></script>
+
     <script>
         const employeeFilter = document.getElementById('employeeFilter');
         const leaveTypeFilter = document.getElementById('leaveTypeFilter');
@@ -124,6 +119,7 @@
             pageLength: 5,
             lengthMenu: [5, 10, 25, 50, 100],
             order: [[0, 'asc']],
+
             layout: {
                 topStart: ['pageLength', {
                     buttons: [
@@ -131,7 +127,29 @@
                             extend: 'excelHtml5',
                             text: 'Export to Excel',
                             title: 'Leave Remaining Report',
-                            exportOptions: { columns: ':visible', modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                            exportOptions: {
+                                columns: ':visible',
+                                modifier: {
+                                    search: 'applied',
+                                    order: 'applied',
+                                    page: 'all'
+                                }
+                            },
+                            action: function (e, dt, button, config) {
+                                if (dt.rows({ search: 'applied' }).count() === 0) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No Data Available!',
+                                        text: 'No matching leave balance records available to export.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    return;
+                                }
+
+                                DataTable.ext.buttons.excelHtml5.action.call(
+                                    this, e, dt, button, config
+                                );
+                            }
                         },
                         {
                             extend: 'pdfHtml5',
@@ -139,7 +157,29 @@
                             title: 'Leave Remaining Report',
                             orientation: 'landscape',
                             pageSize: 'A4',
-                            exportOptions: { columns: ':visible', modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                            exportOptions: {
+                                columns: ':visible',
+                                modifier: {
+                                    search: 'applied',
+                                    order: 'applied',
+                                    page: 'all'
+                                }
+                            },
+                            action: function (e, dt, button, config) {
+                                if (dt.rows({ search: 'applied' }).count() === 0) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No Data Available!',
+                                        text: 'No matching leave balance records available to download.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    return;
+                                }
+
+                                DataTable.ext.buttons.pdfHtml5.action.call(
+                                    this, e, dt, button, config
+                                );
+                            }
                         }
                     ]
                 }],
@@ -147,6 +187,7 @@
                 bottomStart: 'info',
                 bottomEnd: 'paging'
             },
+
             language: {
                 emptyTable: 'No leave balances found.',
                 search: 'Search leave balances:'
@@ -155,15 +196,22 @@
 
         leaveRemainingTable.search.fixed('leaveRemainingFilters', (_searchText, _rowData, dataIndex) => {
             const row = leaveRemainingTable.row(dataIndex).node();
+
             if (!row) return true;
-            const employeeMatches = !employeeFilter.value || row.dataset.employeeId === employeeFilter.value;
-            const leaveTypeMatches = !leaveTypeFilter.value || row.dataset.leaveType === leaveTypeFilter.value;
+
+            const employeeMatches = !employeeFilter.value ||
+                row.dataset.employeeId === employeeFilter.value;
+
+            const leaveTypeMatches = !leaveTypeFilter.value ||
+                row.dataset.leaveType === leaveTypeFilter.value;
+
             return employeeMatches && leaveTypeMatches;
         });
 
         [employeeFilter, leaveTypeFilter].forEach(filter => {
             filter.addEventListener('change', () => leaveRemainingTable.draw());
         });
+
         document.getElementById('resetLeaveRemainingFilters').addEventListener('click', () => {
             employeeFilter.value = '';
             leaveTypeFilter.value = '';

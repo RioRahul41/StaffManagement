@@ -1,15 +1,16 @@
 @model StaffManagement.Core.DTOs.DesignationModel.DesignationDto
 
+
+<div class="mb-3">
+    <label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span>
+    <select asp-for="DepartmentId" class="form-select" required><option value="">Select department</option>@foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto> ?? []) { <option value="@department.DepartmentId">@department.DepartmentName</option> }</select>
+    <span asp-validation-for="DepartmentId" class="text-danger"></span>
+</div>
 <div class="mb-3">
     <label asp-for="DesignationName" class="form-label"></label>
     <span class="text-danger" aria-hidden="true">*</span>
     <input asp-for="DesignationName" class="form-control" />
     <span asp-validation-for="DesignationName" class="text-danger"></span>
-</div>
-<div class="mb-3">
-    <label asp-for="DepartmentId" class="form-label">Department</label><span class="text-danger" aria-hidden="true">*</span>
-    <select asp-for="DepartmentId" class="form-select" required><option value="">Select department</option>@foreach (var department in ViewBag.Departments as IReadOnlyList<StaffManagement.Core.DTOs.DepartmentModel.DepartmentDto> ?? []) { <option value="@department.DepartmentId">@department.DepartmentName</option> }</select>
-    <span asp-validation-for="DepartmentId" class="text-danger"></span>
 </div>
 <div class="mb-3">
     <label asp-for="Description" class="form-label"></label>
