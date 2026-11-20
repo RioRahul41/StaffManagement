@@ -143,8 +143,11 @@ public sealed class EmployeeController(
     public async Task<IActionResult> Create()
     {
         ViewBag.Roles = accountService.GetCreatableRoles(GetCreatorRoles());
-        ViewBag.Designations = designationService.GetAllAsync().Result.Where(d => d.IsActive).ToList();
-        await LoadDepartmentsAsync();
+        var designations = await designationService.GetAllAsync();
+
+        ViewBag.Designations = designations
+            .Where(d => d.IsActive)
+            .ToList(); await LoadDepartmentsAsync();
         var model = new CreateAccountDto();
         var reportingPersons = await LoadReportingPersonsAsync();
         if (IsManagerOnly() && reportingPersons.Count > 0)
@@ -453,7 +456,6 @@ public sealed class EmployeeController(
             TempData["Error"] = result.Error;
             return RedirectToAction(nameof(Delete), new { id = model.EmployeeId });
         }
-
         TempData["Success"] = "Employee deleted successfully.";
 
         return RedirectToAction(nameof(Index));

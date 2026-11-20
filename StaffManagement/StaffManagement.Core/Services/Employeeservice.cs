@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IRepositories;
 using StaffManagement.Core.Iservices;
@@ -9,7 +10,8 @@ namespace StaffManagement.Core.Services
         IEmployeeRepository repository,
         IProjectRepository projectRepository,
         ILeaveRequestRepository leaveRequestRepository,
-         IRelievingTypeRepository relievingTypeRepository) : IEmployeeService
+         IRelievingTypeRepository relievingTypeRepository,
+        UserManager<ApplicationIdentity> userManager) : IEmployeeService
     {
         public async Task<IReadOnlyList<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
             (await repository.GetAllAsync(cancellationToken)).Select(Map).ToList();
@@ -162,6 +164,13 @@ namespace StaffManagement.Core.Services
             // Soft delete: do not permanently remove the employee
             employee.EmpIsDeleted = true;
             employee.EmpIsActive = false;
+         var identityuser = await userManager.FindByIdAsync(employee.IdentityUserId);
+            if(identityuser!= null)
+            {
+                identityuser.UserIsActive = false;
+                identityuser.UserIsDeleted = true;
+                await userManager.UpdateAsync(identityuser);
+            }
 
             repository.Update(employee);
 

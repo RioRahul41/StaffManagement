@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using StaffManagement.Core.DTOs.EmployeeModel;
 using StaffManagement.Core.IServices;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
+using StaffManagement.Data.DbContext;
 using StaffManagement.Model.Entities;
 
 namespace StaffManagement.Services;
@@ -10,7 +12,8 @@ namespace StaffManagement.Services;
 public sealed class IdentityAccountService(
     UserManager<ApplicationIdentity> userManager,
     RoleManager<IdentityRole> roleManager,
-    IEmployeeService employeeService) : IAccountService
+    IEmployeeService employeeService,
+    ApplicationDbContext dbContext) : IAccountService
 {
     public IReadOnlyList<string> GetCreatableRoles(IReadOnlyCollection<string> creatorRoles)
     {
@@ -42,37 +45,50 @@ public sealed class IdentityAccountService(
         model.SickLeaveAllowance = leaveAllowance.Sick;
         model.CasualLeaveAllowance = leaveAllowance.Casual;
 
-        var user = new ApplicationIdentity
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            UserName = model.Email,
-            Email = model.Email,
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            PhoneNumber = model.Phone,
-            Location = model.Location,
-            CreatedTime = DateTime.UtcNow,
-            UserIsActive = true
-        };
+            var user = new ApplicationIdentity
+            {
+                UserName = model.Email.Trim(),
+                Email = model.Email.Trim(),
+                FirstName = model.FirstName.Trim(),
+                LastName = model.LastName.Trim(),
+                PhoneNumber = string.IsNullOrWhiteSpace(model.Phone) ? null : model.Phone.Trim(),
+                Location = model.Location.Trim(),
+                CreatedTime = DateTime.UtcNow,
+                UserIsActive = true
+            };
 
-        var createResult = await userManager.CreateAsync(user, model.Password);
-        if (!createResult.Succeeded)
-            return new(false, FormatErrors(createResult));
+            var createResult = await userManager.CreateAsync(user, model.Password);
+            if (!createResult.Succeeded)
+                return new(false, FormatErrors(createResult));
 
-        var roleResult = await userManager.AddToRoleAsync(user, model.Role);
-        if (!roleResult.Succeeded)
-        {
-            await userManager.DeleteAsync(user);
-            return new(false, FormatErrors(roleResult));
+            var roleResult = await userManager.AddToRoleAsync(user, model.Role);
+            if (!roleResult.Succeeded)
+                return new(false, FormatErrors(roleResult));
+
+            var employeeResult = await employeeService.CreateAsync(
+                model,
+                user.Id,
+                cancellationToken);
+
+            if (!employeeResult.Succeeded)
+                return new(false, employeeResult.Error);
+
+            await transaction.CommitAsync(cancellationToken);
+            return new(true, null, user.Id);
         }
-
-        var employeeResult = await employeeService.CreateAsync(model, user.Id, cancellationToken);
-        if (!employeeResult.Succeeded)
+        catch (DbUpdateException exception)
         {
-            await userManager.DeleteAsync(user);
-            return new(false, employeeResult.Error);
+            await transaction.RollbackAsync(cancellationToken);
+            return new(false, exception.InnerException?.Message ?? exception.Message);
         }
-
-        return new(true, null, user.Id);
+        catch (Exception exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return new(false, exception.Message);
+        }
     }
 
     private static string FormatErrors(IdentityResult result) =>
