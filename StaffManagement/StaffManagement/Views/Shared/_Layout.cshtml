@@ -371,6 +371,14 @@
                                     <span>Leave Report</span>
                                 </a>
 
+                                <a class="sidebar-link @(currentController == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "LeaveRemaining" ? "active" : "")"
+                                   asp-controller="Reports" asp-action="LeaveRemaining">
+                                    <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M4 7h16v13H4zM7 7V5a5 5 0 0 1 10 0v2M8 12h8m-8 4h5" />
+                                    </svg>
+                                    <span>Leave Remaining Report</span>
+                                </a>
+
                             </div>
                         </details>
                     }

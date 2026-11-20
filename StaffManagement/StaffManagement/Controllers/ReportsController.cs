@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StaffManagement.Core.DTOs.LeaveModel;
+using StaffManagement.Core.DTOs.Reports;
 using StaffManagement.Core.DTOs.TimesheetModel;
 using StaffManagement.Core.Iservices;
 using StaffManagement.Core.Security;
@@ -17,6 +18,41 @@ public sealed class ReportsController(
     ITimesheetService timesheetService,
     ILeaveRequestService leaveRequestService) : Controller
 {
+    public async Task<IActionResult> LeaveRemaining(CancellationToken cancellationToken)
+    {
+        var balances = await leaveRequestService.GetAllBalancesAsync(cancellationToken);
+        var reportRows = balances
+            .SelectMany(balance => new[]
+            {
+                new LeaveRemainingReportDto
+                {
+                    EmployeeId = balance.EmployeeId,
+                    EmployeeName = balance.EmployeeName,
+                    Email = balance.Email,
+                    LeaveType = "Sick",
+                    Allowance = balance.SickAllowance,
+                    Used = balance.SickUsed,
+                    Pending = balance.SickPending,
+                    Remaining = balance.SickAvailable
+                },
+                new LeaveRemainingReportDto
+                {
+                    EmployeeId = balance.EmployeeId,
+                    EmployeeName = balance.EmployeeName,
+                    Email = balance.Email,
+                    LeaveType = "Casual",
+                    Allowance = balance.CasualAllowance,
+                    Used = balance.CasualUsed,
+                    Pending = balance.CasualPending,
+                    Remaining = balance.CasualAvailable
+                }
+            })
+            .OrderBy(row => row.EmployeeName)
+            .ThenBy(row => row.LeaveType)
+            .ToList();
+
+        return View(reportRows);
+    }
     public async Task<IActionResult> LeaveReport(CancellationToken cancellationToken)
     {
         const int batchSize = 100;

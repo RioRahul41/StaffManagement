@@ -1,0 +1,173 @@
+@using StaffManagement.Core.DTOs.Reports
+@model IReadOnlyList<LeaveRemainingReportDto>
+@{
+    ViewData["Title"] = "Leave Remaining Report";
+    var employees = Model
+        .GroupBy(row => row.EmployeeId)
+        .Select(group => group.First())
+        .OrderBy(row => row.EmployeeName)
+        .ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/4.1.3/css/buttons.dataTables.min.css" />
+    <style>
+        #leaveRemainingTable_wrapper .dt-buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+        #leaveRemainingTable_wrapper .dt-button {
+            border: 1px solid #0d6efd; border-radius: .375rem; background: #0d6efd;
+            color: #fff; padding: .375rem .75rem;
+        }
+        #leaveRemainingTable_wrapper .dt-button:hover { background: #0b5ed7; color: #fff; }
+        .report-heading-icon { width: 1.2rem; height: 1.2rem; vertical-align: -.15rem; color: #0d6efd; }
+    </style>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <p class="text-primary fw-semibold mb-1">REPORTS</p>
+        <h1 class="mb-1">
+            <svg class="report-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4m8-4v4M3 10h18M8 14h3m2 0h3m-8 4h3m2 0h3" /></svg>
+            Leave Remaining Report
+        </h1>
+        <p class="text-muted mb-0">Review each employee’s sick and casual leave allowance, usage, and balance.</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-xl-4">
+                <label class="form-label" for="employeeFilter">
+                    <svg class="report-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+                    Employee
+                </label>
+                <select id="employeeFilter" class="form-select">
+                    <option value="">All employees</option>
+                    @foreach (var employee in employees)
+                    {
+                        <option value="@employee.EmployeeId">@employee.EmployeeName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <label class="form-label" for="leaveTypeFilter">
+                    <svg class="report-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4" /></svg>
+                    Leave type
+                </label>
+                <select id="leaveTypeFilter" class="form-select">
+                    <option value="">All leave types</option>
+                    <option value="Sick">Sick</option>
+                    <option value="Casual">Casual</option>
+                </select>
+            </div>
+            <div class="col-sm-6 col-xl-2">
+                <button type="button" id="resetLeaveRemainingFilters" class="btn btn-outline-secondary w-100">
+                    <svg class="report-heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="leaveRemainingTable" class="table table-hover align-middle w-100">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Email</th>
+                        <th>Leave type</th>
+                        <th>Allowance</th>
+                        <th>Used</th>
+                        <th>Pending</th>
+                        <th>Remaining</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        <tr data-employee-id="@row.EmployeeId" data-leave-type="@row.LeaveType">
+                            <td>@row.EmployeeName</td>
+                            <td>@row.Email</td>
+                            <td>@row.LeaveType</td>
+                            <td>@row.Allowance</td>
+                            <td>@row.Used</td>
+                            <td>@row.Pending</td>
+                            <td><strong>@row.Remaining</strong></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/v/dt/dt-3.1.5/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/4.1.3/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/4.1.3/js/buttons.html5.min.js"></script>
+    <script>
+        const employeeFilter = document.getElementById('employeeFilter');
+        const leaveTypeFilter = document.getElementById('leaveTypeFilter');
+
+        const leaveRemainingTable = new DataTable('#leaveRemainingTable', {
+            paging: true,
+            pagingType: 'simple_numbers',
+            searching: true,
+            lengthChange: true,
+            pageLength: 5,
+            lengthMenu: [5, 10, 25, 50, 100],
+            order: [[0, 'asc']],
+            layout: {
+                topStart: ['pageLength', {
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Export to Excel',
+                            title: 'Leave Remaining Report',
+                            exportOptions: { columns: ':visible', modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            text: 'Download PDF',
+                            title: 'Leave Remaining Report',
+                            orientation: 'landscape',
+                            pageSize: 'A4',
+                            exportOptions: { columns: ':visible', modifier: { search: 'applied', order: 'applied', page: 'all' } }
+                        }
+                    ]
+                }],
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
+            language: {
+                emptyTable: 'No leave balances found.',
+                search: 'Search leave balances:'
+            }
+        });
+
+        leaveRemainingTable.search.fixed('leaveRemainingFilters', (_searchText, _rowData, dataIndex) => {
+            const row = leaveRemainingTable.row(dataIndex).node();
+            if (!row) return true;
+            const employeeMatches = !employeeFilter.value || row.dataset.employeeId === employeeFilter.value;
+            const leaveTypeMatches = !leaveTypeFilter.value || row.dataset.leaveType === leaveTypeFilter.value;
+            return employeeMatches && leaveTypeMatches;
+        });
+
+        [employeeFilter, leaveTypeFilter].forEach(filter => {
+            filter.addEventListener('change', () => leaveRemainingTable.draw());
+        });
+        document.getElementById('resetLeaveRemainingFilters').addEventListener('click', () => {
+            employeeFilter.value = '';
+            leaveTypeFilter.value = '';
+            leaveRemainingTable.search('').order([[0, 'asc']]).page('first').draw();
+        });
+    </script>
+}
